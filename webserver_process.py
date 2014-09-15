@@ -7,12 +7,6 @@ import nameTools as nt
 nt.dirNameProxy.startDirObservers()
 
 
-import DbManagement.countCleaner
-
-def trimDatabase():
-	cc = DbManagement.countCleaner.CountCleaner()
-	cc.clean()
-
 def fixup_cherrypy_logs():
 	loggers = logging.Logger.manager.loggerDict.keys()
 	for name in loggers:
@@ -68,10 +62,6 @@ def runServer():
 		cherrypy.engine.housekeeper = cherrypy.process.plugins.BackgroundTask(cls.REFRESH_INTERVAL, cls.refresh)  # Check if dir-dicts need updating
 
 
-	# Flatten tracking table for item counts. Hourly
-	# I can't easily wire this into the dynamic lookup above, so it's still manual.
-	cherrypy.engine.housekeeper = cherrypy.process.plugins.BackgroundTask(60*60*1, trimDatabase)
-	cherrypy.engine.housekeeper.start()
 
 	cherrypy.engine.monitorPlugin = MonitorPlugin(cherrypy.engine)
 	cherrypy.engine.monitorPlugin.subscribe()

@@ -31,9 +31,8 @@ def userCheck(userid, dummy_request):
 		return False
 
 import logging
-import psycopg2
+
 import traceback
-import statusManager as sm
 
 import mimetypes
 
@@ -54,38 +53,15 @@ class PageResource(object):
 	def __init__(self):
 		self.base_directory = settings.webCtntPath
 		# self.dirProxy = nameTools.DirNameProxy(settings.mangaFolders)
-		self.dbPath = settings.dbName
+
 		self.lookupEngine = TemplateLookup(directories=[self.base_directory], module_directory='./ctntCache', strict_undefined=True)
 
-		self.openDB()
 
 		self.sessionManager = sessionManager.SessionPoolManager()
-		self.apiInterface = apiHandler.ApiInterface(self.conn)
+		self.apiInterface = apiHandler.ApiInterface()
 
 		mimetypes.init()
 
-		cherrypy.engine.subscribe("exit", self.closeDB)
-
-
-	def openDB(self):
-		self.log.info("WSGI Server Opening DB...")
-		self.log.info("DB Path = %s", self.dbPath)
-
-		# Local sockets are MUCH faster if the DB is on the same machine as the server
-		self.conn = psycopg2.connect(dbname=settings.DATABASE_DB_NAME, user=settings.DATABASE_USER,password=settings.DATABASE_PASS)
-
-		# self.conn = psycopg2.connect(host=settings.PSQL_IP, dbname=settings.DATABASE_DB_NAME, user=settings.DATABASE_USER,password=settings.DATABASE_PASS)
-		# self.conn.autocommit = True
-		sm.checkStatusTableExists()
-
-	def closeDB(self):
-		self.log.info("Closing DB...",)
-		try:
-			self.conn.close()
-		except:
-			self.log.error("wat")
-			self.log.error(traceback.format_exc())
-		self.log.info("done")
 
 
 
@@ -164,7 +140,7 @@ class PageResource(object):
 				pgTemplate = self.lookupEngine.get_template(relPath)
 
 				self.log.info("Request for mako page %s", reqPath)
-				pageContent = pgTemplate.render_unicode(request=request, sqlCon=self.conn)
+				pageContent = pgTemplate.render_unicode(request=request)
 				self.log.info("Mako page Rendered %s", reqPath)
 
 				return Response(body=pageContent)
@@ -173,7 +149,7 @@ class PageResource(object):
 				pgTemplate = self.lookupEngine.get_template(relPath)
 
 				self.log.info("Request for mako css file %s", reqPath)
-				pageContent = pgTemplate.render_unicode(request=request, sqlCon=self.conn)
+				pageContent = pgTemplate.render_unicode(request=request)
 				self.log.info("Mako page Rendered %s", reqPath)
 
 				return Response(body=pageContent, content_type='text/css')
@@ -183,13 +159,13 @@ class PageResource(object):
 		except mako.exceptions.TopLevelLookupException:
 			self.log.error("404 Request for page at url: %s", reqPath)
 			pgTemplate = self.lookupEngine.get_template("error.mako")
-			pageContent = pgTemplate.render_unicode(request=request, sqlCon=self.conn, tracebackStr=traceback.format_exc(), error_str="NO PAGE! 404")
+			pageContent = pgTemplate.render_unicode(request=request, tracebackStr=traceback.format_exc(), error_str="NO PAGE! 404")
 			return Response(body=pageContent)
 		except:
 			self.log.error("Page rendering error! url: %s", reqPath)
 			self.log.error(traceback.format_exc())
 			pgTemplate = self.lookupEngine.get_template("error.mako")
-			pageContent = pgTemplate.render_unicode(request=request, sqlCon=self.conn, tracebackStr=traceback.format_exc(), error_str="EXCEPTION! WAT?")
+			pageContent = pgTemplate.render_unicode(request=request, tracebackStr=traceback.format_exc(), error_str="EXCEPTION! WAT?")
 			return Response(body=pageContent)
 
 
@@ -257,7 +233,7 @@ class PageResource(object):
 		pgTemplate = self.lookupEngine.get_template('reader2/render.mako')
 
 		self.log.info("Request for mako page %s", 'reader2/render.mako')
-		pageContent = pgTemplate.render_unicode(request=request, sqlCon=self.conn, sessionArchTool=session)
+		pageContent = pgTemplate.render_unicode(request=request, sessionArchTool=session)
 		self.log.info("Mako page Rendered %s", 'reader2/render.mako')
 		return Response(body=pageContent)
 
@@ -278,7 +254,7 @@ class PageResource(object):
 		pgTemplate = self.lookupEngine.get_template('reader2/renderPron.mako')
 
 		self.log.info("Request for mako page %s", 'reader2/renderPron.mako')
-		pageContent = pgTemplate.render_unicode(request=request, sqlCon=self.conn, sessionArchTool=session)
+		pageContent = pgTemplate.render_unicode(request=request, sessionArchTool=session)
 		self.log.info("Mako page Rendered %s", 'reader2/renderPron.mako')
 		return Response(body=pageContent)
 
@@ -324,16 +300,9 @@ def buildApp():
 	config.set_authentication_policy(authn_policy)
 	config.set_authorization_policy(authz_policy)
 
-	# config.add_route(name='login',                   pattern='/login')
-	# config.add_route(name='do_login',                pattern='/login-check')
-	# config.add_route(name='auth',                    pattern='/login')
-
-
 	config.add_route(name='reader-redux-container', pattern='/reader2/browse/*page')
 	config.add_route(name='reader-redux-content',   pattern='/reader2/file/{sequenceid}')
 
-	config.add_route(name='porn-get-arch',          pattern='/pron/read/{mId}')
-	config.add_route(name='porn-get-images',        pattern='/pron/image/{sequenceid}')
 
 	config.add_route(name='api',                    pattern='/api')
 	config.add_route(name='static-file',            pattern='/js')
@@ -342,10 +311,8 @@ def buildApp():
 	config.add_route(name='leaf',                   pattern='/*page')
 
 	config.add_view(resource.readerTwoPages,         http_cache=0, route_name='reader-redux-container')
-	config.add_view(resource.readerTwoPorn,          http_cache=0, route_name='porn-get-arch')
-
 	config.add_view(resource.readerTwoContent,       http_cache=0, route_name='reader-redux-content')
-	config.add_view(resource.readerTwoContent,      http_cache=0, route_name='porn-get-images')
+
 
 	config.add_view(resource.getPage,                              route_name='static-file')
 	config.add_view(resource.getPage,                http_cache=0, route_name='root')

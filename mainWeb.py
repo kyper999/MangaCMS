@@ -4,8 +4,6 @@ if sys.version_info < ( 3, 4):
 	# python too old, kill the script
 	sys.exit("This script requires Python 3.4 or newer!")
 
-import schemaUpdater.schemaRevisioner
-schemaUpdater.schemaRevisioner.verifySchemaUpToDate()
 
 
 import logSetup

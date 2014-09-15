@@ -1,5 +1,5 @@
 
-<%namespace name="ap"              file="activePlugins.mako"/>
+
 
 * {
 	font-family: Tahoma, Geneva, sans-serif;
@@ -112,35 +112,12 @@ div.legend
 	padding-left:   5px;
 }
 
-/* Generate CSS Classes for sidebar */
-% for itemDict in ap.attr.sidebarItemList:
-
-	div.${itemDict['cssClass']}
-	{
-		background-color:${itemDict['baseColour']};
-	}
-
-% endfor
 
 div.navId
 {
 	background-color:#EEEEEE;
 }
 
-
-/* Generate row ID classes */
-% for item in [item for item in ap.attr.sidebarItemList if item['genRow']]:
-
-	tr.${item["dictKey"]}_row:nth-child(even)
-	{
-		background: ${item["evenRow"]}
-	}
-	tr.${item["dictKey"]}_row:nth-child(odd)
-	{
-		background: ${item["oddRow"]}
-	}
-
-% endfor
 
 tr:nth-child(even)
 {

@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <%startTime = time.time()%>
 
-<%namespace name="tableGenerators" file="/gentable.mako"/>
+
 <%namespace name="sideBar"         file="/gensidebar.mako"/>
 <%namespace name="ut"              file="/utilities.mako"/>
 
@@ -52,7 +52,7 @@ def dequoteDict(inDict):
 
 
 			<div>
-				${sideBar.getSideBar(sqlCon)}
+				${sideBar.getSideBar()}
 				<div class="maindiv">
 
 </%def>
@@ -95,7 +95,7 @@ def dequoteDict(inDict):
 
 
 			<div>
-				${sideBar.getSideBar(sqlCon)}
+				${sideBar.getSideBar()}
 				<div class="maindiv">
 					${invalidKeyContent(title, message)}
 				</div>
@@ -148,7 +148,7 @@ def dequoteDict(inDict):
 
 
 			<div>
-				${sideBar.getSideBar(sqlCon)}
+				${sideBar.getSideBar()}
 				<div class="maindiv">
 					<div class="contentdiv subdiv uncoloured">
 						<h3>Reader!</h3>

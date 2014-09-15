@@ -25,7 +25,7 @@ import re
 
 <%namespace name="ut"              file="/utilities.mako"/>
 <%namespace name="sideBar"         file="/gensidebar.mako"/>
-<%namespace name="tableGen"        file="/gentable.mako"/>
+
 <%namespace name="reader"          file="/reader2/readBase.mako"/>
 
 
@@ -164,6 +164,7 @@ import re
 			reader.generateInfoSidebar(nt.dirNameProxy[navPath[-1]])
 
 		%>
+		 <div style="clear:both"></div>
 	</div>
 	<%
 	reader.readerBrowseFooter()
@@ -228,8 +229,8 @@ import re
 			%>
 		</div>
 		<div>
-			${tableGen.genMangaTable(seriesName=itemKey, limit=None)}
-			${tableGen.genLegendTable()}
+
+
 			<script type="text/javascript">
 				$(document).ready(function() {
 				// Tooltip only Text
@@ -253,6 +254,7 @@ import re
 				});
 				});
 			</script>
+		 <div style="clear:both"></div>
 		</div>
 	</div>
 	<%

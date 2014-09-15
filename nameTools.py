@@ -6,7 +6,6 @@ import runStatus
 import copy
 import settings
 import logging
-import psycopg2
 import time
 import logSetup
 import threading
@@ -178,9 +177,6 @@ def getCleanedName(inStr):
 
 
 
-
-
-
 def isProbablyImage(fileName):
 	imageExtensions = [".jpeg", ".jpg", ".gif", ".png", ".apng", ".svg", ".bmp"]
 	fileName = fileName.lower()
@@ -196,260 +192,6 @@ def isProbablyImage(fileName):
 
 
 # ------------------------------------------------------
-
-
-# Caching proxy that makes a DB look like a dict, and at the same time rate-limits the DB update queries, for when look-ups are done in a iterative loop
-# Opens a dynamically specifiable database, though the database must be one of a predefined set.
-class MapWrapper(object):
-
-	# Make it a borg class (all instances share state)
-	_shared_state = {}
-
-	log = logging.getLogger("Main.NSLookup")
-
-	dbPath = settings.dbName
-
-	validTables = {
-		"mangaNameMappings"  : ["manganamemappings",
-								'''(mangaUpdates text NOT NULL,
-									mangaTraders text NOT NULL,
-									PRIMARY KEY(mangaTraders) ON CONFLICT REPLACE)''',
-								 ("mangaUpdates", "mangaTraders")],
-		"folderNameMappings" : ["foldernamemappings",
-								'''(baseName text NOT NULL,
-									folderName text NOT NULL,
-									PRIMARY KEY(baseName, folderName) ON CONFLICT REPLACE)''',
-								("baseName", "folderName")]
-
-	}
-
-	def __init__(self, tableName):
-		self.__dict__ = self._shared_state
-
-		self.updateLock = threading.Lock()
-
-		if not tableName in self.validTables:
-			raise ValueError("Invalid table name specified!")
-
-		self.log.info("Loading NSLookup")
-		self.tableName = self.validTables[tableName][0]
-		self.tableSchema = self.validTables[tableName][1]
-		self.tableCols = self.validTables[tableName][2]
-		self.openDB()
-
-		self.lastUpdate = 0
-		self.lutItems = {}
-		self.updateFromDB()
-
-	def stop(self):
-		self.log.info("Unoading NSLookup")
-		self.closeDB()
-
-	def openDB(self):
-		self.log.info( "NSLookup Opening DB...",)
-		self.conn = psycopg2.connect(host=settings.PSQL_IP, dbname=settings.DATABASE_DB_NAME, user=settings.DATABASE_USER,password=settings.DATABASE_PASS)
-		# self.conn.autocommit = True
-		self.log.info("opened")
-
-		with self.conn.cursor() as cur:
-			cur.execute('''SELECT tablename FROM pg_catalog.pg_tables WHERE tablename='%s';''' % self.tableName)
-			rets = cur.fetchall()
-
-		self.conn.commit()
-
-		if rets:
-			rets = rets[0]
-		if not self.tableName in rets:   # If the DB doesn't exist, set it up.
-			self.log.info("DB Not setup for %s. Creating table", self.tableName)
-			# cur = self.conn.cursor()
-			# cur.execute('''CREATE TABLE %s %s''' % (self.tableName, self.tableSchema))
-			# cur.commit()
-			raise ValueError("%s Database does not exist. Name mapper cannot work." % self.tableName)
-
-		self.log.info("PRAGMA return value = %s", rets)
-
-	def closeDB(self):
-		self.log.info( "Closing DB...")
-		self.conn.close()
-		self.log.info( "done")
-
-	def updateFromDB(self, force=False):
-		# Only query the database at most once per 5 seconds.
-		if time.time() > self.lastUpdate + 5 or force:
-			self.updateLock.acquire()
-			self.log.info("NSLookupTool updating from DB. Update forced: %s", force)
-
-			with self.conn.cursor() as cur:
-				cur.execute('SELECT %s, %s FROM %s;' % (self.tableCols[0], self.tableCols[1], self.tableName))
-				rets = cur.fetchall()
-
-
-			self.conn.commit()
-
-			temp = {}
-
-			for muName, mtName in rets:
-				temp[muName] = mtName
-
-			self.items = temp
-			self.lastUpdate = time.time()
-
-
-			self.updateLock.release()
-
-	def iteritems(self):
-		self.updateFromDB()
-
-		keys = list(self.items.keys())  # I want the items sorted by name, so we have to sort the list of keys, and then iterate over that.
-		keys.sort()
-
-		for key in keys:
-			yield key, self.items[key]
-
-
-	def __getitem__(self, key):
-		self.updateFromDB()
-		return self.items[key]
-
-	def __contains__(self, key):
-		self.updateFromDB()
-		return key in self.items
-
-
-
-# proxy that makes a DB look like a dict
-# Opens a dynamically specifiable database, though the database must be one of a predefined set.
-class MtNamesMapWrapper(object):
-
-
-	log = logging.getLogger("Main.NSLookup")
-
-	dbPath = settings.dbName
-
-	modes = {
-		"buId->fsName" : {"cols" : ["buId", "fsSafeName"], "table" : 'munamelist'},
-		"buId->name"   : {"cols" : ["buId", "name"],       "table" : 'munamelist'},
-		"fsName->buId" : {"cols" : ["fsSafeName", "buId"], "table" : 'munamelist'},
-		"buId->buName" : {"cols" : ["buId", "buName"],     "table" : 'mangaseries'},
-		"buName->buId" : {"cols" : ["buName", "buId"],     "table" : 'mangaseries'}
-	}
-
-	loaded = False
-	# special class members that are picked up by the maintenance service, and used to trigger periodic updates from the DB
-	# TL;DR magical runtime-introspection bullshit. Basically, if there is an
-	# object defined in this file's namespace, with the `NEEDS_REFRESHING` attribute, the houskeeping task
-	# will call {object}.refresh() every REFRESH_INTERVAL seconds.
-	NEEDS_REFRESHING = True
-	REFRESH_INTERVAL = 60*2.5
-
-	def __init__(self, mode):
-
-
-		self.updateLock = threading.Lock()
-
-
-		self.log.info("Loading NSLookup")
-
-		if not mode in self.modes:
-			raise ValueError("Specified mapping mode not valid")
-		self.modeKey = mode
-		self.mode = self.modes[mode]
-		self.openDB()
-
-		self.lastUpdate = 0
-		self.items = {}
-
-		self.queryStr = 'SELECT %s FROM %s WHERE %s=%%s;' % (self.mode["cols"][1], self.mode["table"], self.mode["cols"][0])
-		self.allQueryStr = 'SELECT %s, %s FROM %s;' % (self.mode["cols"][0], self.mode["cols"][1], self.mode["table"])
-		self.log.info("Mode %s, Query %s", mode, self.queryStr)
-		self.log.info("Mode %s, IteratorQuery %s",  mode, self.allQueryStr)
-
-		if runStatus.preloadDicts:
-			self.loaded = True
-			self.refresh()
-
-	def stop(self):
-		self.log.info("Unoading NSLookup")
-		self.closeDB()
-
-	def refresh(self):
-		self.log.info("Refresh call! for %s mapping cache.", self.modeKey)
-		tmp = {}
-		for key, buId in self.iteritems():
-			key = key.lower()
-
-			if not key in tmp:
-				tmp[key] = set([buId])
-			else:
-				tmp[key].add(buId)
-		self.log.info("Loaded")
-		self.lutItems = tmp
-
-	def openDB(self):
-		self.log.info( "NSLookup Opening DB...",)
-
-		try:
-			self.conn = psycopg2.connect(dbname=settings.DATABASE_DB_NAME, user=settings.DATABASE_USER,password=settings.DATABASE_PASS)
-		except psycopg2.OperationalError:
-			self.conn = psycopg2.connect(host=settings.DATABASE_IP, dbname=settings.DATABASE_DB_NAME, user=settings.DATABASE_USER,password=settings.DATABASE_PASS)
-
-		# self.conn.autocommit = True
-		self.log.info("opened")
-
-		with self.conn.cursor() as cur:
-			cur.execute('''SELECT tablename FROM pg_catalog.pg_tables WHERE tablename='%s';''' % self.mode["table"])
-			rets = cur.fetchall()
-
-		self.conn.commit()
-		if rets:
-			rets = rets[0]
-		if not self.mode["table"] in rets:   # If the DB doesn't exist, set it up.
-			self.log.info("DB Not setup for %s.", self.mode["table"])
-			raise ValueError
-
-	def closeDB(self):
-		self.log.info( "Closing DB...")
-		self.conn.close()
-		self.log.info( "done")
-
-	def iteritems(self):
-
-
-		with self.conn.cursor() as cur:
-			cur.execute(self.allQueryStr)
-			rets = cur.fetchall()
-
-		self.conn.commit()
-
-		for fsSafeName, buId in rets:
-			yield fsSafeName, buId
-
-
-	def __getitem__(self, key):
-		if not self.loaded:
-			self.loaded = True
-			self.refresh()
-
-		# if we have a key filtering function, run the key through it
-		if "keyfunc" in self.mode:
-			key = self.mode["keyfunc"](key)
-
-		# db is all CITEXT, so we emulate that by calling lower on ALL THE THINGS
-		key = key.lower()
-
-		if not key in self.lutItems:
-			return []
-
-		# Have to do list comprehension so we don't return the item by reference,
-		# which can lead to it getting clobbered.
-		return [item for item in self.lutItems[key]]
-
-	def __contains__(self, key):
-
-		if key in self.lutItems[key]:
-			return True
-		return False
-
 
 
 
@@ -871,16 +613,6 @@ class DirNameProxy(object):
 ## If we have the series name in the synonym database, look it up there, and use the ID
 ## to fetch the proper name from the MangaUpdates database
 def getCanonicalMangaUpdatesName(sourceSeriesName):
-
-	fsName = prepFilenameForMatching(sourceSeriesName)
-	if not fsName:
-		return sourceSeriesName
-
-	mId = buIdLookup[fsName]
-	if mId and len(mId) == 1:
-		correctSeriesName = idLookup[mId.pop()]
-		if correctSeriesName and len(correctSeriesName) == 1:
-			return correctSeriesName.pop()
 	return sourceSeriesName
 
 
@@ -888,11 +620,6 @@ def getCanonicalMangaUpdatesName(sourceSeriesName):
 ## If we have the series name in the synonym database, look it up there, and use the ID
 ## to fetch the proper name from the MangaUpdates database
 def getMangaUpdatesId(sourceSeriesName):
-
-	fsName = prepFilenameForMatching(sourceSeriesName)
-	mId = buIdLookup[fsName]
-	if mId and len(mId) == 1:
-		return mId.pop()
 	return False
 
 
@@ -900,80 +627,9 @@ def getMangaUpdatesId(sourceSeriesName):
 ## If we have the series name in the synonym database, look it up there, and use the ID
 ## to fetch the proper name from the MangaUpdates database
 def haveCanonicalMangaUpdatesName(sourceSeriesName):
-
-	fsName = prepFilenameForMatching(sourceSeriesName)
-	print("Item", sourceSeriesName, fsName)
-	mId = buIdLookup[fsName]
-
-	print("Lookup result", mId)
-	if mId and len(mId) == 1:
-		return True
-	# mId = buIdFromName[sourceSeriesName]
-	# if mId and len(mId) == 1:
-	# 	return True
 	return False
 
-
-buIdLookup       = MtNamesMapWrapper("fsName->buId")
-buSynonymsLookup = MtNamesMapWrapper("buId->name")
-idLookup         = MtNamesMapWrapper("buId->buName")
-buIdFromName     = MtNamesMapWrapper("buName->buId")
-
-nameLookup       = MapWrapper("mangaNameMappings")
-dirsLookup       = MapWrapper("folderNameMappings")
 dirNameProxy     = DirNameProxy(settings.mangaFolders)
 
-
-
-
-def testNameTools():
-	import unittest
-
-
-	class TestSequenceFunctions(unittest.TestCase):
-
-		def setUp(self):
-			dirNameProxy.startDirObservers()
-
-		def test_name_001(self):
-			self.assertTrue("Danshi Koukousei no Nichijou" in dirNameProxy)
-
-
-
-
-	unittest.main()
-
-
-
-
-if __name__ == "__main__":
-	logSetup.initLogging()
-	print("wat")
-	# dirNameProxy.checkUpdate(force=True)
-	# dirNameProxy.checkUpdate()
-	# print("running")
-
-
-	# names = set(["fractale", "fractale", "fractale", "fractale", "fractale", "kaze to ki no uta", "boku ni koi suru mechanical", "kaze to ki no uta", "boku ni koi suru mechanical", "magi", "k - days of blue", "k - days of blue", "gurenki - creo the crimson crises", "gurenki - creo the crimson crises", "soredemo sekai wa utsukushii", "gurenki - creo the crimson crises", "fuuka", "claymore", "himeyaka na tousaku", "himeyaka na tousaku", "himeyaka na tousaku", "kyoushi mo iroiro aru wake de", "ah my goddess", "akb49", "koroshiya ichi bangaihen", "koroshiya ichi bangaihen", "koi no okite"])
-	# print (names)
-	# for keyTmp, stats in dirNameProxy.iteritems():
-	# 	if keyTmp in names:
-	# 		print("Item in dict? ", keyTmp)
-
-	# for nameTmp in names:
-	# 	if nameTmp in dirNameProxy:
-	# 		print("Have name", nameTmp)
-	# 	else:
-	# 		print("Do not have name", nameTmp)
-
-
-	# try:
-	# 	while True:
-	# 		time.sleep(1)
-	# 		dirNameProxy.checkUpdate()
-	# except KeyboardInterrupt:
-	# 	pass
-	# print("Complete?")
-		# print item
 
 
