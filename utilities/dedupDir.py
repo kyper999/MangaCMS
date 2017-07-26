@@ -343,7 +343,8 @@ class DirDeduper(DbBase.DbBase):
 			if not bad_tag in taglist:
 				continue
 
-			self.log.info("Stripping tag from %s", fpath)
+			self.log.info("Stripping tag %s from %s", bad_tag, fpath)
+			self.log.info("Item tags: %s", taglist)
 			self.removeTag(dbid, bad_tag)
 		self.log.info("Scanned %s rows", len(ret))
 

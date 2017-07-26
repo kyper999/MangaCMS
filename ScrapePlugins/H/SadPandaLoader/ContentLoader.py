@@ -219,7 +219,8 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase, LoginMixin.ExLogi
 					#Write all downloaded files to the archive.
 					with open(wholePath, "wb") as fp:
 						fp.write(fCont)
-					self.log.info("Successfully Saved to path: %s", wholePath)
+					fileN = os.path.split(wholePath)[-1]
+					self.log.info("Succesfully Saved to path: %s", wholePath)
 					break
 				except IOError:
 					chop = chop - 1
