@@ -97,8 +97,7 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 		cells = row.find_all("td")
 
 		if len(cells) != 5:
-			# self.log.error("Invalid number of TD items in row!")
-
+			self.log.error("Invalid number of TD items in row!")
 			return None
 
 		chapter, lang, dummy_scanlator, dummy_uploader, uploadDate = cells
@@ -106,6 +105,7 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 
 		# Skip uploads in other languages
 		if DOWNLOAD_ONLY_LANGUAGE and not DOWNLOAD_ONLY_LANGUAGE in str(lang):
+			self.log.info("Skipping due to language filter")
 			return None
 
 
@@ -118,7 +118,8 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 		item["retreivalTime"] = calendar.timegm(addDate.timetuple())
 		item["sourceUrl"] = chapter.a["href"]
 
-		if not "http://bato.to/reader#" in item["sourceUrl"]:
+		if not "/reader#" in item["sourceUrl"]:
+			self.log.error("No batoto reader link in url?")
 			return False
 
 		return item
@@ -189,7 +190,9 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 
 		cells = row.find_all("td")
 		if len(cells) == 2:
-			return cells.pop(0).a['href']
+			surl = cells.pop(0).a['href']
+			print("Series url:", surl)
+			return surl
 
 		return None
 
@@ -234,9 +237,11 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 					break
 
 
-
 		ret = self.getItemsFromSeriesUrls(seriesPages, historical)
 		return ret
+
+	def setup(self):
+		checkLogin(self.wg)
 
 
 
@@ -245,8 +250,15 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 if __name__ == "__main__":
 	import utilities.testBase as tb
 
-	with tb.testSetup():
+	with tb.testSetup(load=False):
 
-		run = FeedLoader()
-		run.go()
+		run = DbLoader()
+		run.do_fetch_feeds(historical=True, rangeOverride=30)
+
+		# run.setup()
+		# seriesUrl = 'https://bato.to/comic/_/comics/chousuinou-kei-makafushigi-jiken-file-r9039'
+		# historical = False
+
+		# run.fetchItemsForSeries(seriesUrl, historical)
+		# run.do_fetch_feeds()
 		# run.getMainItems()

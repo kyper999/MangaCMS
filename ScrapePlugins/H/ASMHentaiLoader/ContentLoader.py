@@ -34,7 +34,7 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
 	tableName = "HentaiItems"
 
-	retreivalThreads = 3
+	retreivalThreads = 6
 
 	itemLimit = 220
 

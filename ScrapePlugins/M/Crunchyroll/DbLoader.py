@@ -171,6 +171,9 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	def parseItem(self, pageUrl):
 
 		page = self.wg.getpage(pageUrl)
+		if not page:
+			return []
+
 		info = self.getInfo(page)
 
 		ctntUrl = self.extractUrl(page)

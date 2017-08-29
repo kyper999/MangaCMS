@@ -25,9 +25,6 @@ import processDownload
 
 class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
-
-
-
 	loggerPath = "Main.Manga.Bt.Cl"
 	pluginName = "Batoto Content Retreiver"
 	tableKey = "bt"
@@ -130,13 +127,14 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		seriesName = "Unknown - ERROR"
 		chapterVol = "Unknown - ERROR"
+		group      = "Unknown - ERROR"
 
 		images = []
 		for pgnum in range(1, 9999999):
-			ajaxurl = "http://bato.to/areader?id={id}&p={pgnum}&supress_webtoon=t".format(id=gid, pgnum=pgnum)
+			ajaxurl = "https://bato.to/areader?id={id}&p={pgnum}&supress_webtoon=t".format(id=gid, pgnum=pgnum)
 			extra_headers = {
 				"X-Requested-With" : "XMLHttpRequest",
-				"Referer"          : "http://bato.to/reader",
+				"Referer"          : "https://bato.to/reader",
 			}
 			subpage = self.wg.getSoup(ajaxurl, addlHeaders=extra_headers)
 			imgtag = subpage.find("img", id='comic_page')
@@ -147,11 +145,17 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 			seriesName, chapterVol = self.extractFilename(imgtag['alt'])
 			images.append(imgtag['src'])
 
+			group_container = subpage.find("select", id='group_select')
+			if group_container and group_container.find("selected"):
+				group = group_container.find_all("selected").get_text(strip=True)
+				group = group.replace(' - English', "")
+
+
 			pages = subpage.find("select", id='page_select')
 			if pgnum + 1 > len(pages.find_all("option")):
 				break
 
-		return seriesName, chapterVol, images
+		return seriesName, chapterVol, group, images
 
 
 	def getLink(self, link):
@@ -162,7 +166,7 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 			self.log.info( "Should retreive url - %s", sourceUrl)
 			self.updateDbEntry(sourceUrl, dlState=1)
 
-			seriesName, chapterVol, imageUrls = self.getContainerPages(sourceUrl)
+			seriesName, chapterVol, groupName, imageUrls = self.getContainerPages(sourceUrl)
 			if not seriesName and not chapterVol and not imageUrls:
 				self.log.critical("Failure on retreiving content at %s", sourceUrl)
 				self.log.critical("Page not found - 404")
@@ -181,7 +185,7 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 			chapterNameRaw = " - ".join((seriesName, chapterVol))
 			chapterName = nt.makeFilenameSafe(chapterNameRaw)
 
-			fqFName = os.path.join(dlPath, chapterName+" [batoto].zip")
+			fqFName = os.path.join(dlPath, chapterName+" [batoto - {}].zip".format(nt.makeFilenameSafe(groupName)))
 
 			loop = 1
 			while os.path.exists(fqFName):
@@ -193,7 +197,7 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 			images = []
 			for imgUrl in imageUrls:
 				self.log.info("Fetching content for item: %s", imgUrl)
-				imageName, imageContent = self.getImage(imgUrl, "http://bato.to/reader")
+				imageName, imageContent = self.getImage(imgUrl, "https://bato.to/reader")
 
 				images.append([imageName, imageContent])
 
@@ -236,8 +240,8 @@ if __name__ == "__main__":
 
 	with tb.testSetup():
 
-		run = BtContentLoader()
-		run.go()
+		run = ContentLoader()
+		run.do_fetch_content()
 		# got = run.getContainerPages("http://bato.to/reader#be32cd58490fe40a")
 		# print(got)
 		# run.getMainItems()

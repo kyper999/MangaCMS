@@ -1,6 +1,7 @@
 # import sys
 # sys.path.insert(0,"..")
 import os.path
+import sys
 
 import logSetup
 if __name__ == "__main__":
@@ -472,6 +473,36 @@ class PathCleaner(DbBase.DbBase):
 		print("need to fix", bad, "of", len(rows))
 
 
+	def btUrlFix(self):
+		'''
+		Fix batoto URLs from http -> https switch.
+		'''
+		print("Fixing Batoto URLs.")
+
+		with self.transaction() as cur:
+			print("Querying")
+			cur.execute("""SELECT dbId, sourceurl FROM {tableName} WHERE sourcesite = %s AND sourceurl LIKE %s""".format(tableName=self.tableName), ('bt', "http://%"))
+			items = cur.fetchall()
+			print("Updating %s items" % len(items))
+			updated = 0
+			for dbid, srcurl in items:
+				srcurl_fixed = srcurl.replace("http://", "https://")
+				# print("{} -> {}".format(srcurl, srcurl_fixed))
+				cur.execute("""UPDATE {tableName} SET sourceurl = %s WHERE dbid=%s""".format(tableName=self.tableName), (srcurl_fixed, dbid))
+				updated += 1
+
+				sys.stdout.write('|')
+				sys.stdout.flush()
+
+				if updated % 1000 == 0:
+					print("Updating - %s" % updated)
+					cur.execute("commit;")
+					print("Committed")
+
+
+			cur.execute("commit;")
+			print(len(items))
+			print(items[:5])
 
 class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 	loggerPath = "Main.Pc"
@@ -560,7 +591,9 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 					print(dbId, tags, set(tags.split(" ")))
 			print(len(items))
 
-	# STFU, abstract base class
+
+
+	# # STFU, abstract base class
 	def go(self):
 		pass
 
