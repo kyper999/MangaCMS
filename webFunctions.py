@@ -392,7 +392,16 @@ class WebGetRobust:
 	# if test=true, no resources are actually fetched (for testing)
 	# creds is a list of 3-tuples that gets inserted into the password manager.
 	# it is structured [(top_level_url1, username1, password1), (top_level_url2, username2, password2)]
-	def __init__(self, test=False, creds=None, logPath="Main.Web", cookie_lock=None, cloudflare=False, use_socks=False, alt_cookiejar=None):
+	def __init__(self,
+			test          = False,
+			creds         = None,
+			logPath       = "Main.Web",
+			cookie_lock   = None,
+			cloudflare    = False,
+			use_socks     = False,
+			alt_cookiejar = None,
+			uaOverride    = None,
+			):
 
 		self.rules = {}
 		self.rules['cloudflare'] = cloudflare
@@ -420,7 +429,10 @@ class WebGetRobust:
 
 		# Due to general internet people douchebaggyness, I've basically said to hell with it and decided to spoof a whole assortment of browsers
 		# It should keep people from blocking this scraper *too* easily
-		self.browserHeaders = getUserAgent()
+		if uaOverride:
+			self.browserHeaders = uaOverride
+		else:
+			self.browserHeaders = getUserAgent()
 
 		self.testMode = test		# if we don't want to actually contact the remote server, you pass a string containing
 									# pagecontent for testing purposes as test. It will get returned for any calls of getpage()

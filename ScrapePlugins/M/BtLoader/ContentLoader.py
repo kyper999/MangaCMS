@@ -145,11 +145,11 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 			seriesName, chapterVol = self.extractFilename(imgtag['alt'])
 			images.append(imgtag['src'])
 
-			group_container = subpage.find("select", id='group_select')
-			if group_container and group_container.find("selected"):
-				group = group_container.find_all("selected").get_text(strip=True)
+			group_container = subpage.find("select", {'name' : 'group_select'})
+			if group_container and group_container.find(True, {"selected" : "selected"}):
+				group = group_container.find(True, {"selected" : "selected"}).get_text(strip=True)
 				group = group.replace(' - English', "")
-
+				group = nt.makeFilenameSafe(group)
 
 			pages = subpage.find("select", id='page_select')
 			if pgnum + 1 > len(pages.find_all("option")):
@@ -238,11 +238,11 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 if __name__ == "__main__":
 	import utilities.testBase as tb
 
-	with tb.testSetup():
+	with tb.testSetup(load=False):
 
 		run = ContentLoader()
-		run.do_fetch_content()
-		# got = run.getContainerPages("http://bato.to/reader#be32cd58490fe40a")
+		# run.do_fetch_content()
+		got = run.getContainerPages("https://bato.to/reader#1ed17397f42a174a")
 		# print(got)
 		# run.getMainItems()
 		# run.checkLogin()

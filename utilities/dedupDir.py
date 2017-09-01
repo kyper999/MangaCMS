@@ -294,7 +294,10 @@ class DirDeduper(DbBase.DbBase):
 
 			if not os.path.exists(fpath):
 				self.log.warning("File for item seems to be missing!")
-				self.addTag(fpath, 'missing-file')
+				try:
+					self.addTag(fpath, 'missing-file')
+				except UntaggableError:
+					pass
 				continue
 
 			if not os.path.isfile(fpath):
