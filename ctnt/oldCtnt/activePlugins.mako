@@ -394,6 +394,17 @@ sidebarItemList = [
 			'genRow'        : True,
 			'type'          : 'Manga'
 		},
+		{
+			"num"           : 33,
+			'dbKey'         : "meraki",
+			'name'          : "Meraki",
+			'dictKey'       : "meraki",
+			'cssClass'      : "meraki",
+			'showOnHome'    : True,
+			'renderSideBar' : True,
+			'genRow'        : True,
+			'type'          : 'Manga'
+		},
 
 		{
 			"num"           : 30,
