@@ -1,5 +1,6 @@
 # import sys
 # sys.path.insert(0,"..")
+import os
 import os.path
 import sys
 
@@ -590,6 +591,82 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 					cur.execute("UPDATE {tableName} SET tags=%s WHERE dbid=%s".format(tableName=self.tableName), (fTags, dbId))
 					print(dbId, tags, set(tags.split(" ")))
 			print(len(items))
+
+	def __delete(self, cur, dbid):
+
+		cur.execute("""
+			SELECT
+				dbId, sourceSite, dlState, sourceUrl, retreivalTime, lastUpdate, sourceId, seriesName, fileName, originName, downloadPath, flags, tags, note
+			FROM
+				{tableName}
+			WHERE dbid = %s""".format(tableName=self.tableName), (dbid, ))
+		have = cur.fetchone()
+		if not have:
+			return
+
+		dbId, sourceSite, dlState, sourceUrl, retreivalTime, lastUpdate, sourceId, seriesName, fileName, originName, downloadPath, flags, tags, note = have
+
+
+		cur.execute("""
+			SELECT
+				dbId
+			FROM
+				{tableName}
+			WHERE
+				downloadPath = %s
+			AND
+				fileName = %s
+
+				""".format(tableName=self.tableName), (downloadPath, fileName))
+
+		ids = cur.fetchall()
+
+		fqpath = os.path.join(downloadPath, fileName)
+
+		if 'ASMHentai' not in downloadPath:
+			return
+
+		if ids == [(dbId, )] and dbId == dbid:
+			print("row", os.path.exists(fqpath), downloadPath, fileName)
+			print("Tags", tags)
+
+			os.remove(fqpath)
+
+			cur.execute("""DELETE FROM {tableName} WHERE dbid = %s""".format(tableName=self.tableName), (dbid, ))
+
+	def cleanJapaneseOnly(self):
+		'''
+		So I've accidentally been introducing duplicate tags into the h-tag database. Not totally sure where
+		(I added some protective {str}.lower() calls in a few places to see if it helps), but it's annoying.
+		Anyways, this extracts all the tags, consolidates and lower-cases them, and then reinserts the
+		fixed values.
+		'''
+		print("cleanJapaneseOnly")
+
+		bad_tags = [r'%language-japanese%', r'%language-日本語%']
+
+		wanted = [tmp.lower() for tmp in settings.tags_keep]
+
+		for bad in bad_tags:
+
+			with self.transaction() as cur:
+				print("Searching for tag %s" % bad)
+				cur.execute("""SELECT dbId, tags FROM {tableName} WHERE tags LIKE %s""".format(tableName=self.tableName), (bad, ))
+				items = cur.fetchall()
+				print("Processing %s results", len(items))
+
+				for dbId, tags in items:
+
+					lcSet = set(tags.lower().split(" "))
+
+					if any([tmp in lcSet for tmp in settings.deleted_indicators]):
+						continue
+
+					match = [tag for tag in lcSet if any([item in tag for item in wanted])]
+					if not match:
+						self.__delete(cur, dbId)
+
+				print(len(items))
 
 
 

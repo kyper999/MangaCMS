@@ -173,6 +173,9 @@ def printHelp():
 	print("	fix-h-tags-case")
 	print("		Fix issues where mixed-case H tags were being duplicated.")
 	print("	")
+	print("	clean-japanese-only")
+	print("		Clear out item in the H database that is not translated and has no tags we care about.")
+	print("	")
 
 	print("*********************************************************")
 	print("Remote deduper interface")
@@ -234,6 +237,9 @@ def parseOneArgCall(param):
 	elif param == "fix-h-tags-case":
 		cleaner = utilities.cleanDb.HCleaner('None')
 		cleaner.cleanTags()
+	elif param == "clean-japanese-only":
+		cleaner = utilities.cleanDb.HCleaner('None')
+		cleaner.cleanJapaneseOnly()
 	elif param == "rescan-failed-h":
 		utilities.dedupDir.reprocessHFailed()
 	elif param == "h-clean":

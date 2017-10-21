@@ -30,6 +30,7 @@ import ScrapePlugins.M.ZenonLoader.Run
 import ScrapePlugins.M.MangaBox.Run
 import ScrapePlugins.M.MangaHere.Run
 import ScrapePlugins.M.MangaStreamLoader.Run
+import ScrapePlugins.M.MerakiScans.Run
 import ScrapePlugins.M.YoMangaLoader.Run
 import ScrapePlugins.M.SurasPlace.Run
 import ScrapePlugins.M.GameOfScanlationLoader.Run
@@ -86,6 +87,7 @@ scrapePlugins = {
 	24  : (ScrapePlugins.M.MangaBox.Run,                        hours(12)),
 	25  : (ScrapePlugins.M.YoMangaLoader.Run,                   hours(12)),
 	26  : (ScrapePlugins.M.GameOfScanlationLoader.Run,          hours(12)),
+	27  : (ScrapePlugins.M.MerakiScans.Run,                     hours(12)),
 
 
 	41  : (ScrapePlugins.H.HBrowseLoader.Run,                   hours( 2)),
