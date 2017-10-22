@@ -592,7 +592,7 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 					print(dbId, tags, set(tags.split(" ")))
 			print(len(items))
 
-	def __delete(self, cur, dbid):
+	def __delete(self, cur, dbid, wanted):
 
 		cur.execute("""
 			SELECT
@@ -606,10 +606,16 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 		dbId, sourceSite, dlState, sourceUrl, retreivalTime, lastUpdate, sourceId, seriesName, fileName, originName, downloadPath, flags, tags, note = have
 
+		fqpath = os.path.join(downloadPath, fileName)
+
+		if not os.path.exists(fqpath):
+			print("Deleting row for missing item")
+			cur.execute("""DELETE FROM {tableName} WHERE dbid = %s""".format(tableName=self.tableName), (dbid, ))
+
 
 		cur.execute("""
 			SELECT
-				dbId
+				dbId, tags
 			FROM
 				{tableName}
 			WHERE
@@ -619,11 +625,17 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 				""".format(tableName=self.tableName), (downloadPath, fileName))
 
-		ids = cur.fetchall()
+		matches = cur.fetchall()
 
-		fqpath = os.path.join(downloadPath, fileName)
+		ids = [(tmp[0], ) for tmp in matches]
 
-		if 'ASMHentai' not in downloadPath:
+		tagagg = " ".join([tmp[1] for tmp in matches])
+		lcSet = set(tagagg.lower().split(" "))
+
+		keep_tags = [tag for tag in lcSet if any([item in tag for item in wanted])]
+
+
+		if "language-english" in tagagg:
 			return
 
 		if ids == [(dbId, )] and dbId == dbid:
@@ -633,6 +645,21 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 			os.remove(fqpath)
 
 			cur.execute("""DELETE FROM {tableName} WHERE dbid = %s""".format(tableName=self.tableName), (dbid, ))
+		elif not keep_tags:
+			print("Have multiple rows for item!")
+			print(keep_tags)
+			print(fqpath)
+			print(matches)
+
+			os.remove(fqpath)
+
+			for item_id in ids:
+				cur.execute("""DELETE FROM {tableName} WHERE dbid = %s""".format(tableName=self.tableName), (item_id, ))
+
+		else:
+			print("Keeeping")
+			print(keep_tags)
+			print(fqpath)
 
 	def cleanJapaneseOnly(self):
 		'''
@@ -643,9 +670,11 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 		'''
 		print("cleanJapaneseOnly")
 
-		bad_tags = [r'%language-japanese%', r'%language-日本語%']
+		bad_tags = [r'%language-japanese%', r'%language-日本語%', r'%language-chinese%',]
 
 		wanted = [tmp.lower() for tmp in settings.tags_keep]
+
+
 
 		for bad in bad_tags:
 
@@ -664,9 +693,96 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 					match = [tag for tag in lcSet if any([item in tag for item in wanted])]
 					if not match:
-						self.__delete(cur, dbId)
+						self.__delete(cur, dbId, wanted)
 
 				print(len(items))
+
+	def process_dupes(self, cur, downloadPath, fileName):
+
+		cur.execute("""
+			SELECT
+			    dbId,
+			    tags
+			FROM
+			    {tableName}
+			WHERE
+				downloadPath = %s
+			AND
+				fileName = %s
+			""".format(tableName=self.tableName),
+			(downloadPath, fileName))
+		items = cur.fetchall()
+		if len(items) < 2:
+			print("Missing sufficent database entries!")
+			print(downloadPath, fileName)
+			raise RuntimeError("How did this happen?")
+
+
+		minid = min([row[0] for row in items])
+		print("	Matching rows:")
+
+		crosslink_tag = 'crosslink-%s' % minid
+
+		print("Expected tag:", crosslink_tag)
+
+		for rowid, tags in items:
+
+			tagsl = tags.split(" ")
+			tagsl = [tmp for tmp in tagsl if tmp.strip()]
+			bad = [tmp for tmp in tagsl if "crosslink" in tmp]
+			if crosslink_tag in bad:
+				bad.remove(crosslink_tag)
+
+			if rowid == minid:
+				remove_tags = "deleted was-duplicate " + " ".join(bad)
+				add_tags    = crosslink_tag
+			else:
+				remove_tags = " ".join(bad)
+				add_tags    = crosslink_tag + " deleted was-duplicate"
+
+			print("Removing tags to %s -> %s" % (rowid, remove_tags))
+			print("Adding tags to %s -> %s" % (rowid, add_tags))
+			self.removeTags(dbId=rowid, limitByKey=False, tags=remove_tags, commit=False, cur=cur)
+			self.addTags(dbId=rowid, limitByKey=False, tags=add_tags, commit=False, cur=cur)
+			cur.execute("commit")
+
+
+
+
+	def aggregateCrossLinks(self):
+		'''
+		So I've accidentally been introducing duplicate tags into the h-tag database. Not totally sure where
+		(I added some protective {str}.lower() calls in a few places to see if it helps), but it's annoying.
+		Anyways, this extracts all the tags, consolidates and lower-cases them, and then reinserts the
+		fixed values.
+		'''
+		print("Aggregate CrossLinks")
+
+
+
+		with self.transaction() as cur:
+			print("Searching for cross-linked tags")
+			cur.execute("""
+				SELECT
+				    downloadPath,
+				    fileName,
+				    COUNT((downloadPath, fileName))
+				FROM
+				    {tableName}
+				GROUP BY
+				    (downloadPath, fileName)
+				HAVING
+				    COUNT((downloadPath, fileName)) > 1
+				""".format(tableName=self.tableName))
+			items = cur.fetchall()
+
+			for downloadPath, fileName, count in items:
+				if downloadPath is None:
+					print("Null path. Skipping")
+					continue
+				print("Processing %s -> %s with %s items" % (downloadPath, fileName, count))
+				self.process_dupes(cur, downloadPath, fileName)
+
 
 
 

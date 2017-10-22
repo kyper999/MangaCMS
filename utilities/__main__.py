@@ -176,6 +176,9 @@ def printHelp():
 	print("	clean-japanese-only")
 	print("		Clear out item in the H database that is not translated and has no tags we care about.")
 	print("	")
+	print("	aggregate-crosslinks")
+	print("		Aggregate cross-linked entries in the H database.")
+	print("	")
 
 	print("*********************************************************")
 	print("Remote deduper interface")
@@ -240,6 +243,9 @@ def parseOneArgCall(param):
 	elif param == "clean-japanese-only":
 		cleaner = utilities.cleanDb.HCleaner('None')
 		cleaner.cleanJapaneseOnly()
+	elif param == "aggregate-crosslinks":
+		cleaner = utilities.cleanDb.HCleaner('None')
+		cleaner.aggregateCrossLinks()
 	elif param == "rescan-failed-h":
 		utilities.dedupDir.reprocessHFailed()
 	elif param == "h-clean":

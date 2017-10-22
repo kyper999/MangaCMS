@@ -359,7 +359,7 @@ class MangaScraperDbBase(DbBase.DbBase):
 		return retL
 
 	# Insert new tags specified as a string kwarg (tags="tag Str") into the tags listing for the specified item
-	def addTags(self, **kwargs):
+	def addTags(self, cur=None, commit=True, **kwargs):
 		validCols = ["dbId", "sourceUrl", "dlState"]
 		if not any([name in kwargs for name in validCols]):
 			raise ValueError("addTags requires at least one fully-qualified argument (%s). Passed args = '%s'" % (validCols, kwargs))
@@ -369,7 +369,7 @@ class MangaScraperDbBase(DbBase.DbBase):
 
 		tags = kwargs.pop("tags")
 		# print("Getting row", kwargs)
-		row = self.getRowByValue(**kwargs)
+		row = self.getRowByValue(**kwargs, cur=cur)
 		if not row:
 			raise ValueError("Row specified does not exist!")
 
@@ -399,13 +399,13 @@ class MangaScraperDbBase(DbBase.DbBase):
 		while "  " in tagStr:
 			tagStr = tagStr.replace("  ", " ")
 		tagStr = tagStr.lower()
-		self.updateDbEntry(row["sourceUrl"], tags=tagStr)
+		self.updateDbEntry(row["sourceUrl"], tags=tagStr, commit=commit, cur=cur)
 
 
 
 
 	# Insert new tags specified as a string kwarg (tags="tag Str") into the tags listing for the specified item
-	def removeTags(self, **kwargs):
+	def removeTags(self, cur=None, commit=True, **kwargs):
 		validCols = ["dbId", "sourceUrl", "dlState"]
 		commit = kwargs.pop("commit", True)
 		if not any([name in kwargs for name in validCols]):
@@ -415,7 +415,7 @@ class MangaScraperDbBase(DbBase.DbBase):
 			raise ValueError("You have to specify tags you want to add as a kwarg! '%s'" % (kwargs))
 
 		tags = kwargs.pop("tags")
-		row = self.getRowByValue(**kwargs)
+		row = self.getRowByValue(**kwargs, cur=cur)
 		if not row:
 			raise ValueError("Row specified does not exist!")
 
@@ -432,7 +432,7 @@ class MangaScraperDbBase(DbBase.DbBase):
 		while "  " in tagStr:
 			tagStr = tagStr.replace("  ", " ")
 
-		self.updateDbEntry(row["sourceUrl"], tags=tagStr, commit=True)
+		self.updateDbEntry(row["sourceUrl"], tags=tagStr, commit=commit, cur=cur)
 
 
 
