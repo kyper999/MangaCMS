@@ -351,11 +351,13 @@ class MangaScraperDbBase(DbBase.DbBase):
 				rets = cur.fetchall()
 
 
+		# print("Response:", rets)
 		retL = []
 		for row in rets:
-
 			keys = ["dbId", "dlState", "sourceUrl", "retreivalTime", "lastUpdate", "sourceId", "seriesName", "fileName", "originName", "downloadPath", "flags", "tags", "note"]
-			retL.append(dict(zip(keys, row)))
+			row_dict = dict(zip(keys, row))
+			# print("Row dict:", row_dict)
+			retL.append(row_dict)
 		return retL
 
 	# Insert new tags specified as a string kwarg (tags="tag Str") into the tags listing for the specified item
@@ -378,6 +380,9 @@ class MangaScraperDbBase(DbBase.DbBase):
 		else:
 			existingTags = set()
 
+		# self.log.info("Row: %s", row)
+		self.log.info("Old tag string: '%s'", " ".join(existingTags))
+
 		newTags = set()
 		for tagTemp in set(tags.split(" ")):
 
@@ -399,6 +404,8 @@ class MangaScraperDbBase(DbBase.DbBase):
 		while "  " in tagStr:
 			tagStr = tagStr.replace("  ", " ")
 		tagStr = tagStr.lower()
+
+		self.log.info("New tag string: '%s'", tagStr)
 		self.updateDbEntry(row["sourceUrl"], tags=tagStr, commit=commit, cur=cur)
 
 
@@ -419,10 +426,13 @@ class MangaScraperDbBase(DbBase.DbBase):
 		if not row:
 			raise ValueError("Row specified does not exist!")
 
-		if not row["tags"]:
+		if row["tags"]:
 			existingTags = set(row["tags"].split(" "))
 		else:
 			existingTags = set()
+
+		# self.log.info("Row: %s", row)
+		self.log.info("Old tag string: '%s'", " ".join(existingTags))
 
 		newTags = set(tags.split(" "))
 
@@ -431,6 +441,8 @@ class MangaScraperDbBase(DbBase.DbBase):
 		tagStr = " ".join(tags)
 		while "  " in tagStr:
 			tagStr = tagStr.replace("  ", " ")
+
+		self.log.info("New tag string: '%s'", tagStr)
 
 		self.updateDbEntry(row["sourceUrl"], tags=tagStr, commit=commit, cur=cur)
 
@@ -443,7 +455,8 @@ class MangaScraperDbBase(DbBase.DbBase):
 		if not rows:
 			return []
 		else:
-			return rows.pop(0)
+			ret = rows.pop(0)
+			return ret
 
 
 

@@ -697,7 +697,7 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 				print(len(items))
 
-	def process_dupes(self, cur, downloadPath, fileName):
+	def __process_dupes(self, cur, downloadPath, fileName):
 
 		cur.execute("""
 			SELECT
@@ -719,11 +719,11 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 
 		minid = min([row[0] for row in items])
-		print("	Matching rows:")
+		self.log.info("	Matching rows:")
 
 		crosslink_tag = 'crosslink-%s' % minid
 
-		print("Expected tag:", crosslink_tag)
+		self.log.info("Expected tag: %s", crosslink_tag)
 
 		for rowid, tags in items:
 
@@ -740,8 +740,8 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 				remove_tags = " ".join(bad)
 				add_tags    = crosslink_tag + " deleted was-duplicate"
 
-			print("Removing tags to %s -> %s" % (rowid, remove_tags))
-			print("Adding tags to %s -> %s" % (rowid, add_tags))
+			self.log.info("Removing tags to %s -> %s" % (rowid, remove_tags))
+			self.log.info("Adding tags to %s -> %s" % (rowid, add_tags))
 			self.removeTags(dbId=rowid, limitByKey=False, tags=remove_tags, commit=False, cur=cur)
 			self.addTags(dbId=rowid, limitByKey=False, tags=add_tags, commit=False, cur=cur)
 			cur.execute("commit")
@@ -781,7 +781,7 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 					print("Null path. Skipping")
 					continue
 				print("Processing %s -> %s with %s items" % (downloadPath, fileName, count))
-				self.process_dupes(cur, downloadPath, fileName)
+				self.__process_dupes(cur, downloadPath, fileName)
 
 
 
