@@ -3,6 +3,7 @@
 import os
 import os.path
 import sys
+import gzip
 
 import logSetup
 if __name__ == "__main__":
@@ -702,6 +703,8 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 		cur.execute("""
 			SELECT
 			    dbId,
+			    dlstate,
+			    sourceUrl,
 			    tags
 			FROM
 			    {tableName}
@@ -718,14 +721,14 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 			raise RuntimeError("How did this happen?")
 
 
+
 		minid = min([row[0] for row in items])
-		self.log.info("	Matching rows:")
 
 		crosslink_tag = 'crosslink-%s' % minid
 
-		self.log.info("Expected tag: %s", crosslink_tag)
+		self.log.info("	Expected tag: %s", crosslink_tag)
 
-		for rowid, tags in items:
+		for rowid, dlstate, sourceUrl, tags in items:
 
 			tagsl = tags.split(" ")
 			tagsl = [tmp for tmp in tagsl if tmp.strip()]
@@ -740,25 +743,30 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 				remove_tags = " ".join(bad)
 				add_tags    = crosslink_tag + " deleted was-duplicate"
 
-			self.log.info("Removing tags to %s -> %s" % (rowid, remove_tags))
-			self.log.info("Adding tags to %s -> %s" % (rowid, add_tags))
-			self.removeTags(dbId=rowid, limitByKey=False, tags=remove_tags, commit=False, cur=cur)
-			self.addTags(dbId=rowid, limitByKey=False, tags=add_tags, commit=False, cur=cur)
+
+			newtags = set([tmp for tmp in (add_tags + " " + remove_tags).split(" ") if tmp])
+			oldtags = set(tagsl)
+
+			if len(oldtags) <= 3:
+				if dlstate == 2:
+					self.log.info("	Resetting DL state to fetch tags")
+					self.updateDbEntry(sourceUrl, dlState=0, cur=cur)
+				else:
+					self.log.info("	DL state already reset")
+
+
+			if oldtags == newtags:
+				self.log.info("	Skipping tag update as tags have not changed")
+			else:
+				self.log.info("	Removing tags to %s -> %s" % (rowid, remove_tags))
+				self.log.info("	Adding tags to %s -> %s" % (rowid, add_tags))
+				self.removeTags(dbId=rowid, limitByKey=False, tags=remove_tags, commit=False, cur=cur)
+				self.addTags(dbId=rowid, limitByKey=False, tags=add_tags, commit=False, cur=cur)
 			cur.execute("commit")
 
 
-
-
 	def aggregateCrossLinks(self):
-		'''
-		So I've accidentally been introducing duplicate tags into the h-tag database. Not totally sure where
-		(I added some protective {str}.lower() calls in a few places to see if it helps), but it's annoying.
-		Anyways, this extracts all the tags, consolidates and lower-cases them, and then reinserts the
-		fixed values.
-		'''
 		print("Aggregate CrossLinks")
-
-
 
 		with self.transaction() as cur:
 			print("Searching for cross-linked tags")
@@ -773,6 +781,8 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 				    (downloadPath, fileName)
 				HAVING
 				    COUNT((downloadPath, fileName)) > 1
+				ORDER BY
+				    min(dbId) DESC
 				""".format(tableName=self.tableName))
 			items = cur.fetchall()
 
@@ -780,11 +790,57 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 				if downloadPath is None:
 					print("Null path. Skipping")
 					continue
-				print("Processing %s -> %s with %s items" % (downloadPath, fileName, count))
+				self.log.info("Processing %s -> %s with %s items", downloadPath, fileName, count)
 				self.__process_dupes(cur, downloadPath, fileName)
 
+	def __process_raw_row(self, row_raw):
+
+		row = row_raw.decode("utf-8")
+		rowitems = row.split("\t")
+
+		if len(rowitems) == 21:
+			# ExHentaiArch item.
+			dbid, dlstate, sourceurl, retreivaltime, lastupdate, sourceid, seriesname, filename, originname, \
+				downloadpath, flags, tags, note, lastchanged, filesize, numcontents, rawname, fetcherrors, \
+				rating, gpcost, updatestate = rowitems
+			try:
+				self.addTags(sourceUrl=sourceurl, tags=tags)
+				print("Updated for ExArch URL: ", sourceurl)
+			except ValueError:
+				print("Skipping row")
+
+		elif len(rowitems) == 14:
+			# ExHentaiArch item.
+			dbid, sourcesite, dlstate, sourceurl, retreivaltime, lastupdate, sourceid, seriesname, filename, \
+				originname, downloadpath, flags, tags, note = rowitems
+			try:
+				self.addTags(sourceUrl=sourceurl, tags=tags)
+				print("Updated for History URL: ", sourceurl)
+			except ValueError:
+				print("Skipping row")
+
+		elif len(rowitems) == 17:
+			pass
+
+		else:
+			print("row_raw", row_raw)
+			print("rowitems", rowitems)
 
 
+
+	def reprocess_from_db_bak(self, bakfile):
+		self.log.info("Opening file %s", bakfile)
+		zfile = gzip.open(bakfile, mode='r')
+		self.log.info("File open")
+		lineproc = 0
+		for line in zfile:
+			lineproc += 1
+			if b'/H/MangaCMS/' in line:
+				tabs = line.count(b'\t')
+				if tabs != 9:
+					self.__process_raw_row(line)
+			if lineproc % 250000 == 0:
+				self.log.info("Processed %s lines", lineproc)
 
 	# # STFU, abstract base class
 	def go(self):

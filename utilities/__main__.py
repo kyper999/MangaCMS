@@ -179,6 +179,10 @@ def printHelp():
 	print("	aggregate-crosslinks")
 	print("		Aggregate cross-linked entries in the H database.")
 	print("	")
+	print("	")
+	print("	reprocess-from-db-bak {path}")
+	print("		Given a tar.gz database backup, extract and update hentai tags from it.")
+	print("	")
 
 	print("*********************************************************")
 	print("Remote deduper interface")
@@ -317,6 +321,13 @@ def parseTwoArgCall(cmd, val):
 			print("Passed path '%s' does not exist!" % val)
 			return
 		utilities.approxFileSorter.scanDirectories(val)
+
+	elif cmd == "reprocess-from-db-bak":
+		if not os.path.exists(val):
+			print("Passed path '%s' does not exist!" % val)
+			return
+		cleaner = utilities.cleanDb.HCleaner('None')
+		cleaner.reprocess_from_db_bak(val)
 
 
 	elif cmd == "clean-archives":

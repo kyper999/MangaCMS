@@ -381,7 +381,6 @@ class MangaScraperDbBase(DbBase.DbBase):
 			existingTags = set()
 
 		# self.log.info("Row: %s", row)
-		self.log.info("Old tag string: '%s'", " ".join(existingTags))
 
 		newTags = set()
 		for tagTemp in set(tags.split(" ")):
@@ -405,8 +404,13 @@ class MangaScraperDbBase(DbBase.DbBase):
 			tagStr = tagStr.replace("  ", " ")
 		tagStr = tagStr.lower()
 
-		self.log.info("New tag string: '%s'", tagStr)
-		self.updateDbEntry(row["sourceUrl"], tags=tagStr, commit=commit, cur=cur)
+		if tagStr != row['tags']:
+
+			self.log.debug("Old tag string: '%s'", " ".join(existingTags))
+			self.log.debug("New tag string: '%s'", tagStr)
+			self.updateDbEntry(row["sourceUrl"], tags=tagStr, commit=commit, cur=cur)
+		else:
+			self.log.debug("Tag string not changed. Nothing to do!")
 
 
 
@@ -432,19 +436,24 @@ class MangaScraperDbBase(DbBase.DbBase):
 			existingTags = set()
 
 		# self.log.info("Row: %s", row)
-		self.log.info("Old tag string: '%s'", " ".join(existingTags))
 
 		newTags = set(tags.split(" "))
 
 		tags = existingTags - newTags
+		tags = list(tags)
+		tags.sort()
 
 		tagStr = " ".join(tags)
 		while "  " in tagStr:
 			tagStr = tagStr.replace("  ", " ")
 
-		self.log.info("New tag string: '%s'", tagStr)
+		if tagStr != row['tags']:
+			self.log.debug("Old tag string: '%s'", " ".join(existingTags))
+			self.log.debug("New tag string: '%s'", tagStr)
 
-		self.updateDbEntry(row["sourceUrl"], tags=tagStr, commit=commit, cur=cur)
+			self.updateDbEntry(row["sourceUrl"], tags=tagStr, commit=commit, cur=cur)
+		else:
+			self.log.debug("Tag string not changed. Nothing to do!")
 
 
 
