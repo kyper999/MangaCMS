@@ -592,6 +592,18 @@ sidebarItemList = [
 			'type'          : 'Porn'
 		},
 
+		{
+			"num"           : 112,
+			'dbKey'         : "Hentai2R",
+			'name'          : "Hentai2R",
+			'dictKey'       : "h2r",
+			'cssClass'      : "h2rId",
+			'showOnHome'    : True,
+			'renderSideBar' : True,
+			'genRow'        : True,
+			'type'          : 'Porn'
+		},
+
 
 	]
 
