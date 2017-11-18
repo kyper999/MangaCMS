@@ -107,10 +107,10 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 
 def getHistory():
 
-	run = HBrowseDbLoader()
+	run = DbLoader()
 	for x in range(400):
 		dat = run.getFeed(pageOverride=x)
-		run.processLinksIntoDB(dat)
+		run._processLinksIntoDB(dat)
 
 
 if __name__ == "__main__":
@@ -118,6 +118,6 @@ if __name__ == "__main__":
 
 	with tb.testSetup():
 		getHistory()
-		run = HBrowseDbLoader()
-		run.go()
+		# run = DbLoader()
+		# run.do_fetch_feeds()
 

@@ -192,6 +192,8 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 			# get a random dict element where downloadstate = 0
 			thisPage = list(toFetch.keys())[list(toFetch.values()).index(0)]
 
+			thisPage = urllib.parse.urljoin(self.urlBase, thisPage)
+
 			soup = self.wg.getSoup(thisPage, addlHeaders={'Referer': linkDict["sourceUrl"]})
 
 			imageTd = soup.find('td', class_='pageImage')
@@ -319,7 +321,6 @@ if __name__ == "__main__":
 	with tb.testSetup():
 
 		# run = HBrowseRetagger()
-		run = HBrowseContentLoader()
+		run = ContentLoader()
 
-		run.resetStuckItems()
-		run.go()
+		run.do_fetch_content()

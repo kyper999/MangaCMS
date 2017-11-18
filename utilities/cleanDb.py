@@ -729,7 +729,8 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 		self.log.info("	Expected tag: %s", crosslink_tag)
 
 		for rowid, dlstate, sourceUrl, tags in items:
-
+			if tags is None:
+				tags = ""
 			tagsl = tags.split(" ")
 			tagsl = [tmp for tmp in tagsl if tmp.strip()]
 			bad = [tmp for tmp in tagsl if "crosslink" in tmp]

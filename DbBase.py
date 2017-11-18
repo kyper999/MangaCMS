@@ -101,8 +101,8 @@ class DbBase(LogBase.LoggerMixin, TransactionMixin, metaclass=abc.ABCMeta):
 					host = settings.GRAPHITE_DB_IP,
 					port = 8125,
 					prefix = 'MangaCMS.Scrapers.{tableName}.{pluginName}'.format(
-								tableName  = self.tableName.replace(".", "_"),
-								pluginName = self.pluginName.replace(".", "_"),
+								tableName  = self.tableName.replace(".", "_").replace("-", "_"),
+								pluginName = self.pluginName.replace(".", "_").replace("-", "_"),
 							)
 					)
 		else:
