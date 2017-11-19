@@ -11,6 +11,7 @@ class ScraperDbTool(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 	pluginName       = "None"
 	tableName        = "HentaiItems"
 
+	pluginType = "Utility"
 
 	tableKey = "NA"
 

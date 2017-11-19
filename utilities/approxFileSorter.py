@@ -18,6 +18,7 @@ class DirDeduper(DbBase.DbBase):
 	loggerPath = "Main.DirDedup"
 	tableName  = "MangaItems"
 
+	pluginType = "Utility"
 
 	def setupDbApi(self):
 

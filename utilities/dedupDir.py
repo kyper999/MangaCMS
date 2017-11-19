@@ -17,6 +17,7 @@ class UntaggableError(RuntimeError):
 
 class DirDeduper(DbBase.DbBase):
 
+	pluginType = "Utility"
 
 	def addTag(self, srcPath, newTags):
 		# Don't do anything if we're not actually doing anything.

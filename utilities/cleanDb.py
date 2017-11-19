@@ -31,6 +31,7 @@ class PathCleaner(DbBase.DbBase):
 	loggerPath = "Main.Pc"
 	tableName  = "MangaItems"
 	pluginName = "PathCleanerUtil"
+	pluginType = "Utility"
 
 	def moveFile(self, srcPath, dstPath):
 		dlPath, fName = os.path.split(srcPath)

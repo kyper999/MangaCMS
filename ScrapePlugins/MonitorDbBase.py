@@ -43,6 +43,7 @@ class MonitorDbBase(DbBase.DbBase):
 
 
 
+	pluginType = "SiteMonitor"
 
 
 	def __init__(self):

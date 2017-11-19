@@ -19,6 +19,7 @@ class ItemImporter(DbBase.DbBase):
 	loggerPath = "Main.ItemImporter"
 	tableName  = "MangaItems"
 
+	pluginType = "Utility"
 
 
 	def scanSingleDir(self, dirPath):

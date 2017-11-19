@@ -16,6 +16,9 @@ class RetreivalBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 	# Abstract class (must be subclassed)
 	__metaclass__ = abc.ABCMeta
 
+	pluginType = "Downloader"
+
+	pluginType = "ContentRetreiver"
 
 	itemLimit = 250
 	retreivalThreads = 1
@@ -80,22 +83,19 @@ class RetreivalBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 			status = self.getLink(link)
 
-			if self.mon_con:
-				ret1 = None
-				if status == 'phash-duplicate':
-					ret1 = self.mon_con.incr('phash_dup_items', 1)
-				elif status == 'binary-duplicate':
-					ret1 = self.mon_con.incr('bin_dup_items', 1)
+			ret1 = None
+			if status == 'phash-duplicate':
+				ret1 = self.mon_con.incr('phash_dup_items', 1)
+			elif status == 'binary-duplicate':
+				ret1 = self.mon_con.incr('bin_dup_items', 1)
 
-				# We /always/ send the "fetched_items" count entry.
-				# However, the deduped result is only send if the item is actually deduped.
-				ret2 = self.mon_con.incr('fetched_items', 1)
-				self.log.info("Retreival complete. Sending log results:")
-				if ret1:
-					self.log.info("	-> %s", ret1)
-				self.log.info("	-> %s", ret2)
-			else:
-				self.log.info("Retreival complete.")
+			# We /always/ send the "fetched_items" count entry.
+			# However, the deduped result is only send if the item is actually deduped.
+			ret2 = self.mon_con.incr('fetched_items', 1)
+			self.log.info("Retreival complete. Sending log results:")
+			if ret1:
+				self.log.info("	-> %s", ret1)
+			self.log.info("	-> %s", ret2)
 
 		except SystemExit:
 			self.die = True
@@ -115,9 +115,8 @@ class RetreivalBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 			raise
 
 		except Exception:
-			if self.mon_con:
-				ret = self.mon_con.incr('failed_items', 1)
-				self.log.critical("Sending log result: %s", ret)
+			ret = self.mon_con.incr('failed_items', 1)
+			self.log.critical("Sending log result: %s", ret)
 
 			self.log.critical("Exception!")
 			traceback.print_exc()

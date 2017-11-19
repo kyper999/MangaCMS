@@ -26,6 +26,7 @@ class DownloadProcessor(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 	loggerPath = 'Main.DlProc'
 	tableKey = 'n/a'
+	pluginType = 'Utility'
 
 	def updatePath(self, oldPath, newPath):
 		oldItemRoot, oldItemFile = os.path.split(oldPath)

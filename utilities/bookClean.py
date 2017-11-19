@@ -17,6 +17,7 @@ import nameTools as nt
 class BookCleaner(DbBase.DbBase):
 	loggerPath = "Main.Pc"
 	tableName  = "MangaItems"
+	pluginType = "Utility"
 
 	def syncNetlocs(self):
 		'''

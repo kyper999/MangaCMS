@@ -53,6 +53,9 @@ def splitall(path):
 class MkUploader(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 	# log = logging.getLogger("Main.Mk.Uploader")
 
+
+	pluginType = "Uploader"
+
 	loggerPath = "Main.Manga.Mk.Up.Plugin"
 	pluginName = "Manga.Madokami Content Retreiver"
 	tableKey = "mk"

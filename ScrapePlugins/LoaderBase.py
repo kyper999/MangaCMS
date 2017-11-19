@@ -26,6 +26,9 @@ import ScrapePlugins.MangaScraperDbBase
 
 class LoaderBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
+
+	pluginType = "Loader"
+
 	def setup(self):
 		pass
 

@@ -12,6 +12,7 @@ import time
 
 class CountCleaner(DbBase.DbBase):
 
+	pluginType = "Utility"
 
 	loggerPath = "Main.DbCleaner"
 

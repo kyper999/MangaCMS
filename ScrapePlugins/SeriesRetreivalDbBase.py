@@ -17,6 +17,8 @@ class SeriesScraperDbBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 
 
+	pluginType = "SeriesContentLoader"
+
 	@abc.abstractmethod
 	def seriesTableName(self):
 		return None

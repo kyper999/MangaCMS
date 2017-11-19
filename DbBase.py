@@ -72,6 +72,15 @@ class DbBase(LogBase.LoggerMixin, TransactionMixin, metaclass=abc.ABCMeta):
 	def pluginName(self):
 		return None
 
+
+	# @abc.abstractmethod
+	# def siteName(self):
+	# 	return None
+
+	@abc.abstractmethod
+	def pluginType(self):
+		return None
+
 	def __del__(self):
 		for db_conn in self.db_connection_dict.values():
 			try:
@@ -97,13 +106,18 @@ class DbBase(LogBase.LoggerMixin, TransactionMixin, metaclass=abc.ABCMeta):
 		# 	)
 		# self.mon_con.connect()
 		if settings.GRAPHITE_DB_IP:
+
+			prefix_str = 'MangaCMS.Scrapers.{tableName}.{loggerPath}'.format(
+								tableName  = self.tableName.replace(".", "_").replace("-", "_").replace(" ", "_"),
+								loggerPath = self.loggerPath.replace("-", "_").replace(" ", "_"),
+							)
+
+			self.log.info("Using graphite prefix str: '%s'", prefix_str)
+
 			self.mon_con = statsd.StatsClient(
 					host = settings.GRAPHITE_DB_IP,
 					port = 8125,
-					prefix = 'MangaCMS.Scrapers.{tableName}.{pluginName}'.format(
-								tableName  = self.tableName.replace(".", "_").replace("-", "_"),
-								pluginName = self.pluginName.replace(".", "_").replace("-", "_"),
-							)
+					prefix = prefix_str
 					)
 		else:
 			self.mon_con = None
@@ -149,6 +163,7 @@ class TestConn(DbBase):
 	loggerPath = "TestConn"
 	pluginName = "TestConn"
 	tableName = "testDb"
+	pluginType = "Utility"
 
 def test_mon_con():
 	c = TestConn()
@@ -158,7 +173,7 @@ def test_mon_con():
 		# newItems = 9
 
 		print("Doing send: ", c.mon_con, 'new_links', newItems)
-		res = c.mon_con.incr('new_links', 0)
+		res = c.mon_con.incr('new_links_2', 1)
 		print("Send return: ", res)
 	pass
 

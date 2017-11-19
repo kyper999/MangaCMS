@@ -10,6 +10,8 @@ class LogTrimmer(DbBase.DbBase):
 
 	loggerPath = "Main.LogCleaner"
 
+	pluginType = "Utility"
+
 
 	def clean(self):
 		self.openDB()
