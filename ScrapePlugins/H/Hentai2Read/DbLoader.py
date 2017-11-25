@@ -186,15 +186,15 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 			else:
 				chap_d["originName"] = chap_d['seriesName'] + " – " + chap.a.get_text(strip=True)
 
-			assert not chap_d["seriesName"].startswith("1")
-			assert not chap_d["seriesName"].startswith("2")
-			assert not chap_d["seriesName"].startswith("3")
-			assert not chap_d["seriesName"].startswith("4")
-			assert not chap_d["seriesName"].startswith("5")
-			assert not chap_d["seriesName"].startswith("6")
-			assert not chap_d["seriesName"].startswith("7")
-			assert not chap_d["seriesName"].startswith("8")
-			assert not chap_d["seriesName"].startswith("9")
+			# assert not chap_d["seriesName"].startswith("1")
+			# assert not chap_d["seriesName"].startswith("2")
+			# assert not chap_d["seriesName"].startswith("3")
+			# assert not chap_d["seriesName"].startswith("4")
+			# assert not chap_d["seriesName"].startswith("5")
+			# assert not chap_d["seriesName"].startswith("6")
+			# assert not chap_d["seriesName"].startswith("7")
+			# assert not chap_d["seriesName"].startswith("8")
+			# assert not chap_d["seriesName"].startswith("9")
 
 			ret.append(chap_d)
 

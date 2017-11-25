@@ -250,6 +250,9 @@ def parseOneArgCall(param):
 	elif param == "aggregate-crosslinks":
 		cleaner = utilities.cleanDb.HCleaner('None')
 		cleaner.aggregateCrossLinks()
+	elif param == "reprocess-damaged":
+		cleaner = utilities.cleanDb.HCleaner('None')
+		cleaner.reprocess_damanged()
 	elif param == "rescan-failed-h":
 		utilities.dedupDir.reprocessHFailed()
 	elif param == "h-clean":
@@ -263,7 +266,7 @@ def parseOneArgCall(param):
 	elif param == "fix-swapped-paths":
 		utilities.dedupDir.fixSwap()
 	else:
-		print("Unknown single-word arg!")
+		print("Unknown single-word arg: '%s'!" % param)
 
 
 def parseTwoArgCall(cmd, val):

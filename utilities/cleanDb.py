@@ -512,6 +512,7 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 	tableName  = "HentaiItems"
 	pluginName = "None"
 	tableKey   = "None"
+	pluginType = 'Utility'
 
 	# QUERY_DEBUG = True
 
@@ -729,6 +730,16 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 		self.log.info("	Expected tag: %s", crosslink_tag)
 
+		tag_sum = ' '.join([tmp[3] for tmp in items])
+		tag_sum = [tmp for tmp in tag_sum.split(" ")]
+		tag_sum = [tmp for tmp in tag_sum if not tmp.startswith("crosslink")]
+		tag_sum = [tmp for tmp in tag_sum if not tmp.startswith("deleted")]
+		tag_sum = [tmp for tmp in tag_sum if not tmp.startswith("was-duplicate")]
+		tag_sum = [tmp for tmp in tag_sum if not tmp.startswith("phash-duplicate")]
+		tag_sum = set(tag_sum)
+
+		# print("Sumarized tag_sum: '%s'" % tag_sum)
+
 		for rowid, dlstate, sourceUrl, tags in items:
 			if tags is None:
 				tags = ""
@@ -748,6 +759,9 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 			newtags = set([tmp for tmp in (add_tags + " " + remove_tags).split(" ") if tmp])
 			oldtags = set(tagsl)
+
+			newtags = newtags | tag_sum
+			add_tags = " ".join(newtags) + " " + add_tags
 
 			if len(oldtags) <= 3:
 				if dlstate == 2:
@@ -794,6 +808,51 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 					continue
 				self.log.info("Processing %s -> %s with %s items", downloadPath, fileName, count)
 				self.__process_dupes(cur, downloadPath, fileName)
+
+	def reprocess_damanged(self):
+		print("Reprocessing damaged files")
+
+		with self.transaction() as cur:
+			print("Searching for files marked damaged")
+			cur.execute("""SELECT dbId, downloadPath, fileName, tags FROM {tableName} WHERE tags LIKE %s""".format(tableName=self.tableName), ("%damaged%", ))
+			items = cur.fetchall()
+
+		# print("Items: ", items)
+		print("Len: ", len(items))
+
+		for dbid, dlp, fn, itemtags in items:
+			fqp = os.path.join(dlp, fn)
+			print(os.path.exists(fqp), fqp)
+			dedupState = processDownload.processDownload("imported", fqp, pron=True, deleteDups=True)
+
+
+			tags = dedupState + ' ' + ' '.join(itemtags)
+			tags = tags.strip()
+			if dedupState:
+				self.addTags(dbId=dbid, tags=tags, limitByKey=False)
+
+
+			# 	SELECT
+			# 	    downloadPath,
+			# 	    fileName,
+			# 	    COUNT((downloadPath, fileName))
+			# 	FROM
+			# 	    {tableName}
+			# 	GROUP BY
+			# 	    (downloadPath, fileName)
+			# 	HAVING
+			# 	    COUNT((downloadPath, fileName)) > 1
+			# 	ORDER BY
+			# 	    min(dbId) DESC
+			# 	""".format(tableName=self.tableName))
+			# items = cur.fetchall()
+
+			# for downloadPath, fileName, count in items:
+			# 	if downloadPath is None:
+			# 		print("Null path. Skipping")
+			# 		continue
+			# 	self.log.info("Processing %s -> %s with %s items", downloadPath, fileName, count)
+			# 	self.__process_dupes(cur, downloadPath, fileName)
 
 	def __process_raw_row(self, row_raw):
 
