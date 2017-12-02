@@ -30,8 +30,6 @@ import processDownload
 
 class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
-
-
 	loggerPath = "Main.Manga.Mh.Cl"
 	pluginName = "MangaHere Content Retreiver"
 	tableKey = "mh"
@@ -54,9 +52,6 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 		return fileN, content
 
 
-
-
-
 	def proceduralGetImages(self, link):
 		baseUrl = link
 
@@ -64,32 +59,42 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 		while baseUrl in link:
 			page = self.wg.getSoup(link)
 			container = page.find('section', class_='read_img')
+			imageContainer = container.find_all('img')
 
-			imgUrl = container.img['src']
+			imgurls = [img['src'] for img in imageContainer if '/media/images/loading.gif' not in img['src']]
 
-			images.append(self.getImage(imgUrl, link))
+			assert len(imgurls) == 1, "Wrong number of images: %s (%s)" % (len(imgurls), imgurls)
+			imgUrl = imgurls[0]
+
+			if imgUrl.startswith("//"):
+				imgUrl = "http:" + imgUrl
+
+
+			assert '/media/images/loading.gif' not in imgUrl
+			imgdat = self.getImage(imgUrl, link)
+
+
+			assert imgdat
+			assert len(imgdat) == 2
+			images.append(imgdat)
 			link = container.a['href']
+
+			if link.startswith("//"):
+				link = "http:" + link
 
 		return images
 
 
 	def getLink(self, link):
 
-
 		sourceUrl  = link["sourceUrl"]
-		print("Link", link)
-
-
-
 		seriesName = link['seriesName']
-
 
 		try:
 			self.log.info( "Should retreive url - %s", sourceUrl)
 			self.updateDbEntry(sourceUrl, dlState=1)
 
 			seriesName = nt.getCanonicalMangaUpdatesName(seriesName)
-
 
 			self.log.info("Downloading = '%s', '%s'", seriesName, link["originName"])
 			dlPath, newDir = self.locateOrCreateDirectoryForSeries(seriesName)
@@ -119,12 +124,7 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 				self.updateDbEntry(sourceUrl, dlState=-1, tags="error-404")
 				return
 
-			#Write all downloaded files to the archive.
-			arch = zipfile.ZipFile(fqFName, "w")
-			for imageName, imageContent in images:
-				arch.writestr(imageName, imageContent)
-			arch.close()
-
+			fqFName = self.save_image_set(fqFName, images)
 
 			dedupState = processDownload.processDownload(seriesName, fqFName, deleteDups=True, includePHash=True, rowId=link['dbId'])
 			self.log.info( "Done")
@@ -132,8 +132,6 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 			filePath, fileName = os.path.split(fqFName)
 			self.updateDbEntry(sourceUrl, dlState=2, downloadPath=filePath, fileName=fileName, tags=dedupState)
 			return
-
-
 
 		except Exception:
 			self.log.critical("Failure on retreiving content at %s", sourceUrl)
@@ -145,13 +143,13 @@ if __name__ == '__main__':
 	import utilities.testBase as tb
 
 	# with tb.testSetup():
-	with tb.testSetup(startObservers=True):
+	with tb.testSetup():
 		cl = ContentLoader()
 		# cl.proceduralGetImages('http://www.mangahere.co/manga/totsugami/v05/c030/')
 		# cl.getLink({'seriesName': 'Totsugami', 'originName': 'Totsugami 32 - Vol 05', 'retreivalTime': 1414512000.0, 'dlState': 0, 'sourceUrl': 'http://www.mangahere.co/manga/totsugami/v05/c032/', 'flags':None})
 
 		# inMarkup = cl.wg.getpage(pg)
 		# cl.getImageUrls(inMarkup, pg)
-		cl.go()
+		cl.do_fetch_content()
 
 

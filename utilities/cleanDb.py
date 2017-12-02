@@ -763,22 +763,46 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 			newtags = newtags | tag_sum
 			add_tags = " ".join(newtags) + " " + add_tags
 
-			if len(oldtags) <= 3:
-				if dlstate == 2:
-					self.log.info("	Resetting DL state to fetch tags")
-					self.updateDbEntry(sourceUrl, dlState=0, cur=cur)
-				else:
-					self.log.info("	DL state already reset")
+			# if len(oldtags) <= 3:
+			# 	if dlstate == 2:
+			# 		self.log.info("	Resetting DL state to fetch tags")
+			# 		self.updateDbEntry(sourceUrl, dlState=0, cur=cur)
+			# 	else:
+			# 		self.log.info("	DL state already reset")
 
 
 			if oldtags == newtags:
 				self.log.info("	Skipping tag update as tags have not changed")
 			else:
-				self.log.info("	Removing tags to %s -> %s" % (rowid, remove_tags))
-				self.log.info("	Adding tags to %s -> %s" % (rowid, add_tags))
+				self.log.info("	Removing tags from %s -> '%s'" % (rowid, remove_tags))
+				self.log.info("	Adding tags to %s -> '%s'" % (rowid, add_tags))
 				self.removeTags(dbId=rowid, limitByKey=False, tags=remove_tags, commit=False, cur=cur)
 				self.addTags(dbId=rowid, limitByKey=False, tags=add_tags, commit=False, cur=cur)
-			cur.execute("commit")
+				cur.execute("commit")
+
+
+	def fixSingleLetterTags(self):
+		print("fixSingleLetterTags")
+
+		with self.transaction() as cur:
+			print("Searching for cross-linked tags")
+			cur.execute("""
+				SELECT
+				    dbid,
+				    tags
+				FROM
+				    {tableName}
+				WHERE
+				    tags IS NOT NULL
+				""".format(tableName=self.tableName))
+			items = cur.fetchall()
+
+			for dbid, tags in items:
+				badtags = [tmp for tmp in tags.split(" ") if len(tmp) == 1]
+				if badtags:
+
+					self.removeTags(dbId=dbid, limitByKey=False, tags=badtags, commit=False, cur=cur)
+					print(badtags, tags)
 
 
 	def aggregateCrossLinks(self):

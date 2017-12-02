@@ -266,6 +266,7 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 				fileN = title+".zip"
 				fileN = nt.makeFilenameSafe(fileN)
 				wholePath = os.path.join(linkDict["dirPath"], fileN)
+				wholePath = self.insertCountIfFilenameExists(wholePath)
 				arch = zipfile.ZipFile(wholePath, "w")
 
 			for imageName, imageContent in images:

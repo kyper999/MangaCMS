@@ -211,11 +211,13 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 			self.doDownload(linkInfo, link)
 		except urllib.error.URLError:
 			self.log.error("Failure retreiving content for link %s", link)
-			self.log.error("Traceback: %s", traceback.format_exc())
+			for line in traceback.format_exc().split("\n"):
+				self.log.error("	%s", line)
 			self.updateDbEntry(link["sourceUrl"], dlState=-1, downloadPath="ERROR", fileName="ERROR: FAILED")
 		except IOError:
 			self.log.error("Failure retreiving content for link %s", link)
-			self.log.error("Traceback: %s", traceback.format_exc())
+			for line in traceback.format_exc().split("\n"):
+				self.log.error("	%s", line)
 			self.updateDbEntry(link["sourceUrl"], dlState=-2, downloadPath="ERROR", fileName="ERROR: MISSING")
 
 if __name__ == "__main__":

@@ -160,6 +160,9 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 
 		chap_list = soup.find("ul", class_='nav-chapters')
 
+		if not chap_list:
+			return ret
+
 		for chap in chap_list.find_all('li', recursive=False):
 			chap_d = {**series_meta}
 

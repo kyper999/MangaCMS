@@ -250,6 +250,9 @@ def parseOneArgCall(param):
 	elif param == "aggregate-crosslinks":
 		cleaner = utilities.cleanDb.HCleaner('None')
 		cleaner.aggregateCrossLinks()
+	elif param == "fix-single-letter-tags":
+		cleaner = utilities.cleanDb.HCleaner('None')
+		cleaner.fixSingleLetterTags()
 	elif param == "reprocess-damaged":
 		cleaner = utilities.cleanDb.HCleaner('None')
 		cleaner.reprocess_damanged()

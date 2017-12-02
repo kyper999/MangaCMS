@@ -366,10 +366,10 @@ class MangaScraperDbBase(DbBase.DbBase):
 		if not any([name in kwargs for name in validCols]):
 			raise ValueError("addTags requires at least one fully-qualified argument (%s). Passed args = '%s'" % (validCols, kwargs))
 
-		if not "tags" in kwargs:
+		if "tags" not in kwargs:
 			raise ValueError("You have to specify tags you want to add as a kwarg! '%s'" % (kwargs))
 
-		tags = kwargs.pop("tags")
+		tags_arg = kwargs.pop("tags")
 		print("Getting row", kwargs)
 		row = self.getRowByValue(**kwargs, cur=cur)
 		if not row:
@@ -380,20 +380,36 @@ class MangaScraperDbBase(DbBase.DbBase):
 		else:
 			existingTags = set()
 
-		# self.log.info("Row: %s", row)
+		if isinstance(tags_arg, (list, set)):
+			add_tags = set(tags_arg)
+		elif isinstance(tags_arg, str):
+			add_tags = set(tags_arg.split(" "))
+		else:
+			raise ValueError("tags parameter passed to addTags call must be either a "
+				"list/set, or a space-delimited string. Received: %s (%s)" % (type(tags_arg), tags_arg))
 
 		newTags = set()
-		for tagTemp in set(tags.split(" ")):
+		for tagTemp in set(add_tags):
 
 			# colon literals (":") break the `tsvector` index. Remove them (they're kinda pointless anyways)
 			tagTemp = tagTemp.replace("&", "_")   \
 							.replace(":", "_")    \
 							.strip(".")           \
 							.lower()
-			newTags.add(tagTemp)
+
+			if len(tagTemp) == 0:
+				pass
+			elif len(tagTemp) == 1:
+				self.log.warning("All tag entries should be longer then 1 character '%s' ('%s', '%s')"
+					% (tagTemp, add_tags, tags_arg))
+			else:
+				newTags.add(tagTemp)
 
 
 		tags = existingTags | newTags
+		new = newTags - existingTags
+
+		self.log.info("Adding tags '%s' to row", ' '.join(list(new)))
 
 		# make the tag ordering determistic by converting to a list, and sorting.
 		tags = list(tags)
@@ -410,7 +426,7 @@ class MangaScraperDbBase(DbBase.DbBase):
 			self.log.debug("New tag string: '%s'", tagStr)
 			self.updateDbEntry(row["sourceUrl"], tags=tagStr, commit=commit, cur=cur)
 		else:
-			self.log.debug("Tag string not changed. Nothing to do!")
+			self.log.info("Tag string not changed. Nothing to do!")
 
 
 
@@ -422,10 +438,10 @@ class MangaScraperDbBase(DbBase.DbBase):
 		if not any([name in kwargs for name in validCols]):
 			raise ValueError("addTags requires at least one fully-qualified argument (%s). Passed args = '%s'" % (validCols, kwargs))
 
-		if not "tags" in kwargs:
+		if "tags" not in kwargs:
 			raise ValueError("You have to specify tags you want to add as a kwarg! '%s'" % (kwargs))
 
-		tags = kwargs.pop("tags")
+		tags_arg = kwargs.pop("tags")
 		row = self.getRowByValue(**kwargs, cur=cur)
 		if not row:
 			raise ValueError("Row specified does not exist!")
@@ -437,9 +453,19 @@ class MangaScraperDbBase(DbBase.DbBase):
 
 		# self.log.info("Row: %s", row)
 
-		newTags = set(tags.split(" "))
+		if isinstance(tags_arg, (list, set)):
+			del_tags = set(tags_arg)
+		elif isinstance(tags_arg, str):
+			del_tags = set(tags_arg.split(" "))
+		else:
+			raise ValueError("tags parameter passed to removeTags call must be either a "
+				"list/set, or a space-delimited string. Received: %s (%s)" % (type(tags_arg), tags_arg))
 
-		tags = existingTags - newTags
+		del_tags = set((tmp for tmp in del_tags if tmp))
+		self.log.info("Removing tags %s from item (%s)" % (del_tags, existingTags))
+
+
+		tags = existingTags - del_tags
 		tags = list(tags)
 		tags.sort()
 

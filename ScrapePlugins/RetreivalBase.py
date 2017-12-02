@@ -1,11 +1,13 @@
 
 import time
 import abc
-import runStatus
+import zipfile
 import traceback
 import os.path
-import settings
 from concurrent.futures import ThreadPoolExecutor
+
+import runStatus
+import settings
 import ScrapePlugins.MangaScraperDbBase
 import nameTools as nt
 
@@ -183,6 +185,46 @@ class RetreivalBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 				self.log.warning("Safe canonized name: %s", safeBaseName)
 			return targetDir, False
 
+	def save_image_set(self, fqfilename, image_list):
+
+		filepath, fileN = os.path.split(fqfilename)
+		fileN = fileN.replace('.zip .zip', '.zip')
+		fileN = fileN.replace('.zip.zip', '.zip')
+		fileN = nt.makeFilenameSafe(fileN)
+
+		fqfilename = os.path.join(filepath, fileN)
+		fqfilename = self.insertCountIfFilenameExists(fqfilename)
+		self.log.info("Complete filepath: %s", fqfilename)
+
+
+		chop = len(fileN)-4
+
+		while 1:
+			try:
+				arch = zipfile.ZipFile(fqfilename, "w")
+
+				#Write all downloaded files to the archive.
+				for imageName, imageContent in image_list:
+					assert isinstance(imageName, str)
+					assert isinstance(imageContent, bytes)
+					arch.writestr(imageName, imageContent)
+				arch.close()
+				return fqfilename
+
+			except (IOError, OSError):
+				chop = chop - 1
+				filepath, fileN = os.path.split(fqfilename)
+
+				fileN = fileN[:chop]+fileN[-4:]
+				self.log.warn("Truncating file length to %s characters and re-encoding.", chop)
+				fileN = fileN.encode('utf-8','ignore').decode('utf-8')
+				fileN = nt.makeFilenameSafe(fileN)
+				fqfilename = os.path.join(filepath, fileN)
+				fqfilename = self.insertCountIfFilenameExists(fqfilename)
+
+
+
+
 	def insertCountIfFilenameExists(self, fqFName):
 
 		base, ext = os.path.splitext(fqFName)
@@ -210,4 +252,5 @@ class RetreivalBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 			self.processTodoLinks(todo)
 		self.log.info("ContentRetreiver for %s has finished.", self.pluginName)
 
-
+	def go(self):
+		raise ValueError("use do_fetch_content() instead!")
