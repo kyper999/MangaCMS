@@ -664,7 +664,7 @@ colours = {
 	<tr class="${row['sourceSite']}_row">
 
 		<td>${ut.timeAgo(row['retreivalTime'])}</td>
-		<td bgcolor=${statusColour} class="showHT" mouseovertext="${row['sourceSite']}, ${row['dbId']}, ${filePath}"></td>
+		<td bgcolor=${statusColour} class="showHT" mouseovertext="${dlState}, ${row['sourceSite']}, ${row['dbId']}, ${filePath}"></td>
 		<td>
 		## Messy hack that prevents the "»" from being drawn anywhere but *inbetween* row['tags'] in the path
 			% for i, seriesName in enumerate(seriesNames):

@@ -255,24 +255,23 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
 			# self.log.info("geturl with processing", fileN)
 			wholePath = os.path.join(linkDict["dirPath"], fileN)
-			wholePath = self.insertCountIfFilenameExists(wholePath)
-			self.log.info("Complete filepath: %s", wholePath)
 
-					#Write all downloaded files to the archive.
-			try:
-				arch = zipfile.ZipFile(wholePath, "w")
-			except OSError:
-				title = title.encode('ascii','ignore').decode('ascii')
-				fileN = title+".zip"
-				fileN = nt.makeFilenameSafe(fileN)
-				wholePath = os.path.join(linkDict["dirPath"], fileN)
-				wholePath = self.insertCountIfFilenameExists(wholePath)
-				arch = zipfile.ZipFile(wholePath, "w")
+			# try:
+			# 	arch = zipfile.ZipFile(wholePath, "w")
+			# except OSError:
+			# 	title = title.encode('ascii','ignore').decode('ascii')
+			# 	fileN = title+".zip"
+			# 	fileN = nt.makeFilenameSafe(fileN)
+			# 	wholePath = os.path.join(linkDict["dirPath"], fileN)
+			# 	wholePath = self.insertCountIfFilenameExists(wholePath)
+			# 	arch = zipfile.ZipFile(wholePath, "w")
 
-			for imageName, imageContent in images:
-				arch.writestr(imageName, imageContent)
-			arch.close()
+			# for imageName, imageContent in images:
+			# 	arch.writestr(imageName, imageContent)
+			# arch.close()
 
+			#Write all downloaded files to the archive.
+			wholePath = self.save_image_set(wholePath, images)
 
 			self.log.info("Successfully Saved to path: %s", wholePath)
 

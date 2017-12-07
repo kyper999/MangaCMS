@@ -211,6 +211,9 @@ def parseOneArgCall(param):
 		hc.resetMissingDownloads()
 	elif param == "clear-bad-dedup":
 		pc.clearInvalidDedupTags()
+	elif param == "clear-bad-h-dedup":
+		hc = utilities.cleanDb.HCleaner()
+		hc.clearInvalidDedupTags()
 	elif param == "fix-batoto-urls":
 		pc.btUrlFix()
 	elif param == "fix-bt-links":

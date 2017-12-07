@@ -135,15 +135,15 @@ class DownloadProcessor(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 	def processDownload(self, seriesName, archivePath, deleteDups=False, includePHash=False, pathPositiveFilter=None, crossReference=True, doUpload=True, rowId=None, **kwargs):
 
 		if 'phashThresh' in kwargs:
-			phashThresh = kwargs.pop('phashThresh')
+			phashThreshIn = kwargs.pop('phashThresh')
 			self.log.warn("Phash search distance overridden!")
-			self.log.warn("Search distance = %s", phashThresh)
+			self.log.warn("Search distance = %s", phashThreshIn)
 			for line in traceback.format_stack():
 				self.log.warn(line.rstrip())
 
 		else:
-			phashThresh = PHASH_DISTANCE
-			self.log.info("Phash search distance = %s", phashThresh)
+			phashThreshIn = PHASH_DISTANCE
+			self.log.info("Phash search distance = %s", phashThreshIn)
 
 		if 'dedupMove' in kwargs:
 			moveToPath = kwargs.pop('dedupMove')
@@ -170,8 +170,24 @@ class DownloadProcessor(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 		# Let the remote deduper do it's thing.
 		# It will delete duplicates automatically.
-		dc = deduplicator.archChecker.ArchChecker(archivePath, phashDistance=phashThresh, pathPositiveFilter=pathPositiveFilter, lock=False)
-		retTagsTmp, bestMatch, intersections = dc.process(moveToPath=moveToPath)
+
+		phashThresh = phashThreshIn
+
+		while True:
+			dc = deduplicator.archChecker.ArchChecker(archivePath, phashDistance=phashThresh, pathPositiveFilter=pathPositiveFilter, lock=False)
+			retTagsTmp, bestMatch, intersections = dc.process(moveToPath=moveToPath)
+
+			if 'deleted' in retTagsTmp:
+				break
+			if phashThresh == 0:
+				break
+			if not 'phash-conflict' in retTagsTmp:
+				break
+			if phashThresh < phashThreshIn:
+				retTagsTmp += " phash-thresh-reduced phash-thresh-%s" % phashThresh
+			phashThresh = phashThresh - 1
+			self.log.warning("Phash conflict! Reducing search threshold to %s to try to work around.", phashThresh)
+
 		retTags += " " + retTagsTmp
 		retTags = retTags.strip()
 
@@ -180,15 +196,6 @@ class DownloadProcessor(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 			if "phash-duplicate" in retTags:
 				isPhash = True
 			self.crossLink(archivePath, bestMatch, isPhash=isPhash, rowId=rowId)
-
-
-		# try:
-		# 	self.scanIntersectingArchives(os.path.split(archivePath)[0], intersections, phashThresh, moveToPath)
-		# except Exception:
-		# 	self.log.error("Failure in scanIntersectingArchives()?")
-		# 	for line in traceback.format_exc().split("\n"):
-		# 		self.log.error(line)
-		# 	self.log.error("Ignoring exception")
 
 
 		# processNewArchive returns "damaged" or "duplicate" for the corresponding archive states.

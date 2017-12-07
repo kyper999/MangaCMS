@@ -190,6 +190,7 @@ class RetreivalBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 		filepath, fileN = os.path.split(fqfilename)
 		fileN = fileN.replace('.zip .zip', '.zip')
 		fileN = fileN.replace('.zip.zip', '.zip')
+		fileN = fileN.replace(' .zip', '.zip')
 		fileN = nt.makeFilenameSafe(fileN)
 
 		fqfilename = os.path.join(filepath, fileN)

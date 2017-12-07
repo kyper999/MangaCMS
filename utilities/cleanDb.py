@@ -117,8 +117,9 @@ class PathCleaner(DbBase.DbBase):
 					cur.execute("BEGIN;")
 
 
-	def updateTags(self, dbId, newTags):
-		cur = self.get_cursor()
+	def updateTags(self, dbId, newTags, cur=None):
+		if not cur:
+			cur = self.get_cursor()
 		cur.execute("UPDATE {tableName} SET tags=%s WHERE dbId=%s;".format(tableName=self.tableName), (newTags, dbId))
 
 	def clearInvalidDedupTags(self):
@@ -133,17 +134,34 @@ class PathCleaner(DbBase.DbBase):
 		print("Have results. Processing")
 
 		cur.execute("BEGIN;")
-		for  dbId, downloadPath, fileName, tags in ret:
-			if tags == None: tags = ""
+		for  dbId, downloadPath, fileName, tagstr in ret:
+			if tagstr is None:
+				tagstr = ""
+			tags = set(tagstr.split(" "))
+
+			changed = False
+
 			if "deleted" in tags and "was-duplicate" in tags:
 				fPath = os.path.join(downloadPath, fileName)
 				if os.path.exists(fPath):
-					tags = set(tags.split(" "))
+					changed = True
 					tags.remove("deleted")
 					tags.remove("was-duplicate")
-					tags = " ".join(tags)
-					print("File ", fPath, "exists!", dbId, )
-					self.updateTags(dbId, tags)
+					self.log.info("File %s exists (%s)", fPath, dbId, )
+
+			if 'phash-thresh-3' in tags:
+				changed = True
+				tags.remove('phash-thresh-3')
+			if 'phash-thresh-reduced' in tags:
+				changed = True
+				tags.remove('phash-thresh-reduced')
+
+			if changed:
+				taglist = list(tags)
+				taglist.sort()
+				tagNew = " ".join(taglist)
+				self.log.info("Updating tags to: '%s'", tagNew)
+				self.updateTags(dbId, tagNew, cur=cur)
 
 		cur.execute("COMMIT;")
 
@@ -508,7 +526,7 @@ class PathCleaner(DbBase.DbBase):
 			print(items[:5])
 
 class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
-	loggerPath = "Main.Pc"
+	loggerPath = "Main.Hc"
 	tableName  = "HentaiItems"
 	pluginName = "None"
 	tableKey   = "None"
@@ -572,6 +590,58 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 				cur.execute("COMMIT;")
 				print("Incremental Commit!")
 				cur.execute("BEGIN;")
+
+
+	def clearInvalidDedupTags(self):
+
+		cur = self.get_cursor()
+		cur.execute("BEGIN;")
+		print("Querying")
+		cur.execute("SELECT dbId, downloadPath, fileName, tags FROM {tableName}".format(tableName=self.tableName))
+		print("Queried. Fetching results")
+		ret = cur.fetchall()
+		cur.execute("COMMIT;")
+		print("Have results. Processing")
+
+		changed = 0
+		cur.execute("BEGIN;")
+		for  dbId, downloadPath, fileName, tagstr in ret:
+			if tagstr is None:
+				tagstr = ""
+			tags = set(tagstr.split(" "))
+
+			removed = ""
+
+			if "deleted" in tags and "was-duplicate" in tags:
+				fPath = os.path.join(downloadPath, fileName)
+				if os.path.exists(fPath):
+					changed = True
+					tags.remove("deleted")
+					tags.remove("was-duplicate")
+					removed += ' was-duplicate deleted'
+					self.log.info("File %s exists (%s)", fPath, dbId, )
+
+			if 'phash-thresh-3' in tags:
+				removed += ' phash-thresh-3'
+				tags.remove('phash-thresh-3')
+			if 'phash-thresh-reduced' in tags:
+				removed += ' phash-thresh-reduced'
+				tags.remove('phash-thresh-reduced')
+
+			if removed:
+				taglist = list(tags)
+				taglist.sort()
+				tagNew = " ".join(taglist)
+				self.log.info("Removed '%s', Updating tags to: '%s'", removed, tagNew)
+
+				cur.execute("UPDATE {tableName} SET tags=%s WHERE dbId=%s;".format(tableName=self.tableName), (tagNew, dbId))
+				changed += 1
+
+			if changed > 1000:
+				changed = 0
+				cur.execute("COMMIT;")
+				self.log.info("Doing a incremental commit")
+		cur.execute("COMMIT;")
 
 
 	def cleanTags(self):
