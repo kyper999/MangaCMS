@@ -21,396 +21,483 @@ import utilities.cleanFiles
 import deduplicator.remoteInterface
 import UploadPlugins.Madokami.uploader
 
+help_strings = [
+	"################################### ",
+	"##   System maintenance script   ## ",
+	"################################### ",
+	"",
+	"*********************************************************",
+	"Runtime Tools",
+	"*********************************************************",
+	"	run {plug_key}",
+	"		Execute plugin {plug_key}.",
+	"		If plugin is not specified, print the available plugins",
+	"",
+	"	retag {plug_key}",
+	"		Retag items for {plug_key}.",
+	"		If plugin is not specified, print the available plugins",
+	"",
+	"",
+	"*********************************************************",
+	"Organizing Tools",
+	"*********************************************************",
+	"	import {dirPath}",
+	"		Import folders of manga from {dirPath}",
+	"		Assumes that {dirPath} is composed of directories containing manga",
+	"		zip files, and the directory is named after the series that it contains.",
+	"",
+	"	organize {dirPath}",
+	"		Run auto_organizing tools against {dirPath}",
+	"",
+	"	rename {dirPath}",
+	"		Rename directories in {dirPath} to match MangaUpdates naming",
+	"",
+	"	dirs_clean {target_path} {del_dir}",
+	"		Find duplicates in each subdir of {target_path}, and remove them.",
+	"		Functions on a per_directory basis, so only duplicates in the same folder will be considered",
+	"		Does not currently use phashing.",
+	"		'Deleted' files are actually moved to {del_dir}, to allow checking before actual deletion.",
+	"		The moved files are named with the entire file_path, with the '/' being replaced with ';'.",
+	"",
+	"	dir_clean {target_path} {del_dir}",
+	"		Find duplicates in {target_path}, and remove them.",
+	"		Functions on a per_directory basis, so only duplicates in the same folder will be considered",
+	"		Does not currently use phashing.",
+	"		'Deleted' files are actually moved to {del_dir}, to allow checking before actual deletion.",
+	"		The moved files are named with the entire file_path, with the '/' being replaced with ';'.",
+	"	",
+	"	dirs_restore {target_path}",
+	"		Reverses the action of 'dirs_clean'. {target_path} is the directory specified as ",
+	"		{del_dir} when running 'dirs_clean' ",
+	"	",
+	"	purge_dir {target_path}",
+	"		Processes the output of 'dirs_clean'. {target_path} is the directory specified as ",
+	"		{del_dir} when running 'dirs_clean'. ",
+	"		Each item in {del_dir} is re_confirmed to be a complete duplicate, and then truly deleted. ",
+	"	",
+	"	purge_dir_phash {target_path}",
+	"		Same as `purge_dir`, but uses phashes for duplicate detection as well.",
+	"	",
+	"	sort_dir_contents {target_path}",
+	"		Scan the contents of {target_path}, and try to infer the series for each file in said folders.",
+	"		If file doesn't match the series for the folder, and does match a known, valid folder, prompt",
+	"		to move to valid folder.",
+	"	",
+	"	move_unlinked {src_path} {to_path}",
+	"		Scan the contents of {src_path}, and try to infer the series for each subdirectory.",
+	"		If a subdir has no matching series, move it to {to_path}",
+	"	",
+	"	h_clean",
+	"		Walk through the historical H items and remove superceded duplicates.",
+	"		Processing is done in DB_ID order, which is roughtly chronological..",
+	"	",
+	"	k_clean",
+	"		Functions identically to the h_cleaner, but operates on the kissmange database entries",
+	"	",
+	"	clean_reset",
+	"		Remove the incremental scan progress tags from the manga and hentai database.",
+	"	",
+	"	m_clean",
+	"		And for cleaning all manga items.",
+	"	",
+	"	src_clean {source_key} {del_dir}",
+	"		Find duplicates for all the items downloaded under the key {source_key}, and remove them.",
+	"		'Deleted' files are actually moved to {del_dir}, to allow checking before actual deletion.",
+	"		The moved files are named with the entire file_path, with the '/' being replaced with ';'.",
+	"	fix_swapped_paths",
+	"		Fix items where the path and filename are swapped in the database.",
+	"	",
+	"	",
+	"*********************************************************",
+	"Miscellaneous Tools",
+	"*********************************************************",
+	"	lookup {name}",
+	"		Lookup {name} in the MangaUpdates name synonym lookup table, print the results.",
+	"",
+	"	crosslink_books",
+	"		Make sure the netloc column of the book_items table is up to date.",
+	"",
+	"	clean_book_cache",
+	"		Clean out and delete any old files from the book content cache",
+	"		that no longer has any entries in the database.",
+	"",
+	"	madokami_organize",
+	"		Attempt to consolidate directories on the Madokami FTP",
+	"		using the name synonym system.",
+	"",
+	"	madokami_upload",
+	"		Look through the last week of downloads, and try to upload any.",
+	"		which appear to not have been uploaded..",
+	"",
+	"	rescan_failed_h",
+	"		Rescan all H items that failed on previous phash processing.",
+	"",
+	"",
+	"*********************************************************",
+	"Database Maintenance",
+	"*********************************************************",
+	"	reset_missing",
+	"		Reset downloads where the file is missing, and the download is not tagged as deduplicated.",
+	"	",
+	"	clear_bad_dedup",
+	"		Remove deduplicated tag from any files where the file exists.",
+	"	",
+	"	fix_bt_links",
+	"		Fix links for Batoto that point to batoto.com, rather then bato.to.",
+	"	",
+	"	cross_sync",
+	"		Sync name lookup table with seen series.",
+	"	",
+	"	update_bu_lut",
+	"		Regernate lookup strings for MangaUpdates table (needed if the `prepFilenameForMatching` call in nameTools is modified).",
+	"	",
+	"	fix_bad_series",
+	"		Consolidate series names to MangaUpdates standard naming.",
+	"	",
+	"	reload_tree",
+	"		Reload the BK tree from the database.",
+	"	",
+	"	lndb_cleaned_regen",
+	"		regenerate the set of cleaned LNDB item titles..",
+	"	",
+	"	fix_book_link_sources",
+	"		",
+	"	",
+	"	fix_bu_authors",
+	"		Fix authors from mangaupdates table where '[, Add, ]' got into the data due to incomplete parsing of the webpage",
+	"	",
+	"	fix_h_tags_case",
+	"		Fix issues where mixed_case H tags were being duplicated.",
+	"	",
+	"	clean_japanese_only",
+	"		Clear out item in the H database that is not translated and has no tags we care about.",
+	"	",
+	"	aggregate_crosslinks",
+	"		Aggregate cross_linked entries in the H database.",
+	"	",
+	"	",
+	"	reprocess_from_db_bak {path}",
+	"		Given a tar.gz database backup, extract and update hentai tags from it.",
+	"	",
+	"	",
+	"*********************************************************",
+	"Remote deduper interface",
+	"*********************************************************",
+	"phash_clean {targetDir} {removeDir}",
+	"		Find duplcates on the path {targetDir}, and move them to {removeDir}",
+	"		Duplicate search is done using the set of phashes contained within ",
+	"		{scanEnv}. ",
+	"		Requires deduper server interface to be running.",
+]
+
+
+
+##############################################################################################################################
+# Function Stubs
+##############################################################################################################################
+
+# Single arg (funcs take no arg):
+def reset_missing():
+	pc = utilities.cleanDb.PathCleaner()
+	pc.resetMissingDownloads()
+def reset_missing_h():
+	hc = utilities.cleanDb.HCleaner()
+	hc.resetMissingDownloads()
+def clear_bad_dedup():
+	pc = utilities.cleanDb.PathCleaner()
+	pc.clearInvalidDedupTags()
+def clear_bad_h_dedup():
+	hc = utilities.cleanDb.HCleaner()
+	hc.clearInvalidDedupTags()
+def fix_batoto_urls():
+	pc = utilities.cleanDb.PathCleaner()
+	pc.btUrlFix()
+def fix_bt_links():
+	pc = utilities.cleanDb.PathCleaner()
+	pc.patchBatotoLinks()
+def cross_sync():
+	pc = utilities.cleanDb.PathCleaner()
+	pc.crossSyncNames()
+def update_bu_lut():
+	pc = utilities.cleanDb.PathCleaner()
+	pc.regenerateNameMappings()
+def fix_bad_series():
+	pc = utilities.cleanDb.PathCleaner()
+	pc.consolidateSeriesNaming()
+def fix_djm():
+	pc = utilities.cleanDb.PathCleaner()
+	pc.fixDjMItems()
+def fix_h_tags_case():
+	cleaner = utilities.cleanDb.HCleaner('None')
+	cleaner.cleanTags()
+def clean_japanese_only():
+	cleaner = utilities.cleanDb.HCleaner('None')
+	cleaner.cleanJapaneseOnly()
+def aggregate_crosslinks():
+	cleaner = utilities.cleanDb.HCleaner('None')
+	cleaner.aggregateCrossLinks()
+def fix_single_letter_tags():
+	cleaner = utilities.cleanDb.HCleaner('None')
+	cleaner.fixSingleLetterTags()
+def reprocess_damaged():
+	cleaner = utilities.cleanDb.HCleaner('None')
+	cleaner.reprocess_damanged()
+
+
+# Double arg (funcs take one parameter):
+def two_arg_import(val):
+	if not os.path.exists(val):
+		print("Passed path '%s' does not exist!" % val)
+		return
+	autoImporter.importDirectories(val)
+
+def two_arg_organize(val):
+	if not os.path.exists(val):
+		print("Passed path '%s' does not exist!" % val)
+		return
+	autOrg.organizeFolder(val)
+
+def two_arg_run(val):
+	utilities.runPlugin.runPlugin(val)
+
+def two_arg_rename(val):
+	if not os.path.exists(val):
+		print("Passed path '%s' does not exist!" % val)
+		return
+	autOrg.renameSeriesToMatchMangaUpdates(val)
+
+def two_arg_lookup(val):
+	print("Passed name = '%s'" % val)
+	import nameTools as nt
+	haveLookup = nt.haveCanonicalMangaUpdatesName(val)
+	if not haveLookup:
+		print("Item not found in MangaUpdates name synonym table")
+		print("Processed item as searched = '%s'" % nt.prepFilenameForMatching(val))
+	else:
+		print("Item found in lookup table!")
+		print("Canonical name = '%s'" % nt.getCanonicalMangaUpdatesName(val) )
+
+def two_arg_purge_dir(val):
+	if not os.path.exists(val):
+		print("Passed path '%s' does not exist!" % val)
+		return
+	utilities.dedupDir.purgeDedupTemps(val)
+def two_arg_purge_dir_phash(val):
+	if not os.path.exists(val):
+		print("Passed path '%s' does not exist!" % val)
+		return
+	utilities.dedupDir.purgeDedupTempsPhash(val)
+
+def two_arg_dirs_restore(val):
+	if not os.path.exists(val):
+		print("Passed path '%s' does not exist!" % val)
+		return
+	utilities.dedupDir.runRestoreDeduper(val)
+
+def two_arg_sort_dir_contents(val):
+	if not os.path.exists(val):
+		print("Passed path '%s' does not exist!" % val)
+		return
+	utilities.approxFileSorter.scanDirectories(val)
+
+def two_arg_reprocess_from_db_bak(val):
+	if not os.path.exists(val):
+		print("Passed path '%s' does not exist!" % val)
+		return
+	cleaner = utilities.cleanDb.HCleaner('None')
+	cleaner.reprocess_from_db_bak(val)
+
+
+def two_arg_clean_archives(val):
+	if not os.path.exists(val):
+		print("Passed path '%s' does not exist!" % val)
+		return
+	utilities.cleanFiles.cleanArchives(val)
+
+# Triple arg (funcs take two parameters):
+
+
+def three_arg_dirs_clean(arg1, arg2):
+	if not os.path.exists(arg1):
+		print("Passed path '%s' does not exist!" % arg1)
+		return
+	elif not os.path.exists(arg2):
+		print("Passed path '%s' does not exist!" % arg2)
+		return
+	utilities.dedupDir.runDeduper(arg1, arg2)
+
+def three_arg_src_clean(arg1, arg2):
+	if not os.path.exists(arg2):
+		print("Passed path '%s' does not exist!" % arg2)
+		return
+	utilities.dedupDir.runSrcDeduper(arg1, arg2)
+
+def three_arg_dir_clean(arg1, arg2):
+	if not os.path.exists(arg1):
+		print("Passed path '%s' does not exist!" % arg1)
+		return
+	if not os.path.exists(arg2):
+		print("Passed path '%s' does not exist!" % arg2)
+		return
+	utilities.dedupDir.runSingleDirDeduper(arg1, arg2)
+
+def three_arg_move_unlinked(arg1, arg2):
+	if not os.path.exists(arg1):
+		print("Passed path '%s' does not exist!" % arg1)
+		return
+	if not os.path.exists(arg2):
+		print("Passed path '%s' does not exist!" % arg2)
+		return
+	utilities.dedupDir.moveUnlinkable(arg1, arg2)
+
+def three_arg_auto_clean(arg1, arg2):
+	if not os.path.exists(arg1):
+		print("Passed path '%s' does not exist!" % arg1)
+		return
+	if not os.path.exists(arg2):
+		print("Passed path '%s' does not exist!" % arg2)
+		return
+	deduplicator.remoteInterface.iterateClean(arg1, arg2)
+
+def three_arg_h_fix(arg1, arg2):
+	if not os.path.exists(arg2):
+		print("Passed path '%s' does not exist!" % arg2)
+		return
+
+	cleaner = utilities.cleanDb.HCleaner(arg1)
+	cleaner.resetMissingDownloads(arg2)
+
+def three_arg_phash_clean(arg1, arg2):
+	if not os.path.exists(arg1):
+		print("Passed path '%s' does not exist!" % arg1)
+		return
+	if not os.path.exists(arg2):
+		print("Passed path '%s' does not exist!" % arg2)
+		return
+	deduplicator.remoteInterface.pClean(arg1, arg2)
+
+
+
+
+##############################################################################################################################
+##############################################################################################################################
+
+single_arg_funcs = {
+
+	"run"                     : utilities.runPlugin.listPlugins,
+	'retag'                   : utilities.runPlugin.listPlugins,
+	"reload_tree"             : deduplicator.remoteInterface.treeReload,
+	"crosslink_books"         : utilities.bookClean.updateNetloc,
+	"clean_book_cache"        : utilities.bookClean.cleanBookContent,
+	"lndb_cleaned_regen"      : utilities.bookClean.regenLndbCleanedNames,
+	"fix_book_link_sources"   : utilities.bookClean.fixBookLinkSources,
+	"fix_bu_authors"          : utilities.bookClean.fixMangaUpdatesAuthors,
+	"madokami_organize"       : UploadPlugins.Madokami.uploader.do_remote_organize,
+	"madokami_upload"         : UploadPlugins.Madokami.uploader.do_missing_ul,
+	"rescan_failed_h"         : utilities.dedupDir.reprocessHFailed,
+	"h_clean"                 : utilities.dedupDir.runHDeduper,
+	"k_clean"                 : utilities.dedupDir.runKissDeduper,
+	"m_clean"                 : utilities.dedupDir.runMDeduper,
+	"clean_reset"             : utilities.dedupDir.resetDeduperScan,
+	"fix_swapped_paths"       : utilities.dedupDir.fixSwap,
+
+	"reset_missing"           : reset_missing,
+	"reset_missing_h"         : reset_missing_h,
+	"clear_bad_dedup"         : clear_bad_dedup,
+	"clear_bad_h_dedup"       : clear_bad_h_dedup,
+	"fix_batoto_urls"         : fix_batoto_urls,
+	"fix_bt_links"            : fix_bt_links,
+	"cross_sync"              : cross_sync,
+	"update_bu_lut"           : update_bu_lut,
+	"fix_bad_series"          : fix_bad_series,
+	"fix_djm"                 : fix_djm,
+	"fix_h_tags_case"         : fix_h_tags_case,
+	"clean_japanese_only"     : clean_japanese_only,
+	"aggregate_crosslinks"    : aggregate_crosslinks,
+	"fix_single_letter_tags"  : fix_single_letter_tags,
+	"reprocess_damaged"       : reprocess_damaged,
+
+}
+
+double_arg_funcs = {
+	"clean_archives"          : two_arg_clean_archives,
+	"dirs_restore"            : two_arg_dirs_restore,
+	"import"                  : two_arg_import,
+	"lookup"                  : two_arg_lookup,
+	"organize"                : two_arg_organize,
+	"purge_dir"               : two_arg_purge_dir,
+	"purge_dir_phash"         : two_arg_purge_dir_phash,
+	"rename"                  : two_arg_rename,
+	"reprocess_from_db_bak"   : two_arg_reprocess_from_db_bak,
+	"run"                     : two_arg_run,
+	"sort_dir_contents"       : two_arg_sort_dir_contents,
+
+}
+
+triple_arg_funcs = {
+	"dirs-clean"    : three_arg_dirs_clean,
+	"src-clean"     : three_arg_src_clean,
+	"dir-clean"     : three_arg_dir_clean,
+	"move-unlinked" : three_arg_move_unlinked,
+	"auto-clean"    : three_arg_auto_clean,
+	"h-fix"         : three_arg_h_fix,
+	"phash-clean"   : three_arg_phash_clean,
+
+}
+
+
+
 def printHelp():
+	for help_str in help_strings:
+		print(help_str)
 
-	print("################################### ")
-	print("##   System maintenance script   ## ")
-	print("################################### ")
-	print("")
-	print("*********************************************************")
-	print("Runtime Tools")
-	print("*********************************************************")
-	print("	run {plug_key}")
-	print("		Execute plugin {plug_key}.")
-	print("		If plugin is not specified, print the available plugins")
-	print()
-	print("	retag {plug_key}")
-	print("		Retag items for {plug_key}.")
-	print("		If plugin is not specified, print the available plugins")
-	print()
-	print("")
-	print("*********************************************************")
-	print("Organizing Tools")
-	print("*********************************************************")
-	print("	import {dirPath}")
-	print("		Import folders of manga from {dirPath}")
-	print("		Assumes that {dirPath} is composed of directories containing manga")
-	print("		zip files, and the directory is named after the series that it contains.")
-	print()
-	print("	organize {dirPath}")
-	print("		Run auto-organizing tools against {dirPath}")
-	print()
-	print("	rename {dirPath}")
-	print("		Rename directories in {dirPath} to match MangaUpdates naming")
-	print()
-	print("	dirs-clean {target-path} {del-dir}")
-	print("		Find duplicates in each subdir of {target-path}, and remove them.")
-	print("		Functions on a per-directory basis, so only duplicates in the same folder will be considered")
-	print("		Does not currently use phashing.")
-	print("		'Deleted' files are actually moved to {del-dir}, to allow checking before actual deletion.")
-	print("		The moved files are named with the entire file-path, with the '/' being replaced with ';'.")
-	print()
-	print("	dir-clean {target-path} {del-dir}")
-	print("		Find duplicates in {target-path}, and remove them.")
-	print("		Functions on a per-directory basis, so only duplicates in the same folder will be considered")
-	print("		Does not currently use phashing.")
-	print("		'Deleted' files are actually moved to {del-dir}, to allow checking before actual deletion.")
-	print("		The moved files are named with the entire file-path, with the '/' being replaced with ';'.")
-	print("	")
-	print("	dirs-restore {target-path}")
-	print("		Reverses the action of 'dirs-clean'. {target-path} is the directory specified as ")
-	print("		{del-dir} when running 'dirs-clean' ")
-	print("	")
-	print("	purge-dir {target-path}")
-	print("		Processes the output of 'dirs-clean'. {target-path} is the directory specified as ")
-	print("		{del-dir} when running 'dirs-clean'. ")
-	print("		Each item in {del-dir} is re-confirmed to be a complete duplicate, and then truly deleted. ")
-	print("	")
-	print("	purge-dir-phash {target-path}")
-	print("		Same as `purge-dir`, but uses phashes for duplicate detection as well.")
-	print("	")
-	print("	sort-dir-contents {target-path}")
-	print("		Scan the contents of {target-path}, and try to infer the series for each file in said folders.")
-	print("		If file doesn't match the series for the folder, and does match a known, valid folder, prompt")
-	print("		to move to valid folder.")
-	print("	")
-	print("	move-unlinked {src-path} {to-path}")
-	print("		Scan the contents of {src-path}, and try to infer the series for each subdirectory.")
-	print("		If a subdir has no matching series, move it to {to-path}")
-	print("	")
-	print("	h-clean")
-	print("		Walk through the historical H items and remove superceded duplicates.")
-	print("		Processing is done in DB-ID order, which is roughtly chronological..")
-	print("	")
-	print("	k-clean")
-	print("		Functions identically to the h-cleaner, but operates on the kissmange database entries")
-	print("	")
-	print("	clean-reset")
-	print("		Remove the incremental scan progress tags from the manga and hentai database.")
-	print("	")
-	print("	m-clean")
-	print("		And for cleaning all manga items.")
-	print("	")
-	print("	src-clean {source-key} {del-dir}")
-	print("		Find duplicates for all the items downloaded under the key {source-key}, and remove them.")
-	print("		'Deleted' files are actually moved to {del-dir}, to allow checking before actual deletion.")
-	print("		The moved files are named with the entire file-path, with the '/' being replaced with ';'.")
-	print("	fix-swapped-paths")
-	print("		Fix items where the path and filename are swapped in the database.")
-	print("	")
-
-	print("*********************************************************")
-	print("Miscellaneous Tools")
-	print("*********************************************************")
-	print("	lookup {name}")
-	print("		Lookup {name} in the MangaUpdates name synonym lookup table, print the results.")
-	print()
-	print("	crosslink-books")
-	print("		Make sure the netloc column of the book_items table is up to date.")
-	print()
-	print("	clean-book-cache")
-	print("		Clean out and delete any old files from the book content cache")
-	print("		that no longer has any entries in the database.")
-	print()
-	print("	madokami-organize")
-	print("		Attempt to consolidate directories on the Madokami FTP")
-	print("		using the name synonym system.")
-	print()
-	print("	madokami-upload")
-	print("		Look through the last week of downloads, and try to upload any.")
-	print("		which appear to not have been uploaded..")
-	print()
-	print("	rescan-failed-h")
-	print("		Rescan all H items that failed on previous phash processing.")
-	print()
-
-	print("*********************************************************")
-	print("Database Maintenance")
-	print("*********************************************************")
-	print("	reset-missing")
-	print("		Reset downloads where the file is missing, and the download is not tagged as deduplicated.")
-	print("	")
-	print("	clear-bad-dedup")
-	print("		Remove deduplicated tag from any files where the file exists.")
-	print("	")
-	print("	fix-bt-links")
-	print("		Fix links for Batoto that point to batoto.com, rather then bato.to.")
-	print("	")
-	print("	cross-sync")
-	print("		Sync name lookup table with seen series.")
-	print("	")
-	print("	update-bu-lut")
-	print("		Regernate lookup strings for MangaUpdates table (needed if the `prepFilenameForMatching` call in nameTools is modified).")
-	print("	")
-	print("	fix-bad-series")
-	print("		Consolidate series names to MangaUpdates standard naming.")
-	print("	")
-	print("	reload-tree")
-	print("		Reload the BK tree from the database.")
-	print("	")
-	print("	lndb-cleaned-regen")
-	print("		regenerate the set of cleaned LNDB item titles..")
-	print("	")
-	print("	truncate-trailing-novel")
-	print("		Clean out the trailing '(Novel)' from mangaupdates novel items.")
-	print("	")
-	print("	fix-book-link-sources")
-	print("		")
-	print("	")
-	print("	fix-bu-authors")
-	print("		Fix authors from mangaupdates table where '[, Add, ]' got into the data due to incomplete parsing of the webpage")
-	print("	")
-	print("	fix-h-tags-case")
-	print("		Fix issues where mixed-case H tags were being duplicated.")
-	print("	")
-	print("	clean-japanese-only")
-	print("		Clear out item in the H database that is not translated and has no tags we care about.")
-	print("	")
-	print("	aggregate-crosslinks")
-	print("		Aggregate cross-linked entries in the H database.")
-	print("	")
-	print("	")
-	print("	reprocess-from-db-bak {path}")
-	print("		Given a tar.gz database backup, extract and update hentai tags from it.")
-	print("	")
-
-	print("*********************************************************")
-	print("Remote deduper interface")
-	print("*********************************************************")
-	print("phash-clean {targetDir} {removeDir}")
-	print("		Find duplcates on the path {targetDir}, and move them to {removeDir}")
-	print("		Duplicate search is done using the set of phashes contained within ")
-	print("		{scanEnv}. ")
-	print("		Requires deduper server interface to be running.")
+	undoc_1 = [key for key in single_arg_funcs.keys() if not any([key in line for line in help_strings])]
+	undoc_2 = [key for key in double_arg_funcs.keys() if not any([key in line for line in help_strings])]
+	undoc_3 = [key for key in triple_arg_funcs.keys() if not any([key in line for line in help_strings])]
+	undoc = {
+		'1' : undoc_1,
+		'2' : undoc_2,
+		'3' : undoc_3,
+	}
+	if any(undoc.values()):
+		print("")
+		keys = list(undoc.keys())
+		keys.sort()
+		for argnum in keys:
+			fnames = undoc[argnum]
+			if fnames:
+				print("	Undocumented commands that take %s parameters:" % argnum)
+				for fname in fnames:
+					print("		%s" % fname)
 
 	return
 
 
 def parseOneArgCall(param):
-
-	print ("Passed arg", param)
-
-	pc = utilities.cleanDb.PathCleaner()
-
-	if param == "reset-missing":
-		pc.resetMissingDownloads()
-	elif param == "run" or param == 'retag':
-		utilities.runPlugin.listPlugins()
-	elif param == "reset-missing-h":
-		hc = utilities.cleanDb.HCleaner()
-		hc.resetMissingDownloads()
-	elif param == "clear-bad-dedup":
-		pc.clearInvalidDedupTags()
-	elif param == "clear-bad-h-dedup":
-		hc = utilities.cleanDb.HCleaner()
-		hc.clearInvalidDedupTags()
-	elif param == "fix-batoto-urls":
-		pc.btUrlFix()
-	elif param == "fix-bt-links":
-		pc.patchBatotoLinks()
-	elif param == "cross-sync":
-		pc.crossSyncNames()
-	elif param == "update-bu-lut":
-		pc.regenerateNameMappings()
-	elif param == "fix-bad-series":
-		pc.consolidateSeriesNaming()
-	elif param == "fix-djm":
-		pc.fixDjMItems()
-	elif param == "reload-tree":
-		deduplicator.remoteInterface.treeReload()
-	elif param == "crosslink-books":
-		utilities.bookClean.updateNetloc()
-	elif param == "clean-book-cache":
-		utilities.bookClean.cleanBookContent()
-	elif param == "lndb-cleaned-regen":
-		utilities.bookClean.regenLndbCleanedNames()
-	elif param == "truncate-trailing-novel":
-		utilities.bookClean.truncateTrailingNovel()
-	elif param == "fix-book-link-sources":
-		utilities.bookClean.fixBookLinkSources()
-	elif param == "fix-bu-authors":
-		utilities.bookClean.fixMangaUpdatesAuthors()
-	elif param == "madokami-organize":
-		UploadPlugins.Madokami.uploader.do_remote_organize()
-	elif param == "madokami-upload":
-		UploadPlugins.Madokami.uploader.do_missing_ul()
-	elif param == "fix-h-tags-case":
-		cleaner = utilities.cleanDb.HCleaner('None')
-		cleaner.cleanTags()
-	elif param == "clean-japanese-only":
-		cleaner = utilities.cleanDb.HCleaner('None')
-		cleaner.cleanJapaneseOnly()
-	elif param == "aggregate-crosslinks":
-		cleaner = utilities.cleanDb.HCleaner('None')
-		cleaner.aggregateCrossLinks()
-	elif param == "fix-single-letter-tags":
-		cleaner = utilities.cleanDb.HCleaner('None')
-		cleaner.fixSingleLetterTags()
-	elif param == "reprocess-damaged":
-		cleaner = utilities.cleanDb.HCleaner('None')
-		cleaner.reprocess_damanged()
-	elif param == "rescan-failed-h":
-		utilities.dedupDir.reprocessHFailed()
-	elif param == "h-clean":
-		utilities.dedupDir.runHDeduper()
-	elif param == "k-clean":
-		utilities.dedupDir.runKissDeduper()
-	elif param == "m-clean":
-		utilities.dedupDir.runMDeduper()
-	elif param == "clean-reset":
-		utilities.dedupDir.resetDeduperScan()
-	elif param == "fix-swapped-paths":
-		utilities.dedupDir.fixSwap()
+	if param in single_arg_funcs:
+		single_arg_funcs[param]()
 	else:
-		print("Unknown single-word arg: '%s'!" % param)
-
+		printHelp()
+		print("ERROR")
+		print("Unknown single_word arg: '%s'!" % param)
 
 def parseTwoArgCall(cmd, val):
-	if cmd == "import":
-		if not os.path.exists(val):
-			print("Passed path '%s' does not exist!" % val)
-			return
-		autoImporter.importDirectories(val)
-
-	elif cmd == "organize":
-		if not os.path.exists(val):
-			print("Passed path '%s' does not exist!" % val)
-			return
-		autOrg.organizeFolder(val)
-
-	elif cmd == "run":
-		utilities.runPlugin.runPlugin(val)
-
-	elif cmd == "rename":
-		if not os.path.exists(val):
-			print("Passed path '%s' does not exist!" % val)
-			return
-		autOrg.renameSeriesToMatchMangaUpdates(val)
-
-	elif cmd == "lookup":
-		print("Passed name = '%s'" % val)
-		import nameTools as nt
-		haveLookup = nt.haveCanonicalMangaUpdatesName(val)
-		if not haveLookup:
-			print("Item not found in MangaUpdates name synonym table")
-			print("Processed item as searched = '%s'" % nt.prepFilenameForMatching(val))
-		else:
-			print("Item found in lookup table!")
-			print("Canonical name = '%s'" % nt.getCanonicalMangaUpdatesName(val) )
-
-	elif cmd == "purge-dir":
-		if not os.path.exists(val):
-			print("Passed path '%s' does not exist!" % val)
-			return
-		utilities.dedupDir.purgeDedupTemps(val)
-	elif cmd == "purge-dir-phash":
-		if not os.path.exists(val):
-			print("Passed path '%s' does not exist!" % val)
-			return
-		utilities.dedupDir.purgeDedupTempsPhash(val)
-
-	elif cmd == "dirs-restore":
-		if not os.path.exists(val):
-			print("Passed path '%s' does not exist!" % val)
-			return
-		utilities.dedupDir.runRestoreDeduper(val)
-
-	elif cmd == "sort-dir-contents":
-		if not os.path.exists(val):
-			print("Passed path '%s' does not exist!" % val)
-			return
-		utilities.approxFileSorter.scanDirectories(val)
-
-	elif cmd == "reprocess-from-db-bak":
-		if not os.path.exists(val):
-			print("Passed path '%s' does not exist!" % val)
-			return
-		cleaner = utilities.cleanDb.HCleaner('None')
-		cleaner.reprocess_from_db_bak(val)
-
-
-	elif cmd == "clean-archives":
-		if not os.path.exists(val):
-			print("Passed path '%s' does not exist!" % val)
-			return
-		utilities.cleanFiles.cleanArchives(val)
+	if cmd in double_arg_funcs:
+		double_arg_funcs[cmd](val)
 
 	else:
+		printHelp()
+		print("ERROR")
 		print("Did not understand command!")
 		print("Sys.argv = ", sys.argv)
 
+
 def parseThreeArgCall(cmd, arg1, arg2):
-	if cmd == "dirs-clean":
-		if not os.path.exists(arg1):
-			print("Passed path '%s' does not exist!" % arg1)
-			return
-		elif not os.path.exists(arg2):
-			print("Passed path '%s' does not exist!" % arg2)
-			return
-		utilities.dedupDir.runDeduper(arg1, arg2)
-
-	elif cmd == "src-clean":
-		if not os.path.exists(arg2):
-			print("Passed path '%s' does not exist!" % arg2)
-			return
-		utilities.dedupDir.runSrcDeduper(arg1, arg2)
-
-	elif cmd == "dir-clean":
-		if not os.path.exists(arg1):
-			print("Passed path '%s' does not exist!" % arg1)
-			return
-		if not os.path.exists(arg2):
-			print("Passed path '%s' does not exist!" % arg2)
-			return
-		utilities.dedupDir.runSingleDirDeduper(arg1, arg2)
-
-	elif cmd == "move-unlinked":
-		if not os.path.exists(arg1):
-			print("Passed path '%s' does not exist!" % arg1)
-			return
-		if not os.path.exists(arg2):
-			print("Passed path '%s' does not exist!" % arg2)
-			return
-		utilities.dedupDir.moveUnlinkable(arg1, arg2)
-
-	elif cmd == "auto-clean":
-		if not os.path.exists(arg1):
-			print("Passed path '%s' does not exist!" % arg1)
-			return
-		if not os.path.exists(arg2):
-			print("Passed path '%s' does not exist!" % arg2)
-			return
-		deduplicator.remoteInterface.iterateClean(arg1, arg2)
-
-	elif cmd == "h-fix":
-		if not os.path.exists(arg2):
-			print("Passed path '%s' does not exist!" % arg2)
-			return
-
-		cleaner = utilities.cleanDb.HCleaner(arg1)
-		cleaner.resetMissingDownloads(arg2)
-
-	elif cmd == "phash-clean":
-		if not os.path.exists(arg1):
-			print("Passed path '%s' does not exist!" % arg1)
-			return
-		if not os.path.exists(arg2):
-			print("Passed path '%s' does not exist!" % arg2)
-			return
-		deduplicator.remoteInterface.pClean(arg1, arg2)
-
+	if cmd in double_arg_funcs:
+		triple_arg_funcs[cmd](arg1, arg2)
 
 	else:
+		print("ERROR")
 		print("Did not understand command!")
 		print("Sys.argv = ", sys.argv)
 

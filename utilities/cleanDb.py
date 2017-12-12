@@ -560,7 +560,7 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 				self.log.info("Item missing: %s", filePath)
 				self.updateDbEntryById(rowId=dbId, dlState=0, commit=False)
 
-				removeTags = ["deleted", "was-duplicate", "phash-duplicate", "dup-checked"]
+				removeTags = ["deleted", "was-duplicate", "dup-checked"]
 				tagList = tags.split(" ")
 
 				self.log.info("Processing '%s', '%s'", downloadPath, fileName)
@@ -800,7 +800,7 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 		self.log.info("	Expected tag: %s", crosslink_tag)
 
-		tag_sum = ' '.join([tmp[3] for tmp in items])
+		tag_sum = ' '.join([tmp[3] for tmp in items if tmp[3]])
 		tag_sum = [tmp for tmp in tag_sum.split(" ")]
 		tag_sum = [tmp for tmp in tag_sum if not tmp.startswith("crosslink")]
 		tag_sum = [tmp for tmp in tag_sum if not tmp.startswith("deleted")]
@@ -831,7 +831,7 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 			oldtags = set(tagsl)
 
 			newtags = newtags | tag_sum
-			add_tags = " ".join(newtags) + " " + add_tags
+			all_tags = " ".join(newtags) + " " + add_tags
 
 			# if len(oldtags) <= 3:
 			# 	if dlstate == 2:
@@ -841,13 +841,21 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 			# 		self.log.info("	DL state already reset")
 
 
+
 			if oldtags == newtags:
 				self.log.info("	Skipping tag update as tags have not changed")
 			else:
 				self.log.info("	Removing tags from %s -> '%s'" % (rowid, remove_tags))
-				self.log.info("	Adding tags to %s -> '%s'" % (rowid, add_tags))
+				self.log.info("	Adding tags to %s -> '%s'" % (rowid, all_tags))
 				self.removeTags(dbId=rowid, limitByKey=False, tags=remove_tags, commit=False, cur=cur)
-				self.addTags(dbId=rowid, limitByKey=False, tags=add_tags, commit=False, cur=cur)
+
+				# Indexed values cannot be larger then 1/3 a buffer page, and IIRC, postgres pages
+				# are 8K
+				if len(all_tags) > 8192 // 3:
+					self.log.warning("Huge tag string, cannot add!")
+					self.addTags(dbId=rowid, limitByKey=False, tags=add_tags, commit=False, cur=cur)
+				else:
+					self.addTags(dbId=rowid, limitByKey=False, tags=all_tags, commit=False, cur=cur)
 				cur.execute("commit")
 
 
@@ -896,7 +904,8 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 				""".format(tableName=self.tableName))
 			items = cur.fetchall()
 
-			for downloadPath, fileName, count in items:
+		for downloadPath, fileName, count in items:
+			with self.transaction() as cur:
 				if downloadPath is None:
 					print("Null path. Skipping")
 					continue

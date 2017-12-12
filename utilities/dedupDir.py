@@ -333,7 +333,7 @@ class DirDeduper(DbBase.DbBase):
 
 		self.log.info("Querying for items.")
 		with self.context_cursor() as cur:
-			cur.execute("SELECT dbid, filename, downloadpath, tags FROM hentaiitems ORDER BY dbid ASC")
+			cur.execute("SELECT dbid, filename, downloadpath, tags FROM {tableName} ORDER BY dbid ASC".format(tableName=self.tableName))
 			ret = cur.fetchall()
 
 
@@ -441,7 +441,7 @@ class DirDeduper(DbBase.DbBase):
 	def reprocessFailedH(self):
 
 		with self.context_cursor() as cur:
-			cur.execute('''SELECT dbid, filename, downloadpath, tags FROM hentaiitems WHERE tags LIKE %s;''', ('%unprocessable%', ))
+			cur.execute('''SELECT dbid, filename, downloadpath, tags FROM {tableName} WHERE tags LIKE %s;'''.format(tableName=self.tableName), ('%unprocessable%', ))
 			ret = cur.fetchall()
 		for dbid, fname, dpath, tags in ret:
 			basePath = os.path.join(dpath, fname)
@@ -628,10 +628,10 @@ def runHDeduper():
 
 def resetDeduperScan():
 
-	dd = HDirDeduper()
-	dd.globalRemoveTag('dup-checked')
 	dd = MDirDeduper()
 	dd.globalRemoveTag('dup-checked')
+	hd = HDirDeduper()
+	hd.globalRemoveTag('dup-checked')
 
 
 
