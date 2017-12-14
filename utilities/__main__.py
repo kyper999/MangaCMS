@@ -183,7 +183,7 @@ help_strings = [
 	"*********************************************************",
 	"Remote deduper interface",
 	"*********************************************************",
-	"phash_clean {targetDir} {removeDir}",
+	"	phash_clean {targetDir} {removeDir}",
 	"		Find duplcates on the path {targetDir}, and move them to {removeDir}",
 	"		Duplicate search is done using the set of phashes contained within ",
 	"		{scanEnv}. ",
@@ -242,6 +242,12 @@ def fix_single_letter_tags():
 def reprocess_damaged():
 	cleaner = utilities.cleanDb.HCleaner('None')
 	cleaner.reprocess_damanged()
+
+def fix_present_files():
+	hcleaner = utilities.cleanDb.HCleaner('None')
+	hcleaner.fixDlstateForPresentFiles()
+	mcleaner = utilities.cleanDb.MCleaner('None')
+	mcleaner.fixDlstateForPresentFiles()
 
 
 # Double arg (funcs take one parameter):
@@ -416,6 +422,7 @@ single_arg_funcs = {
 	"aggregate_crosslinks"    : aggregate_crosslinks,
 	"fix_single_letter_tags"  : fix_single_letter_tags,
 	"reprocess_damaged"       : reprocess_damaged,
+	"fix_present_files"       : fix_present_files,
 
 }
 
@@ -435,13 +442,13 @@ double_arg_funcs = {
 }
 
 triple_arg_funcs = {
-	"dirs-clean"    : three_arg_dirs_clean,
-	"src-clean"     : three_arg_src_clean,
-	"dir-clean"     : three_arg_dir_clean,
-	"move-unlinked" : three_arg_move_unlinked,
-	"auto-clean"    : three_arg_auto_clean,
-	"h-fix"         : three_arg_h_fix,
-	"phash-clean"   : three_arg_phash_clean,
+	"dirs_clean"    : three_arg_dirs_clean,
+	"src_clean"     : three_arg_src_clean,
+	"dir_clean"     : three_arg_dir_clean,
+	"move_unlinked" : three_arg_move_unlinked,
+	"auto_clean"    : three_arg_auto_clean,
+	"h_fix"         : three_arg_h_fix,
+	"phash_clean"   : three_arg_phash_clean,
 
 }
 
@@ -461,6 +468,10 @@ def printHelp():
 	}
 	if any(undoc.values()):
 		print("")
+		print("*********************************************************")
+		print("Undocumented (FIX ME PLZ)")
+		print("*********************************************************")
+
 		keys = list(undoc.keys())
 		keys.sort()
 		for argnum in keys:
@@ -517,24 +528,24 @@ def customHandler(dummy_signum, dummy_stackframe):
 def parseCommandLine():
 	signal.signal(signal.SIGINT, customHandler)
 	if len(sys.argv) == 2:
-		cmd = sys.argv[1].lower()
+		cmd = sys.argv[1].lower().replace("-", "_")
 		parseOneArgCall(cmd)
 
 	elif len(sys.argv) == 3:
-		cmd = sys.argv[1].lower()
+		cmd = sys.argv[1].lower().replace("-", "_")
 		val = sys.argv[2]
 		parseTwoArgCall(cmd, val)
 
 	elif len(sys.argv) == 4:
 
-		cmd = sys.argv[1].lower()
+		cmd = sys.argv[1].lower().replace("-", "_")
 		arg1 = sys.argv[2]
 		arg2 = sys.argv[3]
 		parseThreeArgCall(cmd, arg1, arg2)
 
 	elif len(sys.argv) == 5:
 
-		cmd = sys.argv[1].lower()
+		cmd = sys.argv[1].lower().replace("-", "_")
 		arg1 = sys.argv[2]
 		arg2 = sys.argv[3]
 		arg3 = sys.argv[4]

@@ -4,6 +4,8 @@ import os
 import os.path
 import sys
 import gzip
+import json
+import time
 
 import logSetup
 if __name__ == "__main__":
@@ -525,12 +527,8 @@ class PathCleaner(DbBase.DbBase):
 			print(len(items))
 			print(items[:5])
 
-class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
-	loggerPath = "Main.Hc"
-	tableName  = "HentaiItems"
-	pluginName = "None"
-	tableKey   = "None"
-	pluginType = 'Utility'
+
+class CleanerBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 	# QUERY_DEBUG = True
 
@@ -882,6 +880,52 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 					self.removeTags(dbId=dbid, limitByKey=False, tags=badtags, commit=False, cur=cur)
 					print(badtags, tags)
 
+	def fixDlstateForPresentFiles(self):
+
+		self.log.info("Fix present files")
+
+
+		with self.transaction() as cur:
+			self.log.info("Searching for items with path")
+			cur.execute("""
+				SELECT
+				    downloadPath,
+				    fileName,
+				    dbid,
+				    dlstate,
+				    tags
+
+				FROM
+				    {tableName}
+				WHERE
+					dlstate <= 1
+				AND
+					downloadpath IS NOT NULL
+				""".format(tableName=self.tableName))
+
+			items = cur.fetchall()
+		self.log.info("Found %s items with non-complete dlstates and non-null downloadpath", len(items))
+
+		dellog = []
+
+		try:
+			for downloadpath, filename, dbid, dlstate, tags in items:
+				fqpath = os.path.join(downloadpath, filename)
+				if os.path.exists(fqpath):
+					print((downloadpath, filename, dbid, dlstate ))
+					self.updateDbEntryById(rowId=dbid, dlstate=2)
+				else:
+					print("\r{}".format(len(dellog)), end="", flush=True)
+					dellog.append((downloadpath, filename, dbid, dlstate, tags))
+					self.updateDbEntryById(rowId=dbid, filename='', downloadpath='', tags='')
+				if dellog and len(dellog) % 1000 == 0:
+					print("syncing to JSON file")
+					with open("nullified_h_files-{}.json".format(time.time()), "w") as fp:
+						json.dump(dellog, fp)
+		finally:
+			with open("nullified_h_files-{}.json".format(time.time()), "w") as fp:
+				json.dump(dellog, fp)
+
 
 	def aggregateCrossLinks(self):
 		print("Aggregate CrossLinks")
@@ -957,6 +1001,27 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 			# 	self.log.info("Processing %s -> %s with %s items", downloadPath, fileName, count)
 			# 	self.__process_dupes(cur, downloadPath, fileName)
 
+	# # STFU, abstract base class
+	def go(self):
+		pass
+
+class MCleaner(CleanerBase):
+	loggerPath = "Main.Mc"
+	tableName  = "MangaItems"
+	pluginName = "None"
+	tableKey   = "None"
+	pluginType = 'Utility'
+
+
+class HCleaner(CleanerBase):
+	loggerPath = "Main.Hc"
+	tableName  = "HentaiItems"
+	pluginName = "None"
+	tableKey   = "None"
+	pluginType = 'Utility'
+
+
+
 	def __process_raw_row(self, row_raw):
 
 		row = row_raw.decode("utf-8")
@@ -1005,10 +1070,6 @@ class HCleaner(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 					self.__process_raw_row(line)
 			if lineproc % 250000 == 0:
 				self.log.info("Processed %s lines", lineproc)
-
-	# # STFU, abstract base class
-	def go(self):
-		pass
 
 if __name__ == "__main__":
 	import logSetup
