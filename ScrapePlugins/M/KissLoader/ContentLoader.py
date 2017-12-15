@@ -130,7 +130,7 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		# Let magic figure out the files for us (it's probably smarter then kissmanga, anyways.)
 		guessed = magic.from_buffer(content, mime=True)
-		ext = guess_extension(tp)
+		ext = guess_extension(guessed)
 		if ext:
 			fileN = fileN + ext
 

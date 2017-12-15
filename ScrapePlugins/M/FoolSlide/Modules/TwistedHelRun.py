@@ -168,16 +168,17 @@ class Runner(ScrapePlugins.RunBase.ScraperBase):
 	feedLoader = FeedLoader
 	contentLoader = ContentLoader
 
+
 if __name__ == "__main__":
 	import utilities.testBase as tb
 
 	with tb.testSetup():
-		# run = Runner()
-		# run.go()
+		run = Runner()
+		run.go()
 
-		runStatus.run = True
-		cl = ContentLoader()
-		cl.go()
+		# runStatus.run = True
+		# cl = ContentLoader()
+		# cl.go()
 
 		# cl = ContentLoader()
 		# pg = 'http://www.twistedhelscans.com/read/trace_15/en/0/33/page/1'

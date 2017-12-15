@@ -239,13 +239,16 @@ class MangaScraperDbBase(DbBase.DbBase):
 
 	# Update entry with key sourceUrl with values **kwargs
 	# kwarg names are checked for validity, and to prevent possiblity of sql injection.
-	def updateDbEntryById(self, rowId, commit=True, **kwargs):
+	def updateDbEntryById(self, rowId=None, dbId=None, commit=True, **kwargs):
+		if dbId is None:
+			assert rowId is not None
+			dbId = rowId
 
 		# Patch series name.
 		if "seriesName" in kwargs and kwargs["seriesName"] and self.shouldCanonize:
 			kwargs["seriesName"] = nt.getCanonicalMangaUpdatesName(kwargs["seriesName"])
 
-		query, queryArguments = self.generateUpdateQuery(dbId=rowId, **kwargs)
+		query, queryArguments = self.generateUpdateQuery(dbId=dbId, **kwargs)
 
 		if self.QUERY_DEBUG:
 			print("Query = ", query)
@@ -253,6 +256,7 @@ class MangaScraperDbBase(DbBase.DbBase):
 
 		with self.transaction(commit=commit) as cur:
 			cur.execute(query, queryArguments)
+			print("ret =",  cur.rowcount)
 
 		# print("Updating", self.getRowByValue(sourceUrl=sourceUrl))
 

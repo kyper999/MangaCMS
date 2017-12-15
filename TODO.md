@@ -1,3 +1,43 @@
+To Check:
+
+	19  : (ScrapePlugins.M.KissLoader.Run,                      hours( 1)),
+
+
+
+	# FoolSlide modules
+	80 : (ScrapePlugins.M.MangaMadokami.Run,                    hours(4)),
+	81 : (ScrapePlugins.M.BooksMadokami.Run,                    hours(4)),
+
+	0   : (ScrapePlugins.M.BtBaseManager.Run,                   hours( 1)),
+	2   : (ScrapePlugins.M.BuMonitor.Run,                       hours( 1)),
+
+	12  : (ScrapePlugins.M.IrcGrabber.IrcEnqueueRun,            hours(12)),  # Queue up new items from IRC bots.
+	15  : (ScrapePlugins.M.IrcGrabber.BotRunner,                hours( 1)),  # Irc bot never returns. It runs while the app is live. Rerun interval doesn't matter, as a result.
+
+FIX:
+	1   : (ScrapePlugins.M.MangaStreamLoader.Run,               hours( 6)),
+	42  : (ScrapePlugins.H.PururinLoader.Run,                   hours( 2)),
+	48  : (ScrapePlugins.H.ASMHentaiLoader.Run,                 hours( 4)),
+	26  : (ScrapePlugins.M.GameOfScanlationLoader.Run,          hours(12)),
+	24  : (ScrapePlugins.M.MangaBox.Run,                        hours(12)),
+	23  : (ScrapePlugins.M.ZenonLoader.Run,                     hours(24)),
+	17  : (ScrapePlugins.M.WebtoonLoader.Run,                   hours( 8)),
+
+	62 : (ScrapePlugins.M.FoolSlide.Modules.ChibiMangaRun,      hours(12)),  No longer foolslide?
+	75 : (ScrapePlugins.M.FoolSlide.Modules.MangazukiRun,       hours(12)),
+
+	46  : (ScrapePlugins.H.DjMoeLoader.Run,                     hours( 4)),
+
+
+		61 : (ScrapePlugins.M.FoolSlide.Modules.CanisMajorRun,      hours(12)),   Bad image urls?
+		63 : (ScrapePlugins.M.FoolSlide.Modules.DokiRun,            hours(12)),
+		70 : (ScrapePlugins.M.FoolSlide.Modules.SenseRun,           hours(12)),
+		71 : (ScrapePlugins.M.FoolSlide.Modules.ShoujoSenseRun,     hours(12)),
+		64 : (ScrapePlugins.M.FoolSlide.Modules.GoMangaCoRun,       hours(12)),   # Script tag broke
+		69 : (ScrapePlugins.M.FoolSlide.Modules.S2Run,              hours(12)),
+		72 : (ScrapePlugins.M.FoolSlide.Modules.TripleSevenRun,     hours(12)),
+		73 : (ScrapePlugins.M.FoolSlide.Modules.TwistedHelRun,      hours(12)),
+		
 Broken:
 tsumino
 DoujinMoe

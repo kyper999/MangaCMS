@@ -249,6 +249,12 @@ def fix_present_files():
 	mcleaner = utilities.cleanDb.MCleaner('None')
 	mcleaner.fixDlstateForPresentFiles()
 
+def delete_null_rows():
+	hcleaner = utilities.cleanDb.HCleaner('None')
+	hcleaner.deleteNullRows()
+	mcleaner = utilities.cleanDb.MCleaner('None')
+	mcleaner.deleteNullRows()
+
 
 # Double arg (funcs take one parameter):
 def two_arg_import(val):
@@ -423,6 +429,7 @@ single_arg_funcs = {
 	"fix_single_letter_tags"  : fix_single_letter_tags,
 	"reprocess_damaged"       : reprocess_damaged,
 	"fix_present_files"       : fix_present_files,
+	"delete_null_rows"        : delete_null_rows,
 
 }
 

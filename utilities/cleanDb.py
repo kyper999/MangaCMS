@@ -556,7 +556,7 @@ class CleanerBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 				self.log.info("File exists: %s", filePath)
 			else:
 				self.log.info("Item missing: %s", filePath)
-				self.updateDbEntryById(rowId=dbId, dlState=0, commit=False)
+				self.updateDbEntryById(dbId=dbId, dlState=0, commit=False)
 
 				removeTags = ["deleted", "was-duplicate", "dup-checked"]
 				tagList = tags.split(" ")
@@ -894,38 +894,77 @@ class CleanerBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 				    dbid,
 				    dlstate,
 				    tags
-
 				FROM
 				    {tableName}
 				WHERE
 					dlstate <= 1
 				AND
-					downloadpath IS NOT NULL
+					downloadpath <> ''
 				""".format(tableName=self.tableName))
 
 			items = cur.fetchall()
 		self.log.info("Found %s items with non-complete dlstates and non-null downloadpath", len(items))
 
+		# with open("nullified_h_files-1513242849.0264378.json", "r") as fp1:
+		# 	dellog = json.load(fp1)
 		dellog = []
-
+		skipped = 0
 		try:
 			for downloadpath, filename, dbid, dlstate, tags in items:
 				fqpath = os.path.join(downloadpath, filename)
 				if os.path.exists(fqpath):
 					print((downloadpath, filename, dbid, dlstate ))
-					self.updateDbEntryById(rowId=dbid, dlstate=2)
+					self.updateDbEntryById(dbId=dbid, dlstate=2)
+					skipped += 1
 				else:
-					print("\r{}".format(len(dellog)), end="", flush=True)
+					print("\r{} / {} ({})\r".format(len(dellog), len(items) - len(dellog), skipped), end="", flush=True)
 					dellog.append((downloadpath, filename, dbid, dlstate, tags))
-					self.updateDbEntryById(rowId=dbid, filename='', downloadpath='', tags='')
+					row_old = self.getRowByValue(dbId=dbid, limitByKey=False)
+					self.updateDbEntryById(dbId=dbid, filename='', downloadpath='', tags='')
+					row_new = self.getRowByValue(dbId=dbid, limitByKey=False)
+					print("Row: %s, %s", dbid, row_old)
+					print("Row: %s, %s", dbid, row_new)
+
 				if dellog and len(dellog) % 1000 == 0:
 					print("syncing to JSON file")
-					with open("nullified_h_files-{}.json".format(time.time()), "w") as fp:
+					with open("nullified_{}_files-{}.json".format(self.tableName, time.time()), "w") as fp:
 						json.dump(dellog, fp)
+
+
+					cur.execute("""
+						SELECT
+						    count(*)
+						FROM
+						    {tableName}
+						WHERE
+							dlstate <= 1
+						AND
+							downloadpath IS NOT NULL
+						""".format(tableName=self.tableName))
+
+					icnt = cur.fetchall()
+					print("Remaining: %s" % icnt)
+
 		finally:
 			with open("nullified_h_files-{}.json".format(time.time()), "w") as fp:
 				json.dump(dellog, fp)
 
+
+	def deleteNullRows(self):
+
+
+		with self.transaction() as cur:
+			self.log.info("Searching for items without files")
+			cur.execute("""
+				DELETE
+				FROM
+				    {tableName}
+				WHERE
+					dlstate <= 1
+				AND
+					(downloadpath = '' or downloadpath IS NULL)
+				""".format(tableName=self.tableName))
+			self.log.info("Changed %s rows", cur.rowcount)
 
 	def aggregateCrossLinks(self):
 		print("Aggregate CrossLinks")
