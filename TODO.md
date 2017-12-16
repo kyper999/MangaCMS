@@ -14,8 +14,6 @@ To Check:
 FIX:
 	24  : (ScrapePlugins.M.MangaBox.Run,                        hours(12)),
 	23  : (ScrapePlugins.M.ZenonLoader.Run,                     hours(24)),
-	42  : (ScrapePlugins.H.PururinLoader.Run,                   hours( 2)),
-	48  : (ScrapePlugins.H.ASMHentaiLoader.Run,                 hours( 4)),
 
 	62 : (ScrapePlugins.M.FoolSlide.Modules.ChibiMangaRun,      hours(12)),  No longer foolslide?
 	75 : (ScrapePlugins.M.FoolSlide.Modules.MangazukiRun,       hours(12)),

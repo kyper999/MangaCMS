@@ -85,9 +85,6 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 				tags = self.rowToTags(rowdat)
 				tags = ["Collection "+tag for tag in tags]
 				ret['tags'].extend(tags)
-			elif cat == "Parody:":
-				tags = self.rowToTags(rowdat)
-				tags = ["Parody "+tag for tag in tags]
 				ret['tags'].extend(tags)
 			elif cat == "Characters:":
 				tags = self.rowToTags(rowdat)
@@ -97,6 +94,10 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 				tags = self.rowToTags(rowdat)
 				ret['tags'].extend(tags)
 
+
+			elif cat == "Parodies:" or cat == "Parody:":
+				tags = self.rowToTags(rowdat)
+				tags = ["Parody "+tag for tag in tags]
 
 			# Garbage stuff
 			elif cat == "Pages":
@@ -173,8 +174,9 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 		ret = []
 
 		for itemDiv in divs:
-			cap = itemDiv.find("div", class_='caption')
-			if cap.img['src'] == "/images/en.png" or filter_eng != True or retag:
+			# cap = itemDiv.find("div", class_='caption')
+			img = itemDiv.find('img', class_='flag')
+			if img['src'] == "/images/en.png" or filter_eng != True or retag:
 				item = self.parseItem(itemDiv, retag)
 				if item:
 
@@ -196,8 +198,8 @@ def process(runner, pageOverride, time_offset, retag=False):
 def getHistory(retag=False):
 	print("Getting history")
 	run = DbLoader()
-	with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-		futures = [executor.submit(process, runner=run, pageOverride=x, time_offset=time.time(), retag=retag) for x in range(0, 8980)]
+	with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+		futures = [executor.submit(process, runner=run, pageOverride=x, time_offset=time.time(), retag=retag) for x in range(0, 200)]
 		print("Waiting for executor to finish.")
 		executor.shutdown()
 
@@ -220,6 +222,6 @@ if __name__ == "__main__":
 		getHistory(retag=True)
 		# test()
 		# run = DbLoader()
-		# run.go()
+		# run.do_fetch_feeds()
 
 
