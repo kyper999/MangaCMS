@@ -40,7 +40,6 @@ Gone:
 WebtoonsReader
 
 http://www.tsumino.com/
-https://doujinshi.online/
 
 http://cafeconirst.com/
 https://www.spottoon.com/

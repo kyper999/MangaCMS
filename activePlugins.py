@@ -7,15 +7,19 @@ if __name__ == "__main__":
 import ScrapePlugins.M.BuMonitor.Run
 import ScrapePlugins.M.BtBaseManager.Run
 
+
+import ScrapePlugins.H.ASMHentaiLoader.Run
 import ScrapePlugins.H.DjMoeLoader.Run
 import ScrapePlugins.H.DjMoeLoader.Retag
+import ScrapePlugins.H.DoujinOnlineLoader.Run
+import ScrapePlugins.H.HBrowseLoader.Run
+import ScrapePlugins.H.Hentai2Read.Run
+import ScrapePlugins.H.HitomiLoader.Run
+import ScrapePlugins.H.NHentaiLoader.Run
 import ScrapePlugins.H.PururinLoader.Run
 import ScrapePlugins.H.SadPandaLoader.Run
-import ScrapePlugins.H.NHentaiLoader.Run
-import ScrapePlugins.H.HBrowseLoader.Run
-import ScrapePlugins.H.HitomiLoader.Run
-import ScrapePlugins.H.ASMHentaiLoader.Run
-import ScrapePlugins.H.Hentai2Read.Run
+import ScrapePlugins.H.TsuminoLoader.Run
+
 
 
 import ScrapePlugins.M.McLoader.Run
@@ -98,7 +102,9 @@ scrapePlugins = {
 	46  : (ScrapePlugins.H.DjMoeLoader.Run,                     hours( 4)),
 	47  : (ScrapePlugins.H.HitomiLoader.Run,                    hours( 4)),
 	48  : (ScrapePlugins.H.ASMHentaiLoader.Run,                 hours( 4)),
-	48  : (ScrapePlugins.H.Hentai2Read.Run,                     hours( 6)),
+	49  : (ScrapePlugins.H.Hentai2Read.Run,                     hours( 6)),
+	50  : (ScrapePlugins.H.DoujinOnlineLoader.Run,              hours( 6)),
+	51  : (ScrapePlugins.H.TsuminoLoader.Run,                   hours( 6)),
 	# 55  : (ScrapePlugins.H.DjMoeLoader.Retag,                   hours(24)),
 
 	# FoolSlide modules

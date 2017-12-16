@@ -34,24 +34,20 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 		try:
 			page_params = {
 				"PageNumber"         : pageOverride,
-				"Search"             : "",
-				"SortOptions"        : "Newest",
-				"PageMinimum"        : 1,
-				"PageMaximum"        : 2150,
-				"RateMinimum"        : 0,
-				"RateMaximum"        : 5,
-				"ExcludeCategories"  : "false",
-				"ExcludeArtists"     : "false",
-				"ExcludeGroups"      : "false",
-				"ExcludeParodies"    : "false",
-				"ExcludeCollections" : "false",
-				"ExcludeCharacters"  : "false",
-				"ExcludeUploaders"   : "false",
+				"Text"             : "",
+				"Sort"        : "Newest",
+				"List"               : 0,
+				"Length"             : 0,
+				"MinimumRating"      : 0,
 			}
 
 			referrer = "http://www.tsumino.com/?PageNumber={num}".format(num=pageOverride)
 
-			soup = self.wg.getJson("http://www.tsumino.com/Browse/Query", postData=page_params, addlHeaders={"Referer" : referrer})
+			soup = self.wg.getJson("http://www.tsumino.com/Books/Operate", postData=page_params, addlHeaders={"Referer" : referrer})
+
+			# print("Response:")
+			# pprint.pprint(soup)
+
 		except urllib.error.URLError:
 			self.log.critical("Could not get page from Tsumino!")
 			self.log.critical(traceback.format_exc())
@@ -98,11 +94,11 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 				tags = self.rowToTags(rowdat)
 				tags = ["artist "+tag for tag in tags]
 				ret['tags'].extend(tags)
-			elif cat == "Groups":
+			elif cat == "Groups" or cat == "Group":
 				tags = self.rowToTags(rowdat)
 				tags = ["Group "+tag for tag in tags]
 				ret['tags'].extend(tags)
-			elif cat == "Collections":
+			elif cat == "Collections" or cat == "Collection":
 				tags = self.rowToTags(rowdat)
 				tags = ["Collection "+tag for tag in tags]
 				ret['tags'].extend(tags)
@@ -110,17 +106,17 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 				tags = self.rowToTags(rowdat)
 				tags = ["Parody "+tag for tag in tags]
 				ret['tags'].extend(tags)
-			elif cat == "Characters":
+			elif cat == "Characters" or cat == "Character":
 				tags = self.rowToTags(rowdat)
 				tags = ["Character "+tag for tag in tags]
 				ret['tags'].extend(tags)
-			elif cat == "Tags":
+			elif cat == "Tags" or cat == "Tag":
 				tags = self.rowToTags(rowdat)
 				ret['tags'].extend(tags)
 
 
 			# Garbage stuff
-			elif cat == "Pages":
+			elif cat == "Pages" or cat == "Page":
 				pass
 			elif cat == "Rating":
 				pass
@@ -149,9 +145,16 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 		return ret
 
 
-	def parseItem(self, containerDiv):
+	def parseItem(self, item):
+
+		if not 'Entry' in item and 'Id' in item['Entry']:
+			self.log.error("Missing metadata in item?")
+			for line in pprint.pformat(item).split("\n"):
+				self.log.error(line.rstrip())
+			return None
+
 		ret = {}
-		ret['sourceUrl'] = urllib.parse.urljoin(self.urlBase, containerDiv.a["href"])
+		ret['sourceUrl'] = 'http://www.tsumino.com/Book/Info/{}/'.format(item['Entry']['Id'])
 
 		# Do not decend into items where we've already added the item to the DB
 		if len(self.getRowsByValue(sourceUrl=ret['sourceUrl'])):
@@ -172,16 +175,15 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 		#
 
 		jdat = self.loadFeed(pageOverride)
-		markup = jdat['Data']
+		releases = jdat['Data']
 
-		soup = webFunctions.as_soup(markup)
+		# soup = webFunctions.as_soup(releases)
 
-		divs = soup.find_all("div", class_='book-grid-item-container')
+		# divs = soup.find_all("div", class_='book-grid-item-container')
 
 		ret = []
-		for itemDiv in divs:
-
-			item = self.parseItem(itemDiv)
+		for item in releases:
+			item = self.parseItem(item)
 			if item:
 				ret.append(item)
 
@@ -194,14 +196,14 @@ def getHistory():
 	run = DbLoader()
 	# dat = run.getFeed()
 	# print(dat)
-	for x in range(0, 700):
+	for x in range(0, 70):
 		dat = run.getFeed(pageOverride=x)
-		run.processLinksIntoDB(dat)
+		run._processLinksIntoDB(dat)
 
 def test():
 	print("Test!")
 	run = DbLoader()
-	print(run.go())
+	print(run.do_fetch_feeds())
 	# print(run)
 	# pprint.pprint(run.getFeed())
 	# pprint.pprint(run.getInfo("http://www.tsumino.com/Book/Info/27698/1/sleeping-beauty-dornroschen"))
@@ -214,6 +216,6 @@ if __name__ == "__main__":
 		getHistory()
 		# test()
 		# run = DbLoader()
-		# run.go()
+		# run.do_fetch_feeds()
 
 

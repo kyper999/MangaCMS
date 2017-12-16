@@ -46,28 +46,14 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 		return title.get_text()
 
 
-	def imageUrls(self, soup):
-		thumbnailDiv = soup.find("div", id="thumbnail-container")
-
+	def imageUrls(self, ref_url, jdat):
 		ret = []
 
-		for link in thumbnailDiv.find_all("a", class_='gallerythumb'):
+		for img_hash in jdat['reader_page_urls']:
 
-			referrer = urllib.parse.urljoin(self.urlBase, link['href'])
-			if hasattr(link, "data-src"):
-				thumbUrl = link.img['data-src']
-			else:
-				thumbUrl = link.img['src']
+			imgurl = "http://www.tsumino.com/Image/Object?name={}".format(urllib.parse.quote(img_hash, safe=''))
 
-			if not "t." in thumbUrl[-6:]:
-				raise ValueError("Url is not a thumb? = '%s'" % thumbUrl)
-			else:
-				imgUrl = thumbUrl[:-6] + thumbUrl[-6:].replace("t.", '.')
-
-			imgUrl   = urllib.parse.urljoin(self.urlBase, imgUrl)
-			imgUrl = imgUrl.replace("//t.", "//i.")
-
-			ret.append((imgUrl, referrer))
+			ret.append((imgurl, ref_url))
 
 		return ret
 
@@ -135,7 +121,7 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 		print(jdat)
 
 
-		imageUrls = self.imageUrls(soup)
+		imageUrls = self.imageUrls(sourcePage, jdat)
 
 		# print("Image URLS: ", imageUrls)
 		linkDict["dlLinks"] = imageUrls
@@ -270,6 +256,9 @@ if __name__ == "__main__":
 
 		run = ContentLoader()
 		# run.retreivalThreads = 1
-		run.resetStuckItems()
-		run.go()
+		# run.getDownloadInfo({
+		# 	'sourceUrl'  : 'http://www.tsumino.com/Book/Info/35748/souzouryoku-seiyoku-',
+		# 	'seriesName' : 'Test',
+		# 	})
+		run.do_fetch_content()
 		# run.getDownloadInfo("http://www.tsumino.com/Book/Info/27758/1/the-you-behind-the-lens-fakku")
