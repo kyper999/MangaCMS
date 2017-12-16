@@ -160,7 +160,7 @@ class FeedLoader(ScrapePlugins.LoaderBase.LoaderBase):
 if __name__ == '__main__':
 	fl = FeedLoader()
 	print("fl", fl)
-	fl.go()
+	fl.do_fetch_feeds()
 	# print(fl.getAllItems())
 	# print(fl.getItemPages('https://gameofscanlation.moe/projects/hero-waltz/'))
 	# print(fl.getItemPages('https://gameofscanlation.moe/projects/mujang/'))

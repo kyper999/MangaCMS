@@ -40,18 +40,14 @@ class FeedLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	urlBase    = "http://www.webtoons.com/"
 	seriesBase = "http://www.webtoons.com/genre"
 
-
-
-
-
-
 	def extractItemInfo(self, soup):
 
 		ret = {}
 
 		titleH = soup.find("h1", class_='subj')
 		# print(titleH)
-		titleH.div.decompose()
+		if titleH.div:
+			titleH.div.decompose()
 		# titleDiv = soup.find("h1", class_="ttl")
 		ret["title"] = titleH.get_text().strip()
 

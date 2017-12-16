@@ -112,8 +112,8 @@ class FeedLoader(ScrapePlugins.LoaderBase.LoaderBase):
 			if not series.a:
 				continue
 
-
-			ret.add(series.a['href'])
+			item_url = urllib.parse.urljoin(self.urlBase, series.a['href'])
+			ret.add(item_url)
 
 		self.log.info("Found %s series", len(ret))
 
@@ -148,7 +148,7 @@ class FeedLoader(ScrapePlugins.LoaderBase.LoaderBase):
 if __name__ == '__main__':
 	fl = FeedLoader()
 	print("fl", fl)
-	fl.go()
+	fl.do_fetch_feeds()
 	# fl.getSeriesUrls()
 	# items = fl.getItemPages('http://mangastream.com/manga/area_d')
 	# print("Items")

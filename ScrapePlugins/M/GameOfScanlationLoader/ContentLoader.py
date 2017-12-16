@@ -8,12 +8,16 @@ import nameTools as nt
 import os
 import os.path
 import processDownload
-import ScrapePlugins.RetreivalBase
 import settings
 import traceback
 import urllib.parse
 import webFunctions
 import zipfile
+
+
+import ScrapePlugins.RetreivalBase
+import ScrapePlugins.ScrapeExceptions as ScrapeExceptions
+
 
 class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
@@ -49,6 +53,9 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 		imagesDiv = soup.find('div', class_='chapterPages')
+		if not imagesDiv:
+			if soup.find("div", class_='primaryContent') and soup.find("div", class_='primaryContent').find('div', class_='messageContent'):
+				raise ScrapeExceptions.NotMangaException("This item appears to be a Light-Novel!")
 		images = imagesDiv.find_all('img', class_='avatar')
 
 		pageno = 1
@@ -66,7 +73,8 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 			pages.add((pageno, src))
 			pageno += 1
 
-
+		pages = list(pages)
+		pages.sort()
 		return pages
 
 
@@ -137,6 +145,10 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 			self.updateDbEntry(sourceUrl, dlState=2, downloadPath=filePath, fileName=fileName, seriesName=seriesName, originName=chapterVol, tags=dedupState)
 			return
 
+		except ScrapeExceptions.NotMangaException:
+			self.log.critical("Failure on retreiving content at %s", sourceUrl)
+			self.log.critical("That URL isn't a manga release!")
+			self.updateDbEntry(sourceUrl, dlState=-2)
 		except Exception:
 			self.log.critical("Failure on retreiving content at %s", sourceUrl)
 			self.log.critical("Traceback = %s", traceback.format_exc())
@@ -149,19 +161,19 @@ if __name__ == '__main__':
 	with tb.testSetup():
 
 		cl = ContentLoader()
-		# cl.go()
+		cl.do_fetch_content()
 
-		sourceUrl = "https://gameofscanlation.moe/projects/unbalance-triangle/chapter-32-2.1036/"
+		# sourceUrl = "https://gameofscanlation.moe/projects/unbalance-triangle/chapter-32-2.1036/"
 
-		imageUrls = cl.getImageUrls(sourceUrl)
+		# imageUrls = cl.getImageUrls(sourceUrl)
 
-		for url in imageUrls:
-			print(url)
-		images = []
-		for imgNum, imgUrl in imageUrls:
-			imageName, imageContent = cl.getImage(imgUrl, referrer=sourceUrl)
-			print(imgNum, imgUrl, imageName)
-			images.append([imgNum, imageName, imageContent])
+		# for url in imageUrls:
+		# 	print(url)
+		# # images = []
+		# # for imgNum, imgUrl in imageUrls:
+		# # 	imageName, imageContent = cl.getImage(imgUrl, referrer=sourceUrl)
+		# # 	print(imgNum, imgUrl, imageName)
+		# # 	images.append([imgNum, imageName, imageContent])
 
 
 

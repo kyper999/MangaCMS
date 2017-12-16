@@ -82,3 +82,6 @@ class LoaderBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 		# for x in range(10):
 		# 	dat = self.getFeed(pageOverride=x)
 		# 	self.processLinksIntoDB(dat)
+
+	def go(self):
+		raise RuntimeError("I think you meant to call 'do_fetch_feeds()'")

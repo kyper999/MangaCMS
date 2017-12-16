@@ -27,7 +27,8 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
 	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
-	retreivalThreads = 1
+	retreivalThreads = 2
+	urlBase    = "http://mangastream.com/"
 
 
 
@@ -61,10 +62,14 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 			pages.add((imnum, imageDiv.img['src'], nextUrl))
 
 			nextUrl = imageDiv.a['href']
+			nextUrl = urllib.parse.urljoin(self.urlBase, nextUrl)
+
 
 			if not chapBase in nextUrl:
 				break
 			imnum += 1
+
+		assert len(pages) > 1
 
 
 		self.log.info("Found %s pages", len(pages))
@@ -100,15 +105,6 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
 			chapterName = nt.makeFilenameSafe(chapterVol)
 
-			fqFName = os.path.join(dlPath, chapterName+" [MangaStream.com].zip")
-
-			loop = 1
-			while os.path.exists(fqFName):
-				fqFName, ext = os.path.splitext(fqFName)
-				fqFName = "%s (%d)%s" % (fqFName, loop,  ext)
-				loop += 1
-			self.log.info("Saving to archive = %s", fqFName)
-
 			images = []
 			for imgNum, imgUrl, referrerUrl in imageUrls:
 				imageName, imageContent = self.getImage(imgUrl, referrerUrl)
@@ -125,11 +121,24 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 				self.updateDbEntry(sourceUrl, dlState=-1, seriesName=seriesName, originName=chapterVol, tags="error-404")
 				return
 
-			#Write all downloaded files to the archive.
-			arch = zipfile.ZipFile(fqFName, "w")
-			for imgNum, imageName, imageContent in images:
-				arch.writestr("{:03} - {}".format(imgNum, imageName), imageContent)
-			arch.close()
+			fqFName = os.path.join(dlPath, chapterName+" [MangaStream.com].zip")
+
+			image_list = [("{:03} - {}".format(imgNum, imageName), imageContent) for imgNum, imageName, imageContent in images]
+			self.save_image_set(fqFName, image_list)
+
+			# loop = 1
+			# while os.path.exists(fqFName):
+			# 	fqFName, ext = os.path.splitext(fqFName)
+			# 	fqFName = "%s (%d)%s" % (fqFName, loop,  ext)
+			# 	loop += 1
+			# self.log.info("Saving to archive = %s", fqFName)
+
+
+			# #Write all downloaded files to the archive.
+			# arch = zipfile.ZipFile(fqFName, "w")
+			# for imgNum, imageName, imageContent in images:
+			# 	arch.writestr("{:03} - {}".format(imgNum, imageName), imageContent)
+			# arch.close()
 
 
 			dedupState = processDownload.processDownload(seriesName, fqFName, deleteDups=True, rowId=link['dbId'])
@@ -149,7 +158,5 @@ if __name__ == '__main__':
 
 	with tb.testSetup():
 		cl = ContentLoader()
-
 		cl.do_fetch_content()
-
 

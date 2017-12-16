@@ -187,6 +187,8 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 		toFetch = {key:0 for key in linkDict["dlLink"]}
 		baseUrls = [item for item in linkDict["dlLink"]]
 		images = {}
+		visited = set()
+		bad = 0
 		while not all(toFetch.values()):
 
 			# get a random dict element where downloadstate = 0
@@ -216,6 +218,7 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
 			nextPageLink = imageTd.a['href']
 
+
 			# Block any cases where the next page url is higher then
 			# the baseURLs, so that we don't fetch links back up the
 			# hierarchy.
@@ -223,6 +226,16 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
 				if not nextPageLink in toFetch:
 					toFetch[nextPageLink] = 0
+
+			if nextPageLink in visited:
+				bad += 1
+
+			if bad > 2:
+				break
+
+			visited.add(nextPageLink)
+
+
 
 		# Use a dict, and then flatten to a list because we will fetch some items twice.
 		# Basically, `http://www.hbrowse.com/{sommat}/c00000` has the same image
