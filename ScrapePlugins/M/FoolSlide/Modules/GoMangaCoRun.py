@@ -64,11 +64,13 @@ if __name__ == '__main__':
 	import utilities.testBase as tb
 
 	with tb.testSetup():
-		fl = Runner()
-		fl.go()
+		# fl = Runner()
+		# fl.go()
 
-		# cl = ContentLoader()
-		# ret = cl.getImageUrls("http://gomanga.co/reader/read/hajimete_no_gal/en/0/13/")
+		cl = ContentLoader()
+		cl.do_fetch_content()
+
+		# ret = cl.getImageUrls("https://gomanga.co/reader/read/golden_times/en/0/4/page/4/")
 		# print(ret)
 		# ret = cl.getImageUrls("http://reader.roseliascans.com/read/futari_ecchi/en/24/225/")
 		# print(ret)

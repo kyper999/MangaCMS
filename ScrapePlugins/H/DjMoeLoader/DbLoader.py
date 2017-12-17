@@ -1,6 +1,7 @@
 import webFunctions
 
 import calendar
+import datetime
 import traceback
 
 import json
@@ -28,10 +29,22 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 		self.log.info("Retreiving feed content...",)
 		if not pageOverride:
 			pageOverride = 1
+		pageOverride -= 1
+		pageOverride = max(pageOverride, 0)
+		pageOverride = pageOverride * 5
+
+		date = datetime.date.today()
+		date = date - datetime.timedelta(days=pageOverride)
+		dt = datetime.datetime.combine(date, datetime.time(0))
+		newer = int(dt.timestamp())
+		older = newer - (60 * 60 * 24 * 7)
+
+
 		try:
 			# They're apparently sniffing cookies now. Fake out the system by loading the container page first.
-			dummy_pg = self.wg.getpage("http://doujins.com/main")
-			data = self.wg.getJson( urllib.parse.urljoin(self.urlBase, "/ajax/newest.php"), addlHeaders={'Referer': 'http://doujins.com/main'}, postData={'get': pageOverride} )
+			dummy_pg = self.wg.getpage("https://doujins.com/")
+			data = self.wg.getJson( urllib.parse.urljoin(self.urlBase, "folders?start={older}&end={newer}").format(older=older, newer=newer),
+				addlHeaders={'Referer': 'https://doujins.com/'} )
 		except urllib.error.URLError:
 			self.log.critical("Could not get feed from Doujin Moe!")
 			self.log.critical(traceback.format_exc())
@@ -49,7 +62,7 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 			self.log.error("Returned JSON string = %s", data)
 			return []
 
-		items = data["newest"]
+		items = data["folders"]
 		return items
 
 
@@ -64,11 +77,11 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 			item = {}
 
 			try:
-				item["dlName"] = feedEntry["name"]
-				item["contentID"] = feedEntry["token"]
-				item["date"] = calendar.timegm(parser.parse( feedEntry["date"]).utctimetuple())
+				item["originName"] = feedEntry["name"]
+				item["sourceUrl"] = feedEntry["token"]
+				item["retreivalTime"] = calendar.timegm(parser.parse( feedEntry["date"]).utctimetuple())
 				#self.log.info("date = ", feedEntry['published_parsed'])
-				item['retreivalTime'] = time.time()
+				# item['retreivalTime'] = time.time()
 
 				ret.append(item)
 
@@ -76,6 +89,7 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 				self.log.info("WAT?")
 				traceback.print_exc()
 
+		self.log.info("Found %s releases", len(ret))
 		return ret
 
 
@@ -84,6 +98,9 @@ if __name__ == "__main__":
 
 	with tb.testSetup(load=False):
 		# getHistory()
-		run = DjMoeDbLoader()
+		run = DbLoader()
 		# run.getFeed()
-		run.go()
+		for x in range(500):
+			run.do_fetch_feeds(pageOverride=x)
+
+

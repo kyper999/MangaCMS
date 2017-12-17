@@ -41,6 +41,28 @@ class FoolContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 		return fileN, content
 
 
+	def extract_script(self, container, baseUrl):
+		for script_item in container.find_all('script'):
+			scriptText = script_item.get_text()
+
+			jsonRe = re.compile(r'var [a-zA-Z]+ ?= ?(\[.*?\]);', re.DOTALL)
+			jsons = jsonRe.findall(scriptText)
+			jsons = [tmp for tmp in jsons if len(tmp)>2]
+			if not jsons:
+				continue
+
+			for item in jsons:
+				loaded = json.loads(item)
+				bad = False
+				for image in loaded:
+					urlfname = os.path.split(urllib.parse.urlsplit(image['url']).path)[-1]
+					if image['filename'] != urlfname:
+						bad = True
+				if not bad:
+					return loaded
+
+		raise ValueError("No contents in script tags? '%s'" % baseUrl)
+
 
 	def getImageUrls(self, baseUrl):
 
@@ -70,29 +92,7 @@ class FoolContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 		if container.find('div', class_='ads'):
 			container.find('div', class_='ads').decompose()
 
-		scriptText = container.script.get_text()
-		if not scriptText:
-			raise ValueError("No contents in script tag? '%s'" % baseUrl)
-
-		jsonRe = re.compile(r'var [a-zA-Z]+ ?= ?(\[.*?\]);', re.DOTALL)
-		jsons = jsonRe.findall(scriptText)
-		jsons = [tmp for tmp in jsons if len(tmp)>2]
-		if not jsons:
-			# print("Script = ", container.script)
-			raise ValueError("No JSON variable in script! '%s'" % baseUrl)
-
-		valid = False
-		for item in jsons:
-			loaded = json.loads(item)
-			bad = False
-			for image in loaded:
-				urlfname = os.path.split(urllib.parse.urlsplit(image['url']).path)[-1]
-				if image['filename'] != urlfname:
-					bad = True
-			if not bad:
-				arr = loaded
-				break
-
+		arr = self.extract_script(container, baseUrl)
 
 		imageUrls = []
 
@@ -106,7 +106,7 @@ class FoolContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 		if not imageUrls:
 			raise ValueError("Unable to find contained images on page '%s'" % baseUrl)
 
-
+		self.log.info("Found %s image URLs!", len(imageUrls))
 		return imageUrls
 
 
@@ -142,23 +142,18 @@ class FoolContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
 			chapterName = nt.makeFilenameSafe(chapterVol)
 
-			fqFName = os.path.join(dlPath, chapterName+"["+self.groupName+"].zip")
+			fqFName = os.path.join(dlPath, chapterName+" ["+self.groupName+"].zip")
 
-			loop = 1
-			while os.path.exists(fqFName):
-				fqFName, ext = os.path.splitext(fqFName)
-				fqFName = "%s (%d)%s" % (fqFName, loop,  ext)
-				loop += 1
-			self.log.info("Saving to archive = %s", fqFName)
 
 			images = []
 			for imageName, imgUrl, referrerUrl in imageUrls:
+				print("ImageUrl, referrer: '{}', '{}'".format(imgUrl, referrerUrl))
 				dummy_imageName, imageContent = self.getImage(imgUrl, referrerUrl)
 				images.append([imageName, imageContent])
 
 				if not runStatus.run:
 					self.log.info( "Breaking due to exit flag being set")
-					self.updateDbEntry(sourceUrl, dlState=0)
+					# self.updateDbEntry(sourceUrl, dlState=0)
 					return
 
 			self.log.info("Creating archive with %s images", len(images))
@@ -167,12 +162,8 @@ class FoolContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 				self.updateDbEntry(sourceUrl, dlState=-1, seriesName=seriesName, originName=chapterVol, tags="error-404")
 				return
 
-			#Write all downloaded files to the archive.
-			arch = zipfile.ZipFile(fqFName, "w")
-			for imageName, imageContent in images:
-				arch.writestr(imageName, imageContent)
-			arch.close()
-
+			fqFName = self.save_image_set(fqFName, images)
+			self.log.info("Saved to archive = %s", fqFName)
 
 			filePath, fileName = os.path.split(fqFName)
 			self.updateDbEntry(sourceUrl, downloadPath=filePath, fileName=fileName)

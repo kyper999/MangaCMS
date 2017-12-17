@@ -20,9 +20,12 @@ import bs4
 import logging
 
 import processDownload
-from ScrapePlugins.H.DjMoeLoader import tagsLUT
-
 import ScrapePlugins.RetreivalBase
+
+class UnwantedContentError(RuntimeError):
+	pass
+class PageContentError(RuntimeError):
+	pass
 
 class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 	log = logging.getLogger("Main.Manga.DjM.Cl")
@@ -37,142 +40,84 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 	tableName = "HentaiItems"
 
-	itemLimit = 20
 	shouldCanonize = False
-
-	def retag(self):
-		retagUntaggedThresh = time.time()-settings.djSettings["retagMissing"]
-		retagThresh = time.time()-settings.djSettings["retag"]
-		with self.context_cursor() as cur:
-
-			ret = cur.execute("SELECT sourceUrl,tags FROM {tableName} WHERE lastUpdate<%s AND sourceSite=%s AND dlState=2 AND (tags IS NULL OR tags='') ORDER BY retreivalTime DESC;".format(tableName=self.tableName), (retagUntaggedThresh, self.tableKey))
-			rets = cur.fetchall()
-			if not rets:
-				ret = cur.execute("SELECT sourceUrl,tags FROM {tableName} WHERE lastUpdate<%s AND sourceSite=%s AND dlState=2 AND (tags IS NULL OR tags='') ORDER BY retreivalTime DESC;".format(tableName=self.tableName), (retagThresh, self.tableKey))
-				rets = cur.fetchall()
-				if not rets:
-					self.log.info("Done")
-					return
-
-		items = []
-		for row in rets:
-			#self.log.info("Row = ", row)
-			contentId = row[0]
-
-			items.append(contentId)
-		self.log.info("Have %s new items to retag in Doujin Moe Retagger" % len(items))
-
-		for contentId in items:
-			# print("contentId = ", contentId)
-			if not "import" in contentId:
-				conf = {"sourceUrl" : contentId}
-				ret = self.getDownloadUrl(conf, retag=True)
-				# print(ret)
-
-			if not runStatus.run:
-				return
-
-
-	def getLink(self, link):
-
-		try:
-			url = self.getDownloadUrl(link)
-			if url:
-				self.doDownload(url, link)
-				delay = random.randint(5, 30)
-			else:
-				return
-		except:
-			print("ERROR WAT?")
-			traceback.print_exc()
-			delay = 1
-
 
 
 	def getDirAndFName(self, soup):
-		title = soup.find("div", class_="title")
+		title = soup.find("div", class_="folder-title")
 		if not title:
 			raise ValueError("Could not find title. Wat?")
 		titleSplit = title.get_text().split("»")
-		safePath = [nt.makeFilenameSafe(item.rstrip().lstrip()) for item in titleSplit]
+		safePath = [nt.makeFilenameSafe(item.strip()) for item in titleSplit]
 		fqPath = os.path.join(settings.djSettings["dlDir"], *safePath)
 		dirPath, fName = fqPath.rsplit("/", 1)
-		self.log.debug("dirPath = %s", dirPath)
-		self.log.debug("fName = %s", fName)
-		return dirPath, fName, title.get_text()
+		self.log.info("dirPath = %s", dirPath)
+		self.log.info("fName = %s", fName)
+		return dirPath, fName, titleSplit[-1].strip()
 
-	def getDownloadUrl(self, linkDict, retag=False):
-		self.log.info("Retreiving item: %s", linkDict["sourceUrl"])
+	def getDownloadInfo(self, linkDict):
 
-		if retag:
-			self.log.warning("Retagging. No download is expected behaviour.")
+		content_id = linkDict["sourceUrl"]
+		self.log.info("Retreiving metadata for item: %s", content_id)
+
+
+		if not content_id.startswith("http"):
+			sourcePage = urllib.parse.urljoin(self.urlBase, "/gallery/{gid}".format(gid=content_id))
 		else:
-			self.updateDbEntry(linkDict["sourceUrl"], dlState=1)
-
-		#self.log.info("%s %s", dirDict, linkDict["sourceUrl"])
-		sourcePage = urllib.parse.urljoin(self.urlBase, linkDict["sourceUrl"])
-
-		linkDict["contentId"] = linkDict["sourceUrl"]
-		linkDict["sourceUrl"] = sourcePage
+			sourcePage = content_id
 
 		soup = self.wg.getSoup(sourcePage)
-
 		if not soup:
-			self.log.critical("No download at url %s! SourceUrl = %s", sourcePage, linkDict["sourceUrl"])
-			if not retag:
-				self.updateDbEntry(linkDict["sourceUrl"], dlState=-1)
-			raise IOError("Invalid webpage")
-
+			self.log.critical("No download at url %s! SourceUrl = %s", sourcePage, content_id)
+			raise PageContentError()
 
 		try:
 			linkDict["dirPath"], linkDict["originName"], linkDict["seriesName"] = self.getDirAndFName(soup)
 		except AttributeError:
-			self.log.critical("No download at url %s! SourceUrl = %s", sourcePage, linkDict["sourceUrl"])
-			if retag:
-				# page is gone. Skip it and set it to ignore in the future
-				self.updateDbEntry(linkDict["contentId"], lastUpdate=time.time())
-				return
-
-			self.updateDbEntry(linkDict["sourceUrl"], dlState=-1)
-			return
+			self.log.critical("No download at url %s! SourceUrl = %s", sourcePage, content_id)
+			raise PageContentError()
 
 		except ValueError:
-			self.log.critical("No download at url %s! SourceUrl = %s", sourcePage, linkDict["sourceUrl"])
-			if retag:
-				# page is gone. Skip it and set it to ignore in the future
-				self.updateDbEntry(linkDict["contentId"], lastUpdate=time.time())
-				return
+			self.log.critical("No download at url %s! SourceUrl = %s", sourcePage, content_id)
+			raise PageContentError()
 
-			self.updateDbEntry(linkDict["sourceUrl"], dlState=-1)
-			return
+		image_container = soup.find("div", id='image-container')
 
-
-		linkDict["dlToken"] = soup.find('div', id='gallery')['ziptoken']
-
+		ret_link_list = []
+		for img_tag in image_container.find_all("img"):
+			ret_link_list.append((img_tag['data-file'], sourcePage))
 
 		note = soup.find("div", class_="message")
-		if note == None or note.string == None:
+		if note is None or note.string is None:
 			linkDict["note"] = " "
 		else:
 			linkDict["note"] = nt.makeFilenameSafe(note.string)
 
-		tags = soup.find("div", class_="tag_list")
+		tags = soup.find("li", class_="tag-area")
 		if tags:
 			tagList = []
 			for tag in tags.find_all("a"):
 				tagStr = tag.get_text()
-				if tagStr in tagsLUT.tagLutDict:
-					tagStr = tagsLUT.tagLutDict[tagStr]
 				tagList.append(tagStr.lower().rstrip(", ").lstrip(", ").replace(" ", "-"))
 		else:
 			tagList = []
 
+		artist_area = soup.find('div', class_='gallery-artist')
+		aList = []
+		for artist_link in artist_area.find_all("a"):
+			a_tag = artist_link.get_text(strip=True)
+			aList.append(a_tag)
+			a_tag = "artist " + a_tag
+			tagList.append(a_tag.lower().rstrip(", ").lstrip(", ").replace(" ", "-"))
+
+		linkDict['artist'] = ",".join(aList)
 		tagStr = ' '.join(tagList)
 
 		for skipTag in settings.skipTags:
 			if skipTag in tagStr:
-				self.log.info("Skipped tag '%s' in tags '%s'. Do not want.", skipTag, tagStr)
-				return None
+				errtxt = "Skipped tag '%s' in tags '%s'. Do not want." % (skipTag, tagStr)
+				self.log.info(errtxt)
+				raise UnwantedContentError(errtxt)
 
 		linkDict["tags"] = tagStr
 
@@ -191,78 +136,73 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 		if "tags" in linkDict and "note" in linkDict:
-			self.updateDbEntry(linkDict["contentId"], tags=linkDict["tags"], note=linkDict["note"], lastUpdate=time.time())
+			self.updateDbEntry(content_id, tags=linkDict["tags"], note=linkDict["note"], lastUpdate=time.time())
 
-		return linkDict
-
-	def doDownload(self, linkDict, link):
-
-		contentUrl = urllib.parse.urljoin(self.urlBase, "zipf.php?token={token}&hash={hash}".format(token=linkDict["contentId"], hash=linkDict["dlToken"]))
-		print("Fetching: ", contentUrl, " Referer ", linkDict["sourceUrl"])
-		content, handle = self.wg.getpage(contentUrl, returnMultiple=True, addlHeaders={'Referer': linkDict["sourceUrl"], "Host" : "doujins.com"})
-
-		# self.log.info(len(content))
-
-		if handle:
-			# self.log.info("handle = ", handle)
-			# self.log.info("geturl", handle.geturl())
-			urlFileN = urllib.parse.unquote(urllib.parse.urlparse(handle.geturl())[2].split("/")[-1])
-			urlFileN = bs4.UnicodeDammit(urlFileN).unicode_markup
-			urlFileN.encode("utf-8")
+		return ret_link_list
 
 
+	def getImage(self, imageUrl, referrer):
+
+		content, handle = self.wg.getpage(imageUrl, returnMultiple=True, addlHeaders={'Referer': referrer})
+		if not content or not handle:
+			raise ValueError("Failed to retreive image from page '%s'!" % referrer)
+
+		fileN = urllib.parse.unquote(urllib.parse.urlparse(handle.geturl())[2].split("/")[-1])
+		fileN = bs4.UnicodeDammit(fileN).unicode_markup
+		self.log.info("retreived image '%s' with a size of %0.3f K", fileN, len(content)/1000.0)
+		return fileN, content
+
+	def getImages(self, imageurls):
+
+		images = []
+
+		for imageurl, referrer in imageurls:
+			images.append(self.getImage(imageurl, referrer))
+
+		return images
 
 
-			# DjMoe is apparently returning "zip.php" for ALL filenames.
-			# Blargh
-			if urlFileN == "zipf.php":
-				urlFileN = ".zip"
-				fileN = "%s%s" % (linkDict["originName"], urlFileN)
-			else:
-				self.log.error("Unknown file extension?")
-				self.log.error("Unknown file extension?")
-				self.log.error("Dict filename = %s", linkDict["originName"])
-				self.log.error("URL filename = %s", urlFileN)
-				fileN = "%s - %s" % (linkDict["originName"], urlFileN)
+	def getLink(self, link):
 
+		try:
+			self.updateDbEntry(link["sourceUrl"], dlState=1)
+			image_url_list = self.getDownloadInfo(link)
+
+			images = self.getImages(image_url_list)
+			title  = link['seriesName']
+			artist = link['artist']
+
+		except webFunctions.ContentError:
+			self.updateDbEntry(link["sourceUrl"], dlState=-2, downloadPath="ERROR", fileName="ERROR: FAILED")
+			return False
+		except UnwantedContentError:
+			self.updateDbEntry(link["sourceUrl"], dlState=-3, downloadPath="ERROR", fileName="ERROR: Unwanted Tags applied to series!")
+			return False
+		except PageContentError:
+			self.updateDbEntry(link["sourceUrl"], dlState=-3, downloadPath="ERROR", fileName="ERROR: FAILED (PageContentError)")
+			return False
+
+		if images and title:
+			fileN = title+" "+artist+".zip"
 			fileN = nt.makeFilenameSafe(fileN)
+			wholePath = os.path.join(link["dirPath"], fileN)
 
+			wholePath = self.save_image_set(wholePath, images)
 
-			# self.log.info("geturl with processing", fileN)
-			wholePath = os.path.join(linkDict["dirPath"], fileN)
-			wholePath = self.insertCountIfFilenameExists(wholePath)
-			self.log.info("Complete filepath: %s", wholePath)
-
-			fp = open(wholePath, "wb")
-			fp.write(content)
-			fp.close()
-			self.log.info("Successfully Saved to path: %s", wholePath)
-
-
-			self.updateDbEntry(linkDict["contentId"], downloadPath=linkDict["dirPath"], fileName=fileN)
+			self.updateDbEntry(link["sourceUrl"], downloadPath=link["dirPath"], fileName=fileN)
 
 			# Deduper uses the path info for relinking, so we have to dedup the item after updating the downloadPath and fileN
 			dedupState = processDownload.processDownload(None, wholePath, pron=True, deleteDups=True, includePHash=True, rowId=link['dbId'])
 			self.log.info( "Done")
 
 			if dedupState:
-				self.addTags(sourceUrl=linkDict["contentId"], tags=dedupState)
+				self.addTags(sourceUrl=link["sourceUrl"], tags=dedupState)
 
-			self.updateDbEntry(linkDict["contentId"], dlState=2)
+			self.updateDbEntry(link["sourceUrl"], dlState=2)
 
-
-			return wholePath
-
-
-
-		else:
-
-			self.updateDbEntry(linkDict["contentId"], dlState=-1, downloadPath="ERROR", fileName="ERROR: FAILED")
-
-			# cur.execute('UPDATE djmoe SET downloaded=1 WHERE contentID=?;', (linkDict["contentId"], ))
-			# cur.execute('UPDATE djmoe SET dlPath=?, dlName=?, itemTags=?  WHERE contentID=?;', ("ERROR", 'ERROR: FAILED', "N/A", linkDict["contentId"]))
-			# self.log.info("fetchall = ", cur.fetchall())
-			return False
+			delay = random.randint(5, 30)
+			self.log.info("Sleeping %s", delay)
+			time.sleep(delay)
 
 
 
@@ -272,6 +212,7 @@ if __name__ == "__main__":
 	with tb.testSetup(load=False):
 
 		# run = HBrowseRetagger()
-		run = DjMoeContentLoader()
+		run = ContentLoader()
+		run.do_fetch_content()
 
-		run.go()
+

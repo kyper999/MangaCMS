@@ -70,7 +70,13 @@ if __name__ == '__main__':
 	import utilities.testBase as tb
 
 	with tb.testSetup():
-		fl = Runner()
 
-		fl.go()
+		# run = Runner()
+		# run.go()
+
+		# fl = FeedLoader()
+		# fl.do_fetch_feeds()
+
+		cl = ContentLoader()
+		cl.do_fetch_content()
 

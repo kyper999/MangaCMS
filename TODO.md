@@ -18,17 +18,9 @@ FIX:
 	62 : (ScrapePlugins.M.FoolSlide.Modules.ChibiMangaRun,      hours(12)),  No longer foolslide?
 	75 : (ScrapePlugins.M.FoolSlide.Modules.MangazukiRun,       hours(12)),
 
-	46  : (ScrapePlugins.H.DjMoeLoader.Run,                     hours( 4)),
 
 
 	# FoolSlide modules
-		61 : (ScrapePlugins.M.FoolSlide.Modules.CanisMajorRun,      hours(12)),   Bad image urls?
-		63 : (ScrapePlugins.M.FoolSlide.Modules.DokiRun,            hours(12)),
-		70 : (ScrapePlugins.M.FoolSlide.Modules.SenseRun,           hours(12)),
-		71 : (ScrapePlugins.M.FoolSlide.Modules.ShoujoSenseRun,     hours(12)),
-		64 : (ScrapePlugins.M.FoolSlide.Modules.GoMangaCoRun,       hours(12)),   # Script tag broke
-		69 : (ScrapePlugins.M.FoolSlide.Modules.S2Run,              hours(12)),
-		72 : (ScrapePlugins.M.FoolSlide.Modules.TripleSevenRun,     hours(12)),
 		73 : (ScrapePlugins.M.FoolSlide.Modules.TwistedHelRun,      hours(12)),
 		
 Broken:
