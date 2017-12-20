@@ -4,12 +4,12 @@
 Do the initial database setup, so a functional system can be bootstrapped from an empty database.
 '''
 
-import ScrapePlugins.M.BuMonitor.MonitorRun
-import ScrapePlugins.M.BuMonitor.ChangeMonitor
-import ScrapePlugins.H.DjMoeLoader.DbLoader
+import MangaCMS.ScrapePlugins.M.BuMonitor.MonitorRun
+import MangaCMS.ScrapePlugins.M.BuMonitor.ChangeMonitor
+import MangaCMS.ScrapePlugins.H.DjMoeLoader.DbLoader
 
-import ScrapePlugins.M.BtSeriesFetcher.SeriesEnqueuer
-import ScrapePlugins.M.BtLoader.DbLoader
+import MangaCMS.ScrapePlugins.M.BtSeriesFetcher.SeriesEnqueuer
+import MangaCMS.ScrapePlugins.M.BtLoader.DbLoader
 
 
 '''
@@ -19,11 +19,11 @@ Each plugin is instantiated, and then the plugin database setup method is called
 
 '''
 toInit = [
-	ScrapePlugins.M.BuMonitor.MonitorRun.BuWatchMonitor,
-	ScrapePlugins.M.BuMonitor.ChangeMonitor.BuDateUpdater,
-	ScrapePlugins.H.DjMoeLoader.DbLoader.DbLoader,
-	ScrapePlugins.M.BtSeriesFetcher.SeriesEnqueuer.SeriesEnqueuer,
-	ScrapePlugins.M.BtLoader.DbLoader.DbLoader,
+	MangaCMS.ScrapePlugins.M.BuMonitor.MonitorRun.BuWatchMonitor,
+	MangaCMS.ScrapePlugins.M.BuMonitor.ChangeMonitor.BuDateUpdater,
+	MangaCMS.ScrapePlugins.H.DjMoeLoader.DbLoader.DbLoader,
+	MangaCMS.ScrapePlugins.M.BtSeriesFetcher.SeriesEnqueuer.SeriesEnqueuer,
+	MangaCMS.ScrapePlugins.M.BtLoader.DbLoader.DbLoader,
 	]
 
 
@@ -36,6 +36,6 @@ def checkInitTables():
 			tmp.checkInitSeriesDb()
 
 if __name__ == "__main__":
-	import logSetup
-	logSetup.initLogging()
+	import MangaCMS.lib.logSetup
+	MangaCMS.lib.logSetup.initLogging()
 	checkInitTables()

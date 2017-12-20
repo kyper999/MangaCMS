@@ -17,10 +17,10 @@ import schemaUpdater.schemaRevisioner
 schemaUpdater.schemaRevisioner.verifySchemaUpToDate()
 
 
-import logSetup
-logSetup.initLogging()
+import MangaCMS.lib.logSetup
+MangaCMS.lib.logSetup.initLogging()
 
-import webserver_process
+import MangaCMS.web.webserver_process
 import datetime
 
 
@@ -75,7 +75,7 @@ def run_web():
 
 
 	# It looks like cherrypy installs a ctrl+c handler, so I don't need to.
-	webserver_process.serverProcess()
+	MangaCMS.web.webserver_process.serverProcess()
 
 
 if __name__ == "__main__":

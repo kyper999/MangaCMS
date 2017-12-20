@@ -12,7 +12,7 @@
 
 
 <%!
-import statusManager as sm
+import MangaCMS.lib.statusManager as sm
 import nameTools as nt
 import time
 import urllib.parse

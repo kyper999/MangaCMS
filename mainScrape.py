@@ -10,11 +10,11 @@ if __name__ == "__main__":
 	runStatus.preloadDicts = True
 
 
-import logSetup
+import MangaCMS.lib.logSetup
 import settings
 import schemaUpdater.schemaRevisioner
 
-import statusManager
+import MangaCMS.lib.statusManager
 import time
 
 import runStatus
@@ -57,7 +57,7 @@ jobstores = {
 # Should probably be a lambda? Laaaazy.
 def callMod(passMod):
 	lut = {}
-	for item, dummy_interval in activePlugins.scrapePlugins.values():
+	for item, dummy_interval in activePlugins.MangaCMS.ScrapePlugins.values():
 		lut[item.__name__] = item
 	if not passMod in lut:
 		raise ValueError("Callable '%s' is not in the class lookup table: '%s'!" % (passMod, lut))
@@ -70,7 +70,7 @@ def scheduleJobs(sched, timeToStart):
 
 	jobs = []
 	offset = 0
-	for key, value in activePlugins.scrapePlugins.items():
+	for key, value in activePlugins.MangaCMS.ScrapePlugins.items():
 		baseModule, interval = value
 		jobs.append((key, baseModule, interval, timeToStart+datetime.timedelta(seconds=60*offset)))
 		offset += 1
@@ -130,7 +130,7 @@ def scheduleJobs(sched, timeToStart):
 # proper system operation, reset database state,
 # check/update database schema, etc...
 def preflight():
-	logSetup.initLogging(logToDb=True)
+	MangaCMS.lib.logSetup.initLogging(logToDb=True)
 
 	# A side effect of get_plugins() is to validate there are no database key conflicts.
 	# This has been an issue in the past.
@@ -142,7 +142,7 @@ def preflight():
 	runStatus.notq = None
 
 	schemaUpdater.schemaRevisioner.updateDatabaseSchema()
-	statusManager.resetAllRunningFlags()
+	MangaCMS.lib.statusManager.resetAllRunningFlags()
 
 	nt.dirNameProxy.startDirObservers()
 

@@ -1,8 +1,8 @@
 
 
 import settings
-import ScrapePlugins.MangaScraperDbBase
-import ScrapePlugins.RetreivalBase
+import MangaCMS.ScrapePlugins.MangaScraperDbBase
+import MangaCMS.ScrapePlugins.RetreivalBase
 import time
 
 # This is a class used for situations where a script needs access to the database, but I don't
@@ -11,7 +11,7 @@ import time
 # It's terrible practice, but laaaazy, and sometimes I do just
 # need to hack a one-time-use thing together.
 
-class Inserter(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
+class Inserter(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 
 	loggerPath = "Main.Inserter"
@@ -24,7 +24,7 @@ class Inserter(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 		pass
 
 
-class Scraper(ScrapePlugins.RetreivalBase.RetreivalBase):
+class Scraper(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 	loggerPath = "Main.Inserter"

@@ -7,7 +7,7 @@ import os.path
 import os
 import shutil
 import settings
-import ScrapePlugins.MonitorDbBase
+import MangaCMS.ScrapePlugins.MonitorDbBase
 
 
 import psycopg2
@@ -21,7 +21,7 @@ from utilities.askUser import query_response, query_response_bool
 # from deduplicator.DbUtilities import DedupManager
 
 
-class DbInterface(ScrapePlugins.MonitorDbBase.MonitorDbBase):
+class DbInterface(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 
 	loggerPath       = "Main.Org.Tool"
 	pluginName       = "Organization Tool"
@@ -47,7 +47,7 @@ def consolidateMangaFolders(dirPath, smartMode=True):
 	idLut = nt.MtNamesMapWrapper("fsName->buId")
 
 	pc = PathCleaner()
-	
+
 	count = 0
 	print("Dir", dirPath)
 	items = os.listdir(dirPath)

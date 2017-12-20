@@ -22,7 +22,7 @@ def install_signal_handler():
 
 def get_plugins():
 	ret = {}
-	for plugin_module, dummy_interval in activePlugins.scrapePlugins.values():
+	for plugin_module, dummy_interval in activePlugins.MangaCMS.ScrapePlugins.values():
 		plugin = plugin_module.Runner
 		print("plugin.pluginName: ", plugin.pluginName)
 		# print(dir(plugin))

@@ -7,9 +7,9 @@ import gzip
 import json
 import time
 
-import logSetup
+import MangaCMS.lib.logSetup
 if __name__ == "__main__":
-	logSetup.initLogging()
+	MangaCMS.lib.logSetup.initLogging()
 
 
 import runStatus
@@ -17,8 +17,8 @@ runStatus.preloadDicts = False
 
 import traceback
 import re
-import DbBase
-import ScrapePlugins.MangaScraperDbBase
+import MangaCMS.DbBase
+import MangaCMS.ScrapePlugins.MangaScraperDbBase
 import nameTools as nt
 import shutil
 import settings
@@ -26,10 +26,10 @@ import hashlib
 
 
 import utilities.EmptyRetreivalDb
-import processDownload
+import MangaCMS.cleaner.processDownload
 
 
-class PathCleaner(DbBase.DbBase):
+class PathCleaner(MangaCMS.DbBase.DbBase):
 	loggerPath = "Main.Pc"
 	tableName  = "MangaItems"
 	pluginName = "PathCleanerUtil"
@@ -432,7 +432,7 @@ class PathCleaner(DbBase.DbBase):
 
 
 
-				dedupState = processDownload.processDownload("imported", dstPath, pron=True, deleteDups=True)
+				dedupState = MangaCMS.cleaner.processDownload.processDownload("imported", dstPath, pron=True, deleteDups=True)
 
 
 				tags = dedupState + ' ' + ' '.join(itemtags)
@@ -528,7 +528,7 @@ class PathCleaner(DbBase.DbBase):
 			print(items[:5])
 
 
-class CleanerBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
+class CleanerBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 	# QUERY_DEBUG = True
 
@@ -1115,7 +1115,7 @@ class CleanerBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 		for dbid, dlp, fn, itemtags in items:
 			fqp = os.path.join(dlp, fn)
 			print(os.path.exists(fqp), fqp)
-			dedupState = processDownload.processDownload("imported", fqp, pron=True, deleteDups=True)
+			dedupState = MangaCMS.cleaner.processDownload.processDownload("imported", fqp, pron=True, deleteDups=True)
 
 
 			tags = dedupState + ' ' + ' '.join(itemtags)
@@ -1217,5 +1217,5 @@ class HCleaner(CleanerBase):
 				self.log.info("Processed %s lines", lineproc)
 
 if __name__ == "__main__":
-	import logSetup
-	logSetup.initLogging()
+	import MangaCMS.lib.logSetup
+	MangaCMS.lib.logSetup.initLogging()

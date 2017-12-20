@@ -21,7 +21,7 @@ import nameTools as nt
 
 import unicodedata
 
-import statusManager as sm
+import MangaCMS.lib.statusManager as sm
 
 colours = {
 	# Download Status

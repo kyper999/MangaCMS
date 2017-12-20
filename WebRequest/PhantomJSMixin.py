@@ -6,6 +6,7 @@ import socket
 import urllib.parse
 import http.cookiejar
 import bs4
+from contextlib import contextmanager
 import selenium.webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -62,7 +63,8 @@ class WebGetPjsMixin(object):
 
 		self.pjs_driver = None
 
-	def _initPjsWebDriver(self):
+
+	def __initPjsWebDriver(self):
 		if self.pjs_driver:
 			self.pjs_driver.quit()
 		dcap = dict(DesiredCapabilities.PHANTOMJS)
@@ -76,8 +78,17 @@ class WebGetPjsMixin(object):
 		self.pjs_driver = selenium.webdriver.PhantomJS(desired_capabilities=dcap)
 		self.pjs_driver.set_window_size(1280, 1024)
 
+	def __killPjsWebDriver(self):
 
-	def _syncIntoPjsWebDriver(self):
+
+		if self.pjs_driver != None:
+			self.pjs_driver.quit()
+		else:
+			self.log.error("Trying to tear down phantomjs driver when it's not instantiated!")
+
+		self.pjs_driver = None
+
+	def __syncIntoPjsWebDriver(self):
 		'''
 		So selenium is completely retarded, and you can't just set cookes, you have to
 		be navigated to the domain for which you want to set cookies.
@@ -110,32 +121,37 @@ class WebGetPjsMixin(object):
 		# 	self.pjs_driver.add_cookie(cdat)
 
 
-	def _syncOutOfPjsWebDriver(self):
+	def __syncOutOfPjsWebDriver(self):
 		for cookie in self.pjs_driver.get_cookies():
 			self.addSeleniumCookie(cookie)
 
+	@contextmanager
+	def pjs_context(self):
+		self.__initPjsWebDriver()
+		self.__syncIntoPjsWebDriver()
+		yield
+		self.__syncOutOfPjsWebDriver()
+		self.__killPjsWebDriver()
 
 	def getItemPhantomJS(self, itemUrl):
 		self.log.info("Fetching page for URL: '%s' with PhantomJS" % itemUrl)
 
-		if not self.pjs_driver:
-			self._initPjsWebDriver()
-		self._syncIntoPjsWebDriver()
+		with self.pjs_context():
 
-		with load_delay_context_manager(self.pjs_driver):
-			self.pjs_driver.get(itemUrl)
-		time.sleep(3)
+			with load_delay_context_manager(self.pjs_driver):
+				self.pjs_driver.get(itemUrl)
+			time.sleep(3)
 
-		fileN = urllib.parse.unquote(urllib.parse.urlparse(self.pjs_driver.current_url)[2].split("/")[-1])
-		fileN = bs4.UnicodeDammit(fileN).unicode_markup
+			fileN = urllib.parse.unquote(urllib.parse.urlparse(self.pjs_driver.current_url)[2].split("/")[-1])
+			fileN = bs4.UnicodeDammit(fileN).unicode_markup
 
-		self._syncOutOfPjsWebDriver()
+			self._syncOutOfPjsWebDriver()
 
-		# Probably a bad assumption
-		mType = "text/html"
+			# Probably a bad assumption
+			mType = "text/html"
 
-		# So, self.pjs_driver.page_source appears to be the *compressed* page source as-rendered. Because reasons.
-		source = self.pjs_driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
+			# So, self.pjs_driver.page_source appears to be the *compressed* page source as-rendered. Because reasons.
+			source = self.pjs_driver.execute_script("return document.getElementsByTagName('html')[0].innerHTML")
 
 		assert source != '<head></head><body></body>'
 
@@ -145,37 +161,35 @@ class WebGetPjsMixin(object):
 
 
 	def getHeadTitlePhantomJS(self, url, referrer=None):
-		self.getHeadPhantomJS(url, referrer)
-		ret = {
-			'url'   : self.pjs_driver.current_url,
-			'title' : self.pjs_driver.title,
-		}
+
+		with self.pjs_context():
+			def try_get(loc_url):
+				tries = 3
+				for x in range(9999):
+					try:
+						self.pjs_driver.get(loc_url)
+						time.sleep(random.uniform(2, 6))
+						return
+					except socket.timeout as e:
+						if x > tries:
+							raise e
+			if referrer:
+				try_get(referrer)
+			try_get(url)
+
+			self._syncOutOfPjsWebDriver()
+
+			ret = {
+				'url'   : self.pjs_driver.current_url,
+				'title' : self.pjs_driver.title,
+			}
 		return ret
+
 
 	def getHeadPhantomJS(self, url, referrer=None):
 		self.log.info("Getting HEAD with PhantomJS")
-
-		if not self.pjs_driver:
-			self._initPjsWebDriver()
-		self._syncIntoPjsWebDriver()
-
-		def try_get(loc_url):
-			tries = 3
-			for x in range(9999):
-				try:
-					self.pjs_driver.get(loc_url)
-					time.sleep(random.uniform(2, 6))
-					return
-				except socket.timeout as e:
-					if x > tries:
-						raise e
-		if referrer:
-			try_get(referrer)
-		try_get(url)
-
-		self._syncOutOfPjsWebDriver()
-
-		return self.pjs_driver.current_url
+		tmp = self.getHeadTitlePhantomJS(url, referrer)
+		return tmp['url']
 
 	def addSeleniumCookie(self, cookieDict):
 		'''
@@ -244,34 +258,28 @@ class WebGetPjsMixin(object):
 
 		self.log.info("Attempting to access page through cloudflare browser verification.")
 
-		if not self.pjs_driver:
-			self._initPjsWebDriver()
-		self._syncIntoPjsWebDriver()
+		with self.pjs_context():
+
+			self.pjs_driver.get(url)
+
+			if titleContains:
+				condition = EC.title_contains(titleContains)
+			elif titleNotContains:
+				condition = title_not_contains(titleNotContains)
+			else:
+				raise ValueError("Wat?")
 
 
-		self.pjs_driver.get(url)
+			try:
+				WebDriverWait(self.pjs_driver, 20).until(condition)
+				success = True
+				self.log.info("Successfully accessed main page!")
+			except TimeoutException:
+				self.log.error("Could not pass through cloudflare blocking!")
+				success = False
+			# Add cookies to cookiejar
 
-		if titleContains:
-			condition = EC.title_contains(titleContains)
-		elif titleNotContains:
-			condition = title_not_contains(titleNotContains)
-		else:
-			raise ValueError("Wat?")
-
-
-		try:
-			WebDriverWait(self.pjs_driver, 20).until(condition)
-			success = True
-			self.log.info("Successfully accessed main page!")
-		except TimeoutException:
-			self.log.error("Could not pass through cloudflare blocking!")
-			success = False
-		# Add cookies to cookiejar
-
-		self._syncOutOfPjsWebDriver()
-
-		self.__syncCookiesFromFile()
-
+		self.log.info("Cloudflare access return: %s", success)
 		return success
 
 

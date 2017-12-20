@@ -834,11 +834,9 @@ class WebGetRobust(PhantomJSMixin.WebGetPjsMixin, ChromiumMixin.WebGetCrMixin):
 			sup.__del__()
 
 
-
-
 	def stepThroughCloudFlare(self, *args, **kwargs):
 		# Shim to the underlying web browser of choice
 
-		self.stepThroughCloudFlare_pjs(*args, **kwargs)
+		return self.stepThroughCloudFlare_pjs(*args, **kwargs)
 
 

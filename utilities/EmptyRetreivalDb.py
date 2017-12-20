@@ -1,10 +1,10 @@
 
 
 import settings
-import ScrapePlugins.MangaScraperDbBase
+import MangaCMS.ScrapePlugins.MangaScraperDbBase
 
 
-class ScraperDbTool(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
+class ScraperDbTool(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 
 	loggerPath       = "Main.Util.Base"

@@ -2,19 +2,19 @@ import sys
 sys.path.insert(0,"..")
 import os.path
 
-import logSetup
+import MangaCMS.lib.logSetup
 if __name__ == "__main__":
-	logSetup.initLogging()
+	MangaCMS.lib.logSetup.initLogging()
 
 import shutil
-import DbBase
+import MangaCMS.DbBase
 import rpyc
 import os
 import nameTools as nt
 
 from utilities.askUser import query_response, query_response_bool
 
-class DirDeduper(DbBase.DbBase):
+class DirDeduper(MangaCMS.DbBase.DbBase):
 	loggerPath = "Main.DirDedup"
 	tableName  = "MangaItems"
 

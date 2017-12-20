@@ -1,6 +1,6 @@
 
 
-import ScrapePlugins.M.IrcGrabber.IrcBot
+import MangaCMS.ScrapePlugins.M.IrcGrabber.IrcBot
 import irc.client
 import irc.bot
 import irc.events
@@ -17,7 +17,6 @@ import runStatus
 import traceback
 import multiprocessing
 
-import processDownload
 
 import abc
 import random
@@ -138,7 +137,7 @@ EMOTICONS = {
 
 KEYS = list(EMOTICONS.keys())
 
-class NotifierBot(ScrapePlugins.M.IrcGrabber.IrcBot.TestBot):
+class NotifierBot(MangaCMS.ScrapePlugins.M.IrcGrabber.IrcBot.TestBot):
 
 
 	def __init__(self, message_queue, runstate, *args, **kwargs):
@@ -285,7 +284,7 @@ def start_notifier():
 
 
 if __name__ == "__main__":
-	import logSetup
+	import MangaCMS.lib.logSetup
 	import signal
 
 	print(dir(runStatus))
@@ -305,7 +304,7 @@ if __name__ == "__main__":
 
 
 	signal.signal(signal.SIGINT, signal_handler)
-	logSetup.initLogging()
+	MangaCMS.lib.logSetup.initLogging()
 
 
 

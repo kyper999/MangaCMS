@@ -1,11 +1,11 @@
 
 
 import settings
-import DbBase
+import MangaCMS.DbBase
 import time
 
 
-class LogTrimmer(DbBase.DbBase):
+class LogTrimmer(MangaCMS.DbBase.DbBase):
 
 
 	loggerPath = "Main.LogCleaner"

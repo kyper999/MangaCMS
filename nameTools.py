@@ -8,7 +8,7 @@ import settings
 import logging
 import psycopg2
 import time
-import logSetup
+import MangaCMS.lib.logSetup
 import threading
 import os
 import os.path
@@ -880,7 +880,7 @@ def testNameTools():
 
 
 if __name__ == "__main__":
-	logSetup.initLogging()
+	MangaCMS.lib.logSetup.initLogging()
 	print("wat")
 	# dirNameProxy.checkUpdate(force=True)
 	# dirNameProxy.checkUpdate()

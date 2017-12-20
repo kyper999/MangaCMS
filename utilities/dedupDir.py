@@ -1,11 +1,11 @@
 import os.path
 
 import time
-import processDownload
+import MangaCMS.cleaner.processDownload
 import nameTools as nt
 import shutil
 import settings
-import DbBase
+import MangaCMS.DbBase
 import rpyc
 import signal
 import traceback
@@ -15,7 +15,7 @@ import deduplicator.archChecker
 class UntaggableError(RuntimeError):
 	pass
 
-class DirDeduper(DbBase.DbBase):
+class DirDeduper(MangaCMS.DbBase.DbBase):
 
 	pluginType = "Utility"
 
@@ -108,9 +108,9 @@ class DirDeduper(DbBase.DbBase):
 
 	def __process_download(self, basePath, pathPositiveFilter):
 		if settings.mangaCmsHContext in os.path.abspath(basePath):
-			processor = processDownload.HentaiProcessor
+			processor = MangaCMS.cleaner.processDownload.HentaiProcessor
 		else:
-			processor = processDownload.MangaProcessor
+			processor = MangaCMS.cleaner.processDownload.MangaProcessor
 
 		failures = 0
 		while True:
@@ -203,7 +203,7 @@ class DirDeduper(DbBase.DbBase):
 				continue
 
 
-			proc = processDownload.MangaProcessor()
+			proc = MangaCMS.cleaner.processDownload.MangaProcessor()
 			tags = proc.processDownload(seriesName=None, archivePath=fpath, doUpload=False)
 			tags += " dup-checked"
 			self.log.info("Adding tags: '%s'", tags)
@@ -454,7 +454,7 @@ class DirDeduper(DbBase.DbBase):
 			print(os.path.exists(basePath), basePath)
 			print(tags)
 
-			proc = processDownload.MangaProcessor()
+			proc = MangaCMS.cleaner.processDownload.MangaProcessor()
 			tags = proc.processDownload(seriesName=None, archivePath=basePath, pathPositiveFilter=None)
 			self.addTag(basePath, tags)
 
@@ -680,8 +680,8 @@ def reprocessHFailed():
 
 
 if __name__ == '__main__':
-	import logSetup
-	logSetup.initLogging()
+	import MangaCMS.lib.logSetup
+	MangaCMS.lib.logSetup.initLogging()
 
 	dd = HDirDeduper()
 	dd.globalRemoveTag("dup-checked")
