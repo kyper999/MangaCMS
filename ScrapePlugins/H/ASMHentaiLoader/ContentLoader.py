@@ -1,7 +1,6 @@
 
 # -*- coding: utf-8 -*-
 
-import webFunctions
 import os
 import re
 import os.path
@@ -22,15 +21,12 @@ import ScrapePlugins.ScrapeExceptions as ScrapeExceptions
 
 class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
-
-
 	dbName = settings.DATABASE_DB_NAME
 	loggerPath = "Main.Manga.ASMHentai.Cl"
 	pluginName = "ASMHentai Content Retreiver"
 	tableKey   = "asmh"
 	urlBase    = "https://asmhentai.com/"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "HentaiItems"
 

@@ -1,5 +1,4 @@
 
-import webFunctions
 import bs4
 import re
 
@@ -26,7 +25,6 @@ class FeedLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	tableKey = "kw"
 	dbName = settings.DATABASE_DB_NAME
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "MangaItems"
 

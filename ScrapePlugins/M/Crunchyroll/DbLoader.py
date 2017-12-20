@@ -1,5 +1,4 @@
 
-import webFunctions
 
 import re
 import settings
@@ -41,7 +40,6 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	urlFeed = "http://www.crunchyroll.com/comics/manga/updated"
 	ajaxRoot = "http://www.crunchyroll.com/ajax/"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "MangaItems"
 

@@ -1,7 +1,6 @@
 
 
 
-import webFunctions
 import re
 import yaml
 import json
@@ -25,7 +24,6 @@ class TriggerLoader(ScrapePlugins.M.IrcGrabber.IrcQueueBase.IrcQueueBase):
 	tableKey = "irc-irh"
 	dbName = settings.DATABASE_DB_NAME
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "MangaItems"
 

@@ -1,7 +1,6 @@
 
 
 
-import webFunctions
 import re
 
 import time
@@ -23,7 +22,6 @@ class TriggerLoader(ScrapePlugins.M.IrcGrabber.IrcQueueBase.IrcQueueBase):
 	tableKey = "irc-trg"
 	dbName = settings.DATABASE_DB_NAME
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "MangaItems"
 

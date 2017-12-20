@@ -8,7 +8,6 @@ import ScrapePlugins.M.FoolSlide.FoolSlideFetchBase
 import ScrapePlugins.RunBase
 import settings
 import time
-import webFunctions
 
 
 class ContentLoader(ScrapePlugins.M.FoolSlide.FoolSlideDownloadBase.FoolContentLoader):
@@ -23,7 +22,6 @@ class ContentLoader(ScrapePlugins.M.FoolSlide.FoolSlideDownloadBase.FoolContentL
 	tableName = "MangaItems"
 	groupName = "GoManga.co"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	retreivalThreads = 1
 
@@ -39,7 +37,6 @@ class FeedLoader(ScrapePlugins.M.FoolSlide.FoolSlideFetchBase.FoolFeedLoader):
 	tableKey = "gomco"
 	dbName = settings.DATABASE_DB_NAME
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "MangaItems"
 

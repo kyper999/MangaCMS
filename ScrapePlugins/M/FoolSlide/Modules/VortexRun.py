@@ -10,7 +10,6 @@ import ScrapePlugins.RunBase
 import settings
 import settings
 import time
-import webFunctions
 
 class FeedLoader(ScrapePlugins.M.FoolSlide.FoolSlideFetchBase.FoolFeedLoader):
 
@@ -21,7 +20,6 @@ class FeedLoader(ScrapePlugins.M.FoolSlide.FoolSlideFetchBase.FoolFeedLoader):
 	tableKey = "vx"
 	dbName = settings.DATABASE_DB_NAME
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "MangaItems"
 
@@ -40,7 +38,6 @@ class ContentLoader(ScrapePlugins.M.FoolSlide.FoolSlideDownloadBase.FoolContentL
 	tableName = "MangaItems"
 	groupName = "VortexScans"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	retreivalThreads = 1
 

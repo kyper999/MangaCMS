@@ -23,9 +23,9 @@ import bs4
 import runStatus
 runStatus.preloadDicts = False
 import nameTools as nt
-import webFunctions
 import settings
 
+import WebRequest
 import processDownload
 
 import ScrapePlugins.RetreivalBase
@@ -41,7 +41,6 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 	tableKey   = "hit"
 	urlBase = "https://hitomi.la/"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "HentaiItems"
 
@@ -245,7 +244,7 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 			title  = linkDict['title']
 			artist = linkDict['artist']
 
-		except webFunctions.ContentError:
+		except WebRequest.ContentError:
 			self.updateDbEntry(linkDict["sourceUrl"], dlState=-2, downloadPath="ERROR", fileName="ERROR: FAILED")
 			return False
 

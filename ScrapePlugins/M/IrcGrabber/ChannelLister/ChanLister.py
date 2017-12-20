@@ -1,7 +1,6 @@
 
 
 
-import webFunctions
 import re
 import json
 
@@ -96,7 +95,6 @@ class ChannelTriggerLoader(ScrapePlugins.M.IrcGrabber.IrcQueueBase.IrcQueueBase)
 	tableKey = "irc-trg"
 	dbName = settings.DATABASE_DB_NAME
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "MangaItems"
 

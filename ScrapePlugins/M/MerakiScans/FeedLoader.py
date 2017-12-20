@@ -1,5 +1,5 @@
 
-import webFunctions
+
 import bs4
 import re
 
@@ -26,9 +26,6 @@ class FeedLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	pluginName = "MerakiScans Link Retreiver"
 	tableKey = "meraki"
 	dbName = settings.DATABASE_DB_NAME
-
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
-
 	tableName = "MangaItems"
 
 	urlBase = "http://merakiscans.com/"

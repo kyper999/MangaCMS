@@ -3,7 +3,6 @@ import runStatus
 runStatus.preloadDicts = False
 
 
-import webFunctions
 
 import urllib.parse
 import time
@@ -26,7 +25,6 @@ class FeedLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	tableKey = "ki"
 	dbName = settings.DATABASE_DB_NAME
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "MangaItems"
 

@@ -1,7 +1,7 @@
 
 import runStatus
 runStatus.preloadDicts = False
-import webFunctions
+
 
 import calendar
 import traceback
@@ -21,9 +21,6 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	pluginName = "Pururin Link Retreiver"
 	tableKey    = "pu"
 	urlBase = "http://pururin.us/"
-
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
-
 	tableName = "HentaiItems"
 
 	def loadFeed(self, pageOverride=None):

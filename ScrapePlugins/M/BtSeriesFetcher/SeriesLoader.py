@@ -1,5 +1,4 @@
 
-import webFunctions
 import bs4
 import re
 
@@ -25,7 +24,6 @@ class SeriesLoader(ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperDbBase):
 	tableKey        = "bt"
 	dbName          = settings.DATABASE_DB_NAME
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName       = "MangaItems"
 

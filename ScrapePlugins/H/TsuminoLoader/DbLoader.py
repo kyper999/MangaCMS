@@ -1,5 +1,4 @@
 
-import webFunctions
 
 import pprint
 import calendar
@@ -22,7 +21,6 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	tableKey    = "ts"
 	urlBase = "http://www.tsumino.com/"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "HentaiItems"
 
@@ -177,7 +175,7 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 		jdat = self.loadFeed(pageOverride)
 		releases = jdat['Data']
 
-		# soup = webFunctions.as_soup(releases)
+		# soup = WebRequest.as_soup(releases)
 
 		# divs = soup.find_all("div", class_='book-grid-item-container')
 

@@ -1,5 +1,4 @@
 
-import webFunctions
 import runStatus
 import re
 
@@ -35,7 +34,6 @@ class BuWatchMonitor(ScrapePlugins.MonitorDbBase.MonitorDbBase):
 
 	dbName = settings.DATABASE_DB_NAME
 
-	wgH = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 
 	# -----------------------------------------------------------------------------------

@@ -11,7 +11,6 @@ import processDownload
 import settings
 import traceback
 import urllib.parse
-import webFunctions
 import zipfile
 
 
@@ -28,7 +27,6 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 	tableKey = "gos"
 	dbName = settings.DATABASE_DB_NAME
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "MangaItems"
 

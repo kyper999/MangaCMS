@@ -1,5 +1,5 @@
 
-import webFunctions
+import WebRequest
 import settings
 import os
 import os.path
@@ -24,8 +24,8 @@ import processDownload
 
 
 HTTPS_CREDS = [
-	("manga.madokami.al", settings.mkSettings["login"], settings.mkSettings["passWd"]),
-	("http://manga.madokami.al", settings.mkSettings["login"], settings.mkSettings["passWd"]),
+	(        "manga.madokami.al", settings.mkSettings["login"], settings.mkSettings["passWd"]),
+	( "http://manga.madokami.al", settings.mkSettings["login"], settings.mkSettings["passWd"]),
 	("https://manga.madokami.al", settings.mkSettings["login"], settings.mkSettings["passWd"]),
 	]
 
@@ -33,18 +33,21 @@ HTTPS_CREDS = [
 class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
-	wg = webFunctions.WebGetRobust(creds=HTTPS_CREDS)
 	loggerPath = "Main.Manga.Mk.Cl"
 	pluginName = "Manga.Madokami Content Retreiver"
 	tableKey = "mk"
 	dbName = settings.DATABASE_DB_NAME
 
-	retreivalThreads = 1
+	retreivalThreads = 4
 
 	tableName = "MangaItems"
 	urlBase = "https://manga.madokami.al/"
 
-	itemLimit = 500
+	itemLimit = None
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.wg = WebRequest.WebGetRobust(creds=HTTPS_CREDS)
 
 
 	def getLinkFile(self, fileUrl):

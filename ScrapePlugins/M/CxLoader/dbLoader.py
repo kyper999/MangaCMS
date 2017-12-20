@@ -1,5 +1,4 @@
 
-import webFunctions
 import bs4
 import re
 
@@ -24,7 +23,6 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	tableKey = "cx"
 	dbName = settings.DATABASE_DB_NAME
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "MangaItems"
 

@@ -1,5 +1,5 @@
 
-import webFunctions
+import WebRequest
 import settings
 import traceback
 import os.path
@@ -30,8 +30,6 @@ class SeriesEnqueuer(ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperDbBase):
 	pluginName      = "Batoto Series Link Retreiver"
 	tableKey        = "bt"
 	dbName          = settings.DATABASE_DB_NAME
-
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName       = "MangaItems"
 
@@ -180,7 +178,7 @@ class SeriesEnqueuer(ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperDbBase):
 				for line in traceback.format_exc().split("\n"):
 					self.log.error("%s", line)
 
-			except webFunctions.ContentError:
+			except WebRequest.ContentError:
 				self.log.error("Failure fetching pave: '%s'",  self.seriesUrl % row["seriesId"])
 				for line in traceback.format_exc().split("\n"):
 					self.log.error("%s", line)

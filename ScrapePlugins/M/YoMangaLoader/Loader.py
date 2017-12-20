@@ -2,7 +2,7 @@
 
 
 
-import webFunctions
+
 
 import urllib.parse
 import time
@@ -24,9 +24,6 @@ class Loader(ScrapePlugins.RetreivalBase.RetreivalBase):
 	pluginName = "YoManga Scans Link Retreiver"
 	tableKey = "ym"
 	dbName = settings.DATABASE_DB_NAME
-
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
-
 	tableName = "MangaItems"
 
 	urlBase    = "http://yomanga.co/"

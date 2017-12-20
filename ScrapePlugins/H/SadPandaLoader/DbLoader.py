@@ -1,5 +1,4 @@
 
-import webFunctions
 
 import calendar
 import traceback
@@ -28,7 +27,6 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase, LoginMixin.ExLoginMixin):
 	urlBase = "http://exhentai.org/"
 	urlFeed = "http://exhentai.org/?page={num}&f_search={search}"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "HentaiItems"
 

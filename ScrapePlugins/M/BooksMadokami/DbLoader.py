@@ -1,5 +1,5 @@
 
-import webFunctions
+import WebRequest
 import html.parser
 import urllib.parse
 import urllib.error
@@ -43,7 +43,6 @@ HTTPS_CREDS = [
 
 class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 
-	wg = webFunctions.WebGetRobust(creds=HTTPS_CREDS)
 	loggerPath = "Main.Books.Mk.Fl"
 	pluginName = "Books.Madokami Link Retreiver"
 	tableKey = "mk"
@@ -52,6 +51,10 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	tableName = "BookItems"
 	url_base     = "https://manga.madokami.al/"
 	tree_api     = "https://manga.madokami.al/stupidapi/lessdumbtree"
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.wg = WebRequest.WebGetRobust(creds=HTTPS_CREDS)
 
 	def checkLogin(self):
 		pass

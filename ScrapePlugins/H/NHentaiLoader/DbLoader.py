@@ -1,5 +1,4 @@
 
-import webFunctions
 
 import traceback
 
@@ -22,7 +21,6 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	urlBase = "http://nhentai.net/"
 	urlFeed = "http://nhentai.net/language/english/?page={num}"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "HentaiItems"
 

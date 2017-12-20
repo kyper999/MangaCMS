@@ -35,10 +35,10 @@ def go():
 
 	conn = server.classic_connect()
 
-	import webFunctions
-	webFunctions.urllib.request = conn.modules['urllib.request']
+	import WebRequest
+	WebRequest.urllib.request = conn.modules['urllib.request']
 
-	wg = webFunctions.WebGetRobust()
+	wg = WebRequest.WebGetRobust()
 	print(wg.getpage('http://api.ipify.org?format=json'))
 
 	import ScrapePlugins.H.SadPandaLoader.Run

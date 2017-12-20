@@ -1,5 +1,5 @@
 
-import webFunctions
+import WebRequest
 import settings
 import os
 import os.path
@@ -33,7 +33,6 @@ HTTPS_CREDS = [
 class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
-	wg = webFunctions.WebGetRobust(creds=HTTPS_CREDS)
 	loggerPath = "Main.Books.Mk.Cl"
 	pluginName = "Books.Madokami Content Retreiver"
 	tableKey = "mk"
@@ -44,6 +43,9 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 	tableName = "BookItems"
 	urlBase = "https://manga.madokami.al/"
 
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.wg = WebRequest.WebGetRobust(creds=HTTPS_CREDS)
 
 	def getLinkFile(self, fileUrl):
 

@@ -13,6 +13,7 @@ import threading
 import settings
 import os
 import traceback
+import WebRequest
 
 import nameTools as nt
 import DbBase
@@ -28,6 +29,12 @@ class LoaderBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 
 	pluginType = "Loader"
+
+	def __init__(self, *args, **kwargs):
+		self.wg = WebRequest.WebGetRobust(logPath=self.loggerPath+".Web")
+
+		super().__init__(*args, **kwargs)
+
 
 	def setup(self):
 		pass

@@ -6,7 +6,7 @@ if __name__ == "__main__":
 	runStatus.preloadDicts = False
 
 
-import webFunctions
+import WebRequest
 import settings
 import os
 import os.path
@@ -43,7 +43,6 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 	dbName = settings.DATABASE_DB_NAME
 	tableName = "MangaItems"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	retreivalThreads = 3
 
@@ -51,7 +50,7 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
 	def check_recaptcha(self, pgurl, soup=None, markup=None):
 		if markup:
-			soup = webFunctions.as_soup(markup)
+			soup = WebRequest.as_soup(markup)
 		if not soup:
 			raise RuntimeError("You have to pass either the raw page markup, or a pre-parsed bs4 soup object!")
 

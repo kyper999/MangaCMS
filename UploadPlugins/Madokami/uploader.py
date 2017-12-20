@@ -11,7 +11,7 @@ import nameTools as nt
 import base64
 import json
 import time
-import webFunctions
+import WebRequest
 import ssl
 import Levenshtein as lv
 import socket
@@ -68,7 +68,7 @@ class MkUploader(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 		super().__init__()
 
-		self.wg = webFunctions.WebGetRobust(logPath=self.loggerPath+".Web")
+		self.wg = WebRequest.WebGetRobust(logPath=self.loggerPath+".Web")
 
 		self.log.info("Initializing SFTP connection")
 

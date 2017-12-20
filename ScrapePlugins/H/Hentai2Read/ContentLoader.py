@@ -1,7 +1,6 @@
 
 # -*- coding: utf-8 -*-
 
-import webFunctions
 import os
 import re
 import os.path
@@ -32,7 +31,6 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 	tableKey   = "h2r"
 	urlBase    = "https://hentai2read.com/"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "HentaiItems"
 

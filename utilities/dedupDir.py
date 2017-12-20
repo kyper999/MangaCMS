@@ -233,14 +233,14 @@ class DirDeduper(DbBase.DbBase):
 									WHERE
 										dbid = %s;""".format(tableName=self.tableName),
 								(downloadpath, filename, dbid))
-					print(cur.rowcount)
+					# print(cur.rowcount)
 					cur.execute("COMMIT;")
 			else:
 				fqp = os.path.join(downloadpath, filename)
 				absp = os.path.abspath(fqp)
 				ndl, nf = os.path.split(absp)
-				if not any([downloadpath == ndl, filename == nf]):
-					print(downloadpath == ndl, filename == nf)
+				# if not any([downloadpath == ndl, filename == nf]):
+				# 	print(downloadpath == ndl, filename == nf)
 
 		self.log.info("Mismatching plugins: %s", mismatch_ids)
 	def cleanHistory(self):

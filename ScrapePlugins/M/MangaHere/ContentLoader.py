@@ -6,7 +6,6 @@ if __name__ == "__main__":
 	runStatus.preloadDicts = False
 
 
-import webFunctions
 import settings
 import os
 import os.path
@@ -35,7 +34,6 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 	tableKey = "mh"
 	tableName = "MangaItems"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	retreivalThreads = 5
 

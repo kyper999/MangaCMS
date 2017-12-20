@@ -1,7 +1,6 @@
 
 # -*- coding: utf-8 -*-
 
-import webFunctions
 import os
 import os.path
 
@@ -33,7 +32,6 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 	tableKey   = "hb"
 	urlBase = "http://www.hbrowse.com/"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "HentaiItems"
 
@@ -315,9 +313,6 @@ class HBrowseRetagger(ContentLoader):
 
 	loggerPath = "Main.Manga.HBrowse.Tag"
 	pluginName = "H-Browse Content Re-Tagger"
-
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
-
 
 
 	def getLink(self, link):

@@ -22,9 +22,9 @@ import bs4
 import runStatus
 runStatus.preloadDicts = False
 import nameTools as nt
-import webFunctions
 import settings
 
+import WebRequest
 import processDownload
 
 import ScrapePlugins.RetreivalBase
@@ -40,7 +40,6 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 	tableKey   = "pu"
 	urlBase = "http://pururin.us"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "HentaiItems"
 
@@ -244,7 +243,7 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
 			images = self.getImages(linkDict)
 			title = linkDict['originName']
-		except webFunctions.ContentError:
+		except WebRequest.ContentError:
 			self.updateDbEntry(linkDict["sourceUrl"], dlState=-2, downloadPath="ERROR", fileName="ERROR: FAILED")
 			return False
 

@@ -1,7 +1,6 @@
 
 # -*- coding: utf-8 -*-
 
-import webFunctions
 import os
 import os.path
 
@@ -19,6 +18,7 @@ import settings
 import bs4
 import logging
 
+import WebRequest
 import processDownload
 import ScrapePlugins.RetreivalBase
 
@@ -37,7 +37,6 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 	tableKey   = "djm"
 	urlBase = "http://doujins.com/"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 	tableName = "HentaiItems"
 
 	shouldCanonize = False
@@ -172,7 +171,7 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 			title  = link['seriesName']
 			artist = link['artist']
 
-		except webFunctions.ContentError:
+		except WebRequest.ContentError:
 			self.updateDbEntry(link["sourceUrl"], dlState=-2, downloadPath="ERROR", fileName="ERROR: FAILED")
 			return False
 		except UnwantedContentError:

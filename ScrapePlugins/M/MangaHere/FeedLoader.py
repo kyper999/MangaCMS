@@ -3,7 +3,6 @@ import runStatus
 runStatus.preloadDicts = False
 
 
-import webFunctions
 
 import urllib.parse
 import time
@@ -25,7 +24,6 @@ class FeedLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	pluginName = "MangaHere Link Retreiver"
 	tableKey = "mh"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "MangaItems"
 

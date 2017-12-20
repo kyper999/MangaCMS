@@ -1,5 +1,4 @@
 
-import webFunctions
 
 import pprint
 import calendar
@@ -24,7 +23,6 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	tableKey   = "asmh"
 	urlBase    = "https://asmhentai.com/"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "HentaiItems"
 
@@ -48,6 +46,10 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	def getInfo(self, itemUrl):
 		ret = {'tags' : []}
 		soup = self.wg.getSoup(itemUrl)
+
+		del_cnts = soup.find_all("span", class_='gallery_count')
+		for bad in del_cnts:
+			bad.decompose()
 
 		info_section = soup.find("div", class_='info')
 

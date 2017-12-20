@@ -856,6 +856,141 @@ class CleanerBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 					self.addTags(dbId=rowid, limitByKey=False, tags=all_tags, commit=False, cur=cur)
 				cur.execute("commit")
 
+	def __clear_crosslinks(self):
+
+		with self.transaction() as cur:
+			self.log.info("Searching for items tagged crosslinked")
+			cur.execute("""
+				SELECT
+				    dbid,
+				    tags
+				FROM
+				    {tableName}
+				WHERE
+				    tags LIKE '%crosslink%'
+				ORDER BY
+				    dbId DESC
+				""".format(tableName=self.tableName))
+			cross_link = list(cur.fetchall())
+
+			self.log.info("Searching for items tagged deleted")
+			cur.execute("""
+				SELECT
+				    dbid,
+				    tags
+				FROM
+				    {tableName}
+				WHERE
+				    tags LIKE '%deleted%'
+				ORDER BY
+				    dbId DESC
+				""".format(tableName=self.tableName))
+			deleted = list(cur.fetchall())
+
+			self.log.info("Searching for items tagged duplicate")
+			cur.execute("""
+				SELECT
+				    dbid,
+				    tags
+				FROM
+				    {tableName}
+				WHERE
+				    tags LIKE '%was-duplicate%'
+				ORDER BY
+				    dbId DESC
+				""".format(tableName=self.tableName))
+			duplicate = list(cur.fetchall())
+
+			self.log.info("Searching for items with count tags in row")
+			cur.execute("""
+				SELECT
+				    dbid,
+				    tags
+				FROM
+				    {tableName}
+				WHERE
+				    tags LIKE '%-(%'
+				ORDER BY
+				    dbId DESC
+				""".format(tableName=self.tableName))
+			bad_parenthesis = list(cur.fetchall())
+
+		self.log.info("Found %s rows with cross-link tags, %s with deleted tag, %s dup, %s parenthses.",
+			len(cross_link), len(deleted), len(duplicate), len(bad_parenthesis))
+
+		rows = []
+		rows.extend(deleted)
+		rows.extend(cross_link)
+		rows.extend(duplicate)
+		rows.extend(bad_parenthesis)
+
+		changes = 0
+
+		num_re = re.compile(r'\-\([\d\-,]+?\)')
+
+		with self.transaction() as cur:
+			for dbid, tags in rows:
+				tagl = tags.split(" ")
+
+				tagn = [num_re.split(tmp)[0] for tmp in tagl]
+				tagn = [tmp for tmp in tagn if
+						tmp != 'deleted'       and
+						tmp != 'was-duplicate' and
+						'crosslink' not in tmp
+					]
+				tagn.sort()
+
+				tags_clean = " ".join(tagn)
+				if tags != tags_clean:
+					self.updateDbEntryById(dbid, tags=tags_clean, cur=cur)
+				# else:
+				# 	print("No change? Wat?")
+				# 	print(tags)
+				# 	print(tags_clean)
+				# 	print('was-duplicate' in tagn, tagn)
+				# 	print()
+
+				print("\rRow: %s   " % str(dbid).rjust(10), end='', flush=True)
+
+				changes += 1
+
+				if changes > 5000:
+					changes = 0
+					print("Committing!")
+					cur.execute("Commit;")
+
+
+	def aggregateCrossLinks(self):
+		self.log.info("Removing crosslinks that exist")
+		self.__clear_crosslinks()
+		self.log.info("Aggregating CrossLinks")
+
+		with self.transaction() as cur:
+			self.log.info("Searching for cross-linked tags")
+			cur.execute("""
+				SELECT
+				    downloadPath,
+				    fileName,
+				    COUNT((downloadPath, fileName))
+				FROM
+				    {tableName}
+				GROUP BY
+				    (downloadPath, fileName)
+				HAVING
+				    COUNT((downloadPath, fileName)) > 1
+				ORDER BY
+				    min(dbId) DESC
+				""".format(tableName=self.tableName))
+			items = cur.fetchall()
+
+		for downloadPath, fileName, count in items:
+			with self.transaction() as cur:
+				if downloadPath is None:
+					self.log.info("Null path. Skipping")
+					continue
+				self.log.info("Processing %s -> %s with %s items", downloadPath, fileName, count)
+				self.__process_dupes(cur, downloadPath, fileName)
+
 
 	def fixSingleLetterTags(self):
 		print("fixSingleLetterTags")
@@ -966,35 +1101,6 @@ class CleanerBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 				""".format(tableName=self.tableName))
 			self.log.info("Changed %s rows", cur.rowcount)
 
-	def aggregateCrossLinks(self):
-		print("Aggregate CrossLinks")
-
-		with self.transaction() as cur:
-			print("Searching for cross-linked tags")
-			cur.execute("""
-				SELECT
-				    downloadPath,
-				    fileName,
-				    COUNT((downloadPath, fileName))
-				FROM
-				    {tableName}
-				GROUP BY
-				    (downloadPath, fileName)
-				HAVING
-				    COUNT((downloadPath, fileName)) > 1
-				ORDER BY
-				    min(dbId) DESC
-				""".format(tableName=self.tableName))
-			items = cur.fetchall()
-
-		for downloadPath, fileName, count in items:
-			with self.transaction() as cur:
-				if downloadPath is None:
-					print("Null path. Skipping")
-					continue
-				self.log.info("Processing %s -> %s with %s items", downloadPath, fileName, count)
-				self.__process_dupes(cur, downloadPath, fileName)
-
 	def reprocess_damanged(self):
 		print("Reprocessing damaged files")
 
@@ -1058,7 +1164,7 @@ class HCleaner(CleanerBase):
 	pluginName = "None"
 	tableKey   = "None"
 	pluginType = 'Utility'
-
+	shouldCanonize = False
 
 
 	def __process_raw_row(self, row_raw):

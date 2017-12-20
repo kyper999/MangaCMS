@@ -15,7 +15,6 @@ import ScrapePlugins.RunBase
 import settings
 import time
 import urllib.request, urllib.parse, urllib.error
-import webFunctions
 import zipfile
 
 class ContentLoader(ScrapePlugins.M.FoolSlide.FoolSlideDownloadBase.FoolContentLoader):
@@ -26,7 +25,6 @@ class ContentLoader(ScrapePlugins.M.FoolSlide.FoolSlideDownloadBase.FoolContentL
 	tableKey    = "th"
 	urlBase = "http://www.twistedhelscans.com/"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "MangaItems"
 
@@ -91,7 +89,6 @@ class FeedLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	urlBase = "http://www.twistedhelscans.com/"
 	urlFeed = "http://www.twistedhelscans.com/directory/"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "MangaItems"
 

@@ -7,7 +7,6 @@ import ScrapePlugins.M.FoolSlide.FoolSlideFetchBase
 import ScrapePlugins.RunBase
 import settings
 import time
-import webFunctions
 
 class FeedLoader(ScrapePlugins.M.FoolSlide.FoolSlideFetchBase.FoolFeedLoader):
 
@@ -20,7 +19,6 @@ class FeedLoader(ScrapePlugins.M.FoolSlide.FoolSlideFetchBase.FoolFeedLoader):
 	tableName = "MangaItems"
 	groupName = "Mangatopia"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 
 	urlBase = "http://mangatopia.net/slide/"
@@ -49,7 +47,6 @@ class ContentLoader(ScrapePlugins.M.FoolSlide.FoolSlideDownloadBase.FoolContentL
 	tableName = "MangaItems"
 	groupName = "Mangatopia"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	retreivalThreads = 1
 

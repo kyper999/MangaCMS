@@ -1,5 +1,4 @@
 
-import webFunctions
 
 import pprint
 import calendar
@@ -26,7 +25,6 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	tableKey   = "h2r"
 	urlBase    = "https://hentai2read.com/"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "HentaiItems"
 

@@ -12,7 +12,7 @@ if __name__ == "__main__":
 	logSetup.initLogging()
 	runStatus.preloadDicts = False
 
-import webFunctions
+import WebRequest
 import processDownload
 import ScrapePlugins.RetreivalBase
 import nameTools as nt
@@ -545,8 +545,8 @@ class Loader(ScrapePlugins.RetreivalBase.RetreivalBase):
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		self.wg  = webFunctions.WebGetRobust(logPath=self.loggerPath+".Web", uaOverride=app_browser_ua)
-		self.jwg = webFunctions.WebGetRobust(logPath=self.loggerPath+".Web", uaOverride=app_user_agent)
+		self.wg  = WebRequest.WebGetRobust(logPath=self.loggerPath+".Web", ua_override=app_browser_ua)
+		self.jwg = WebRequest.WebGetRobust(logPath=self.loggerPath+".App-Web", ua_override=app_user_agent)
 
 
 	def make_base_api_request(self, params=None, param_str=None):

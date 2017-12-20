@@ -12,7 +12,7 @@ import ScrapePlugins.RetreivalBase
 import settings
 import traceback
 import urllib.parse
-import webFunctions
+
 import zipfile
 
 class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
@@ -24,9 +24,6 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 	tableKey = "ms"
 	dbName = settings.DATABASE_DB_NAME
 	tableName = "MangaItems"
-
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
-
 	retreivalThreads = 2
 	urlBase    = "http://mangastream.com/"
 

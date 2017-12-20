@@ -1,7 +1,6 @@
 
 import runStatus
 runStatus.preloadDicts = False
-import webFunctions
 
 import calendar
 import traceback
@@ -22,7 +21,6 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	tableKey    = "hit"
 	urlBase = "https://hitomi.la/"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "HentaiItems"
 

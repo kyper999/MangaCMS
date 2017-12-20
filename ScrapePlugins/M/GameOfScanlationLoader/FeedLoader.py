@@ -7,7 +7,6 @@ if __name__ == "__main__":
 	runStatus.preloadDicts = False
 
 
-import webFunctions
 
 import urllib.parse
 import calendar
@@ -25,7 +24,6 @@ class FeedLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	tableKey = "gos"
 	dbName = settings.DATABASE_DB_NAME
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "MangaItems"
 

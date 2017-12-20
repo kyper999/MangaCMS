@@ -3,7 +3,6 @@
 import runStatus
 runStatus.preloadDicts = False
 
-import webFunctions
 import bs4
 import re
 
@@ -34,7 +33,6 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	tableKey = "bt"
 	dbName = settings.DATABASE_DB_NAME
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "MangaItems"
 

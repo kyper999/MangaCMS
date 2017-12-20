@@ -1,5 +1,4 @@
 
-import webFunctions
 import runStatus
 import urllib.parse
 import re
@@ -38,7 +37,6 @@ class BuDateUpdater(ScrapePlugins.MonitorDbBase.MonitorDbBase):
 
 	dbName = settings.DATABASE_DB_NAME
 
-	wgH = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 
 

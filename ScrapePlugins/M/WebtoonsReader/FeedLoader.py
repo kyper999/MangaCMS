@@ -7,7 +7,7 @@ if __name__ == "__main__":
 	runStatus.preloadDicts = False
 
 
-import webFunctions
+
 
 import urllib.parse
 import time
@@ -26,9 +26,6 @@ class FeedLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	pluginName = "Webtoons Reader Scans Link Retreiver"
 	tableKey = "wr"
 	dbName = settings.DATABASE_DB_NAME
-
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
-
 	tableName = "MangaItems"
 
 	urlBase    = "http://www.webtoonsreader.com/"

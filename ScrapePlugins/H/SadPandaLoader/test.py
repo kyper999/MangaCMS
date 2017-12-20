@@ -1,8 +1,8 @@
 
-import webFunctions
+import WebRequest
 
 def test():
-	wg = webFunctions.WebGetRobust()
+	wg = WebRequest.WebGetRobust()
 	print("Test fetching page:")
 	print(wg.getpage('http://api.ipify.org?format=json'))
 

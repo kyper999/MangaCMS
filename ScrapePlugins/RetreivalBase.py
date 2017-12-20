@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import runStatus
 import settings
+import WebRequest
 import ScrapePlugins.MangaScraperDbBase
 import nameTools as nt
 
@@ -26,9 +27,11 @@ class RetreivalBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 	retreivalThreads = 1
 
 	def __init__(self, *args, **kwargs):
+		self.die = False
+		self.wg = WebRequest.WebGetRobust(logPath=self.loggerPath+".Web")
+
 		super().__init__(*args, **kwargs)
 
-		self.die = False
 
 
 	@abc.abstractmethod
@@ -191,6 +194,7 @@ class RetreivalBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 		fileN = fileN.replace('.zip .zip', '.zip')
 		fileN = fileN.replace('.zip.zip', '.zip')
 		fileN = fileN.replace(' .zip', '.zip')
+		fileN = fileN.replace('..zip', '.zip')
 		fileN = nt.makeFilenameSafe(fileN)
 
 		fqfilename = os.path.join(filepath, fileN)

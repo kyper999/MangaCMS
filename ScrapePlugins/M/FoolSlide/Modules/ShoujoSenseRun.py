@@ -8,7 +8,6 @@ import ScrapePlugins.M.FoolSlide.FoolSlideFetchBase
 import ScrapePlugins.RunBase
 import settings
 import time
-import webFunctions
 
 class FeedLoader(ScrapePlugins.M.FoolSlide.FoolSlideFetchBase.FoolFeedLoader):
 
@@ -20,7 +19,6 @@ class FeedLoader(ScrapePlugins.M.FoolSlide.FoolSlideFetchBase.FoolFeedLoader):
 	tableName = "MangaItems"
 
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	urlBase = "http://reader.shoujosense.com/"
 	feedUrl = urlBase+"latest/{num}/"
@@ -35,7 +33,6 @@ class ContentLoader(ScrapePlugins.M.FoolSlide.FoolSlideDownloadBase.FoolContentL
 	tableName = "MangaItems"
 	groupName = "ShoujoSense"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	retreivalThreads = 1
 

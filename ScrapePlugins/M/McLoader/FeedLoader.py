@@ -1,5 +1,5 @@
 
-import webFunctions
+
 import bs4
 import re
 
@@ -26,9 +26,6 @@ class FeedLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	pluginName = "MangaCow Link Retreiver"
 	tableKey = "mc"
 	dbName = settings.DATABASE_DB_NAME
-
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
-
 	tableName = "MangaItems"
 
 	urlBase = "http://mngcow.co/"

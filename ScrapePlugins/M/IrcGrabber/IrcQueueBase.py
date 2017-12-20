@@ -3,11 +3,16 @@
 
 
 import time
-import ScrapePlugins.MangaScraperDbBase
 
 import abc
+import WebRequest
+import ScrapePlugins.MangaScraperDbBase
 
 class IrcQueueBase(ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.wg = WebRequest.WebGetRobust(logPath=self.loggerPath+".Web")
 
 
 	def processLinksIntoDB(self, itemDataSets, isPicked=False):

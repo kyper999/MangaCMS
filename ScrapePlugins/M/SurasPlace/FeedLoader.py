@@ -1,5 +1,5 @@
 
-import webFunctions
+
 import bs4
 import time
 import urllib.parse
@@ -16,9 +16,6 @@ class FeedLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	pluginName = "Sura's Place Link Retreiver"
 	tableKey = "sura"
 	dbName = settings.DATABASE_DB_NAME
-
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
-
 	tableName = "MangaItems"
 
 	urlBase = "http://www.surasplace.com/"

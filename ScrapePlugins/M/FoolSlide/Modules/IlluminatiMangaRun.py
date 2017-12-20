@@ -10,7 +10,6 @@ import ScrapePlugins.M.FoolSlide.FoolSlideDownloadBase
 
 import time
 import runStatus
-import webFunctions
 
 DB_KEY     = "im"
 LONG_NAME  = "Illuminati Manga"
@@ -29,7 +28,6 @@ class FeedLoader(ScrapePlugins.M.FoolSlide.FoolSlideFetchBase.FoolFeedLoader):
 	tableKey = DB_KEY
 	dbName = settings.DATABASE_DB_NAME
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "MangaItems"
 
@@ -50,7 +48,6 @@ class ContentLoader(ScrapePlugins.M.FoolSlide.FoolSlideDownloadBase.FoolContentL
 	tableName = "MangaItems"
 	groupName = GROUP_NAME
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	retreivalThreads = 1
 

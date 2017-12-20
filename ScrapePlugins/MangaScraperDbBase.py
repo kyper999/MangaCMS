@@ -239,7 +239,7 @@ class MangaScraperDbBase(DbBase.DbBase):
 
 	# Update entry with key sourceUrl with values **kwargs
 	# kwarg names are checked for validity, and to prevent possiblity of sql injection.
-	def updateDbEntryById(self, rowId=None, dbId=None, commit=True, **kwargs):
+	def updateDbEntryById(self, rowId=None, dbId=None, commit=True, cur=None, **kwargs):
 		if dbId is None:
 			assert rowId is not None
 			dbId = rowId
@@ -254,9 +254,12 @@ class MangaScraperDbBase(DbBase.DbBase):
 			print("Query = ", query)
 			print("Args = ", queryArguments)
 
-		with self.transaction(commit=commit) as cur:
+		if cur:
 			cur.execute(query, queryArguments)
-			print("ret =",  cur.rowcount)
+		else:
+			with self.transaction(commit=commit) as cur:
+				cur.execute(query, queryArguments)
+				print("ret =",  cur.rowcount)
 
 		# print("Updating", self.getRowByValue(sourceUrl=sourceUrl))
 

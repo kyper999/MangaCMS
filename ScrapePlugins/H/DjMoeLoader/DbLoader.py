@@ -1,4 +1,3 @@
-import webFunctions
 
 import calendar
 import datetime
@@ -20,7 +19,6 @@ class DbLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	tableKey    = "djm"
 	urlBase = "http://doujins.com/"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "HentaiItems"
 	shouldCanonize = False

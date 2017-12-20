@@ -3,7 +3,7 @@ import runStatus
 runStatus.preloadDicts = False
 
 
-import webFunctions
+
 
 import urllib.parse
 import time
@@ -26,9 +26,6 @@ class FeedLoader(ScrapePlugins.LoaderBase.LoaderBase):
 	tableKey = "ze"
 	dbName = settings.DATABASE_DB_NAME
 	tableName = "MangaItems"
-
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
-
 
 	urlBase    = "http://www.manga-audition.com/comic-zenon/"
 

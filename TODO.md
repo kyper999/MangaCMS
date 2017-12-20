@@ -1,4 +1,5 @@
 Add: 
+	https://www.manga.club/
 	https://www.lezhin.com/en
 
 To Check:

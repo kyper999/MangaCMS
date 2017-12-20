@@ -1,5 +1,5 @@
 
-import webFunctions
+
 import settings
 import os
 import os.path
@@ -28,9 +28,6 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase):
 	tableKey = "mc"
 	dbName = settings.DATABASE_DB_NAME
 	tableName = "MangaItems"
-
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
-
 	retreivalThreads = 4
 
 

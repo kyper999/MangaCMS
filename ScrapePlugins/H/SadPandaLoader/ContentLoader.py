@@ -1,7 +1,6 @@
 
 # -*- coding: utf-8 -*-
 
-import webFunctions
 import os
 import os.path
 import time
@@ -29,7 +28,6 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase, LoginMixin.ExLogi
 	tableKey   = "sp"
 	urlBase = "http://exhentai.org/"
 
-	wg = webFunctions.WebGetRobust(logPath=loggerPath+".Web")
 
 	tableName = "HentaiItems"
 
@@ -43,6 +41,7 @@ class ContentLoader(ScrapePlugins.RetreivalBase.RetreivalBase, LoginMixin.ExLogi
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 
+	def setup(self):
 		self.checkLogin()
 		if not self.checkExAccess():
 			raise ValueError("Cannot access ex! Wat?")
