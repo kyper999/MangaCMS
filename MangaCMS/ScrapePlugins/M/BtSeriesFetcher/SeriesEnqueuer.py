@@ -178,7 +178,7 @@ class SeriesEnqueuer(MangaCMS.ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperD
 				for line in traceback.format_exc().split("\n"):
 					self.log.error("%s", line)
 
-			except WebRequest.ContentError:
+			except WebRequest.WebGetException:
 				self.log.error("Failure fetching pave: '%s'",  self.seriesUrl % row["seriesId"])
 				for line in traceback.format_exc().split("\n"):
 					self.log.error("%s", line)

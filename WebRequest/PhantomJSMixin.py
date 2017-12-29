@@ -145,7 +145,6 @@ class WebGetPjsMixin(object):
 			fileN = urllib.parse.unquote(urllib.parse.urlparse(self.pjs_driver.current_url)[2].split("/")[-1])
 			fileN = bs4.UnicodeDammit(fileN).unicode_markup
 
-			self._syncOutOfPjsWebDriver()
 
 			# Probably a bad assumption
 			mType = "text/html"
@@ -177,7 +176,6 @@ class WebGetPjsMixin(object):
 				try_get(referrer)
 			try_get(url)
 
-			self._syncOutOfPjsWebDriver()
 
 			ret = {
 				'url'   : self.pjs_driver.current_url,

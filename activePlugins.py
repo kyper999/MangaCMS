@@ -98,12 +98,12 @@ scrapePlugins = {
 	42  : (MangaCMS.ScrapePlugins.H.PururinLoader.Run,                   hours( 2)),
 	44  : (MangaCMS.ScrapePlugins.H.NHentaiLoader.Run,                   hours( 2)),
 	45  : (MangaCMS.ScrapePlugins.H.SadPandaLoader.Run,                  hours(12)),
-	46  : (MangaCMS.ScrapePlugins.H.DjMoeLoader.Run,                     hours( 4)),
-	47  : (MangaCMS.ScrapePlugins.H.HitomiLoader.Run,                    hours( 4)),
-	48  : (MangaCMS.ScrapePlugins.H.ASMHentaiLoader.Run,                 hours( 4)),
-	49  : (MangaCMS.ScrapePlugins.H.Hentai2Read.Run,                     hours( 6)),
-	50  : (MangaCMS.ScrapePlugins.H.DoujinOnlineLoader.Run,              hours( 6)),
-	51  : (MangaCMS.ScrapePlugins.H.TsuminoLoader.Run,                   hours( 6)),
+	46  : (MangaCMS.ScrapePlugins.H.DjMoeLoader.Run,                     hours( 2)),
+	47  : (MangaCMS.ScrapePlugins.H.HitomiLoader.Run,                    hours( 2)),
+	48  : (MangaCMS.ScrapePlugins.H.ASMHentaiLoader.Run,                 hours( 2)),
+	49  : (MangaCMS.ScrapePlugins.H.Hentai2Read.Run,                     hours( 2)),
+	50  : (MangaCMS.ScrapePlugins.H.DoujinOnlineLoader.Run,              hours( 2)),
+	51  : (MangaCMS.ScrapePlugins.H.TsuminoLoader.Run,                   hours( 2)),
 
 	# FoolSlide modules
 

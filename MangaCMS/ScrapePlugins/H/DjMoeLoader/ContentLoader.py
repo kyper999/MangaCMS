@@ -171,7 +171,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			title  = link['seriesName']
 			artist = link['artist']
 
-		except WebRequest.ContentError:
+		except WebRequest.WebGetException:
 			self.updateDbEntry(link["sourceUrl"], dlState=-2, downloadPath="ERROR", fileName="ERROR: FAILED")
 			return False
 		except UnwantedContentError:

@@ -57,7 +57,7 @@ jobstores = {
 # Should probably be a lambda? Laaaazy.
 def callMod(passMod):
 	lut = {}
-	for item, dummy_interval in activePlugins.MangaCMS.ScrapePlugins.values():
+	for item, dummy_interval in activePlugins.scrapePlugins.values():
 		lut[item.__name__] = item
 	if not passMod in lut:
 		raise ValueError("Callable '%s' is not in the class lookup table: '%s'!" % (passMod, lut))
@@ -70,7 +70,7 @@ def scheduleJobs(sched, timeToStart):
 
 	jobs = []
 	offset = 0
-	for key, value in activePlugins.MangaCMS.ScrapePlugins.items():
+	for key, value in activePlugins.scrapePlugins.items():
 		baseModule, interval = value
 		jobs.append((key, baseModule, interval, timeToStart+datetime.timedelta(seconds=60*offset)))
 		offset += 1

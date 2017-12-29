@@ -232,7 +232,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			artist = linkDict['artist']
 
 
-		except WebRequest.ContentError:
+		except WebRequest.WebGetException:
 			self.updateDbEntry(linkDict["sourceUrl"], dlState=-2, downloadPath="ERROR", fileName="ERROR: FAILED")
 
 		if images and title:

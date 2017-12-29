@@ -134,6 +134,10 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 
 	def processDownload(self, seriesName, archivePath, deleteDups=False, includePHash=False, pathPositiveFilter=None, crossReference=True, doUpload=True, rowId=None, **kwargs):
 
+		if self.mon_con:
+			self.mon_con.incr('processed-download', 1)
+
+
 		if 'phashThresh' in kwargs:
 			phashThreshIn = kwargs.pop('phashThresh')
 			self.log.warn("Phash search distance overridden!")
@@ -160,6 +164,7 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 				self.log.critical("Error processing archive '%s'", archivePath)
 				self.log.critical(traceback.format_exc())
 				retTags = "corrupt unprocessable"
+				self.mon_con.incr('corrupt-archive', 1)
 
 
 
@@ -178,12 +183,15 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 			retTagsTmp, bestMatch, intersections = dc.process(moveToPath=moveToPath)
 
 			if 'deleted' in retTagsTmp:
+				self.mon_con.incr('deleted-archive', 1)
 				break
 			if phashThresh == 0:
+				self.mon_con.incr('phash-exhausted', 1)
 				break
 			if not 'phash-conflict' in retTagsTmp:
 				break
 			if phashThresh < phashThreshIn:
+				self.mon_con.incr('phash-thresh-reduced', 1)
 				retTagsTmp += " phash-thresh-reduced phash-thresh-%s" % phashThresh
 			phashThresh = phashThresh - 1
 			self.log.warning("Phash conflict! Reducing search threshold to %s to try to work around.", phashThresh)
@@ -191,10 +199,17 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 		retTags += " " + retTagsTmp
 		retTags = retTags.strip()
 
+		if "phash-duplicate" in retTags:
+			self.mon_con.incr('phash-duplicate', 1)
+
+		elif 'deleted' in retTags:
+			self.mon_con.incr('binary-duplicate', 1)
+
 		if bestMatch and crossReference:
 			isPhash = False
 			if "phash-duplicate" in retTags:
 				isPhash = True
+
 			self.crossLink(archivePath, bestMatch, isPhash=isPhash, rowId=rowId)
 
 
@@ -206,6 +221,7 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 				self.log.info("Trying to upload file '%s'.", archivePath)
 				up.uploadFile(seriesName, archivePath)
 				retTags += " uploaded"
+				self.mon_con.incr('uploaded', 1)
 			except ConnectionRefusedError:
 				self.log.warning("Uploading file failed! Connection Refused!")
 				for line in traceback.format_exc().split("\n"):

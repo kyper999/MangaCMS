@@ -3,7 +3,7 @@
 import logging
 import abc
 
-
+import WebRequest
 import nameTools as nt
 
 
@@ -30,6 +30,7 @@ class SeriesScraperDbBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraper
 		super().__init__()
 		self.checkInitSeriesDb()
 
+		self.wg = WebRequest.WebGetRobust(logPath=self.loggerPath+".Web")
 
 
 	def checkIfWantToFetchSeries(self, seriesName):
