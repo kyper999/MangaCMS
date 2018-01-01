@@ -141,8 +141,8 @@ def preflight():
 	# runStatus.notq = UploadPlugins.Madokami.notifier.start_notifier()
 	runStatus.notq = None
 
-	schemaUpdater.schemaRevisioner.updateDatabaseSchema()
 	MangaCMS.lib.statusManager.resetAllRunningFlags()
+	schemaUpdater.schemaRevisioner.updateDatabaseSchema()
 
 	nt.dirNameProxy.startDirObservers()
 

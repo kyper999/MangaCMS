@@ -43,7 +43,7 @@ class BuWatchMonitor(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 
 	def checkLogin(self):
 
-		checkPage = self.wgH.getpage(self.baseListURL)
+		checkPage = self.wg.getpage(self.baseListURL)
 		if "You must be a user to access this page." in checkPage:
 			self.log.info("Whoops, need to get Login cookie")
 		else:
@@ -51,14 +51,14 @@ class BuWatchMonitor(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 			return
 
 		logondict = {"username" : settings.buSettings["login"], "password" : settings.buSettings["passWd"], "act" : "login"}
-		getPage = self.wgH.getpage(r"http://www.mangaupdates.com/login.html", postData=logondict)
+		getPage = self.wg.getpage(r"http://www.mangaupdates.com/login.html", postData=logondict)
 		if "No user found, or error. Try again." in getPage:
 			self.log.error("Login failed!")
 			raise ValueError("Cannot login to MangaUpdates. Is your login/password valid?")
 		elif "You are currently logged in as" in getPage:
 			self.log.info("Logged in successfully!")
 
-		self.wgH.saveCookies()
+		self.wg.saveCookies()
 
 
 	# -----------------------------------------------------------------------------------
@@ -88,7 +88,7 @@ class BuWatchMonitor(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 		listDict = {}
 		listDict["Reading"] = r"http://www.mangaupdates.com/mylist.html"  # The reading list is not specifically named.
 
-		pageCtnt = self.wgH.getpage(self.baseListURL)
+		pageCtnt = self.wg.getpage(self.baseListURL)
 
 		soup = bs4.BeautifulSoup(pageCtnt, "lxml")
 		add_seriesSegment = soup.find("div", id="add_series")
@@ -187,7 +187,7 @@ class BuWatchMonitor(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 
 	def updateUserListNamed(self, listName, listURL):
 
-		pageCtnt = self.wgH.getpage(listURL)
+		pageCtnt = self.wg.getpage(listURL)
 		soup = bs4.BeautifulSoup(pageCtnt, "lxml")
 		itemTable = soup.find("table", id="list_table")
 
@@ -211,7 +211,7 @@ class BuWatchMonitor(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 
 	def scanRecentlyUpdated(self):
 		ONE_DAY = 60*60*24
-		releases = self.wgH.getpage(self.baseReleasesURL)
+		releases = self.wg.getpage(self.baseReleasesURL)
 		soup = bs4.BeautifulSoup(releases, "lxml")
 
 		content = soup.find("td", {"id": "main_content"})
@@ -284,7 +284,7 @@ class BuWatchMonitor(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 
 			run += 1
 
-			soup = self.wgH.getSoup(url)
+			soup = self.wg.getSoup(url)
 			series = self.getSeriesFromPage(soup)
 			if series:
 				self.log.info("Inserting %s items into name DB", len(series))

@@ -134,10 +134,18 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 
 			with ThreadPoolExecutor(max_workers=self.retreivalThreads) as executor:
 
-				for link in links:
-					executor.submit(self._fetchLink, link)
+				futures = [executor.submit(self._fetchLink, link) for link in links]
 
-				executor.shutdown(wait=True)
+				while futures:
+					futures = [tmp for tmp in futures if not (tmp.done() or tmp.cancelled())]
+					if not runStatus.run:
+						self.log.warning("Cancelling all pending futures")
+						for job in futures:
+							job.cancel()
+						self.log.warning("Jobs cancelled. Exiting executor context.")
+						return
+					time.sleep(1)
+
 
 
 

@@ -7,6 +7,7 @@ import abc
 import traceback
 import time
 import settings
+import WebRequest
 import nameTools as nt
 import MangaCMS.DbBase
 
@@ -49,6 +50,7 @@ class MonitorDbBase(MangaCMS.DbBase.DbBase):
 	def __init__(self):
 		super().__init__()
 
+		self.wg = WebRequest.WebGetRobust(logPath=self.loggerPath+".Web")
 
 
 		self.log.info("Loading %s Monitor BaseClass", self.pluginName)

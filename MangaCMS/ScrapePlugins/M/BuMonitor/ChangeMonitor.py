@@ -53,7 +53,7 @@ class BuDateUpdater(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 
 	def checkLogin(self):
 
-		checkPage = self.wgH.getpage(r"http://www.mangaupdates.com/mylist.html")
+		checkPage = self.wg.getpage(r"http://www.mangaupdates.com/mylist.html")
 		if "You must be a user to access this page." in checkPage:
 			self.log.info("Whoops, need to get Login cookie")
 		else:
@@ -61,7 +61,7 @@ class BuDateUpdater(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 			return
 
 		logondict = {"username" : settings.buSettings["login"], "password" : settings.buSettings["passWd"], "act" : "login"}
-		getPage = self.wgH.getpage(r"http://www.mangaupdates.com/login.html", postData=logondict)
+		getPage = self.wg.getpage(r"http://www.mangaupdates.com/login.html", postData=logondict)
 		if "No user found, or error. Try again." in getPage:
 			self.log.error("Login failed!")
 			with open("pageTemp.html", "wb") as fp:
@@ -69,7 +69,7 @@ class BuDateUpdater(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 		elif "You are currently logged in as" in getPage:
 			self.log.info("Logged in successfully!")
 
-		self.wgH.saveCookies()
+		self.wg.saveCookies()
 
 
 	# -----------------------------------------------------------------------------------
@@ -172,7 +172,7 @@ class BuDateUpdater(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 
 	def getItemInfo(self, dbId, mId):
 
-		pageCtnt  = self.wgH.getpage(self.itemURL.format(buId=mId))
+		pageCtnt  = self.wg.getpage(self.itemURL.format(buId=mId))
 
 		if "You specified an invalid series id." in pageCtnt:
 			self.log.warning("Invalid MU ID! ID: %s", mId)
@@ -261,7 +261,7 @@ class BuDateUpdater(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 			return None
 		searchPage = item['href']
 
-		relPage = self.wgH.getSoup(searchPage)
+		relPage = self.wg.getSoup(searchPage)
 
 		mainTd = relPage.find('td', id='main_content')
 
@@ -382,7 +382,7 @@ class BuDateUpdater(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 																																	num2=int(random.random()*100000000),
 																																	num3=int(random.random()*100000000))
 
-		soup = self.wgH.getSoup(tagAjaxUrl, addlHeaders={'Referer': self.itemURL.format(buId=mId)})
+		soup = self.wg.getSoup(tagAjaxUrl, addlHeaders={'Referer': self.itemURL.format(buId=mId)})
 
 		tagsHeaderB = soup.find("div", id="cat_opts")
 

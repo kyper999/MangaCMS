@@ -73,7 +73,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		linkDict['dirPath'] = os.path.join(settings.asmhSettings["dlDir"], linkDict['seriesName'])
 
 		if not os.path.exists(linkDict["dirPath"]):
-			os.makedirs(linkDict["dirPath"])
+			os.makedirs(linkDict["dirPath"], exist_ok=True)
 		else:
 			self.log.info("Folder Path already exists?: %s", linkDict["dirPath"])
 
@@ -110,7 +110,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 	def getImage(self, imageUrl, referrer):
 
-		content, handle = self.wg.getpage(imageUrl, returnMultiple=True, addlHeaders={'Referer': referrer})
+		content, handle = self.wg.getpage(imageUrl, returnMultiple=True)
 		if not content or not handle:
 			raise ValueError("Failed to retreive image from page '%s'!" % referrer)
 
