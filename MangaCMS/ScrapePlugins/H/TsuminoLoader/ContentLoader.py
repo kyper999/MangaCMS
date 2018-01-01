@@ -5,7 +5,10 @@ import os
 import re
 import os.path
 
+import mimetypes
+import magic
 import zipfile
+
 import nameTools as nt
 
 import urllib.request, urllib.parse, urllib.error
@@ -133,7 +136,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		return linkDict
 
-	def getImage(self, imageUrl, referrer):
+	def getImage(self, imageUrl, referrer, fidx):
 
 		content, handle = self.wg.getpage(imageUrl, returnMultiple=True, addlHeaders={'Referer': referrer})
 		if not content or not handle:
@@ -141,16 +144,32 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		fileN = urllib.parse.unquote(urllib.parse.urlparse(handle.geturl())[2].split("/")[-1])
 		fileN = bs4.UnicodeDammit(fileN).unicode_markup
-		self.log.info("retreived image '%s' with a size of %0.3f K", fileN, len(content)/1000.0)
-		return fileN, content
+
+		mtype = magic.from_buffer(content, mime=True)
+		fext = mimetypes.guess_extension(mtype)
+
+		# Assume jpeg if we can't figure it out, because it's probably safe.
+		if not fext:
+			fext = ".jpg"
+
+		filename = "{orig} {counter}{ext}".format(
+				orig    = fileN,
+				counter = str(fidx).zfill(4),
+				ext     = fext,
+			)
+
+		self.log.info("retreived image '%s' with a size of %0.3f K", filename, len(content)/1000.0)
+		return filename, content
 
 
 
 	def fetchImages(self, linkDict):
 
 		images = []
+		fidx = 1
 		for imgUrl, referrerUrl in linkDict["dlLinks"]:
-			images.append(self.getImage(imgUrl, referrerUrl))
+			images.append(self.getImage(imgUrl, referrerUrl, fidx))
+			fidx += 1
 
 		return images
 
