@@ -17,7 +17,8 @@ import traceback
 import settings
 import bs4
 import logging
-
+import magic
+import mimetypes
 import WebRequest
 import MangaCMS.cleaner.processDownload
 import MangaCMS.ScrapePlugins.RetreivalBase
@@ -103,11 +104,12 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		artist_area = soup.find('div', class_='gallery-artist')
 		aList = []
-		for artist_link in artist_area.find_all("a"):
-			a_tag = artist_link.get_text(strip=True)
-			aList.append(a_tag)
-			a_tag = "artist " + a_tag
-			tagList.append(a_tag.lower().rstrip(", ").lstrip(", ").replace(" ", "-"))
+		if artist_area:
+			for artist_link in artist_area.find_all("a"):
+				a_tag = artist_link.get_text(strip=True)
+				aList.append(a_tag)
+				a_tag = "artist " + a_tag
+				tagList.append(a_tag.lower().rstrip(", ").lstrip(", ").replace(" ", "-"))
 
 		linkDict['artist'] = ",".join(aList)
 		tagStr = ' '.join(tagList)
@@ -140,7 +142,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		return ret_link_list
 
 
-	def getImage(self, imageUrl, referrer):
+	def getImage(self, imageUrl, referrer, fidx):
 
 		content, handle = self.wg.getpage(imageUrl, returnMultiple=True, addlHeaders={'Referer': referrer})
 		if not content or not handle:
@@ -148,15 +150,31 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		fileN = urllib.parse.unquote(urllib.parse.urlparse(handle.geturl())[2].split("/")[-1])
 		fileN = bs4.UnicodeDammit(fileN).unicode_markup
-		self.log.info("retreived image '%s' with a size of %0.3f K", fileN, len(content)/1000.0)
-		return fileN, content
+
+		mtype = magic.from_buffer(content, mime=True)
+		fext = mimetypes.guess_extension(mtype)
+
+		# Assume jpeg if we can't figure it out, because it's probably safe.
+		if not fext:
+			fext = ".jpg"
+
+		filename = "{counter} - {orig} {ext}".format(
+				orig    = fileN,
+				counter = str(fidx).zfill(4),
+				ext     = fext,
+			)
+
+		self.log.info("retreived image '%s' with a size of %0.3f K", filename, len(content)/1000.0)
+		return filename, content
 
 	def getImages(self, imageurls):
 
 		images = []
 
+		fidx = 1
 		for imageurl, referrer in imageurls:
-			images.append(self.getImage(imageurl, referrer))
+			images.append(self.getImage(imageurl, referrer, fidx))
+			fidx += 1
 
 		return images
 

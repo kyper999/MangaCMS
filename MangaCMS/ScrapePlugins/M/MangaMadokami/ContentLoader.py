@@ -43,7 +43,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	tableName = "MangaItems"
 	urlBase = "https://manga.madokami.al/"
 
-	itemLimit = None
+	itemLimit = 250
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -184,23 +184,12 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 
-class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
-	loggerPath = "Main.Manga.MkC.Run"
-
-	pluginName = "MkCLoader"
-
-	def _go(self):
-		self.log.info("Checking Mk feeds for updates")
-		fl = ContentLoader()
-		fl.do_fetch_content()
-
-
 if __name__ == "__main__":
 	import utilities.testBase as tb
 
 	with tb.testSetup():
 
-		run = Runner()
-		run.go()
+		run = ContentLoader()
+		run.do_fetch_content()
 
 
