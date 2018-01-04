@@ -162,7 +162,7 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 			return ret
 
 		for chap in chap_list.find_all('li', recursive=False):
-			chap_d = {**series_meta}
+			chap_d = {key : val for key, val in series_meta.items()}
 
 			chap_d['sourceUrl'] = chap.a['href']
 
