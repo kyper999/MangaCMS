@@ -378,7 +378,7 @@ class MangaScraperDbBase(MangaCMS.DbBase.DbBase):
 
 		tags_arg = kwargs.pop("tags")
 		print("Getting row", kwargs)
-		row = self.getRowByValue(**kwargs, cur=cur)
+		row = self.getRowByValue(cur=cur, **kwargs)
 		if not row:
 			raise ValueError("Row specified does not exist!")
 
@@ -449,7 +449,7 @@ class MangaScraperDbBase(MangaCMS.DbBase.DbBase):
 			raise ValueError("You have to specify tags you want to add as a kwarg! '%s'" % (kwargs))
 
 		tags_arg = kwargs.pop("tags")
-		row = self.getRowByValue(**kwargs, cur=cur)
+		row = self.getRowByValue(cur=cur, **kwargs)
 		if not row:
 			raise ValueError("Row specified does not exist!")
 
