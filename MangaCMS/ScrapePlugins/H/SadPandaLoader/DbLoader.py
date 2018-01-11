@@ -40,7 +40,7 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase, LoginMixin.ExLoginM
 
 
 	def loadFeed(self, tag, pageOverride=None, includeExpunge=False):
-		self.log.info("Retreiving feed content...",)
+		self.log.info("Retrieving feed content...",)
 		if not pageOverride:
 			pageOverride = 0  # Pages start at zero. Yeah....
 		try:

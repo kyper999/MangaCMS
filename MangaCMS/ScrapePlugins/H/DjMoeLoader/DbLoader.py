@@ -24,7 +24,7 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	shouldCanonize = False
 
 	def loadFeed(self, pageOverride=None):
-		self.log.info("Retreiving feed content...",)
+		self.log.info("Retrieving feed content...",)
 		if not pageOverride:
 			pageOverride = 1
 		pageOverride -= 1

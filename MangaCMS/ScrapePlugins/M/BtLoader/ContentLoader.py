@@ -31,7 +31,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	tableName = "MangaItems"
 
 
-	retreivalThreads = 2
+	retreivalThreads = 10
 
 	itemLimit = 500
 
@@ -166,7 +166,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 			seriesName, chapterVol, groupName, imageUrls = self.getContainerPages(sourceUrl)
 			if not seriesName and not chapterVol and not imageUrls:
-				self.log.critical("Failure on retreiving content at %s", sourceUrl)
+				self.log.critical("Failure on retrieving content at %s", sourceUrl)
 				self.log.critical("Page not found - 404")
 				self.updateDbEntry(sourceUrl, dlState=-1)
 				return
@@ -227,7 +227,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 		except Exception:
-			self.log.critical("Failure on retreiving content at %s", sourceUrl)
+			self.log.critical("Failure on retrieving content at %s", sourceUrl)
 			self.log.critical("Traceback = %s", traceback.format_exc())
 			self.updateDbEntry(sourceUrl, dlState=-1)
 

@@ -132,7 +132,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			return
 
 		except Exception:
-			self.log.critical("Failure on retreiving content at %s", sourceUrl)
+			self.log.critical("Failure on retrieving content at %s", sourceUrl)
 			self.log.critical("Traceback = %s", traceback.format_exc())
 			self.updateDbEntry(sourceUrl, dlState=-1)
 			raise

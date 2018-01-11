@@ -151,8 +151,13 @@ def buildQuery(srcTbl, cols, **kwargs):
 		andOperators.append((srcTbl.seriesname == kwargs['seriesName']))
 
 	if "includeDeleted" not in kwargs or kwargs['includeDeleted'] is False:
-			match = '%was-duplicate%'
-			andOperators.append(sqlo.Not(sqlo.Like(srcTbl.tags, match)))
+		match = '%was-duplicate%'
+		andOperators.append(sqlo.Not(sqlo.Like(srcTbl.tags, match)))
+		
+	andOperators.append(sqlo.Not(sqlo.Like(srcTbl.tags, '%language-日本語%')))
+			
+			
+			
 
 	# Trigram similarity search uses the '%' symbol. It's only exposed by the python-sql library as the
 	# "mod" operator, but the syntax is compatible.

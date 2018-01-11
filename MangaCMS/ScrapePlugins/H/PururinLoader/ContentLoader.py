@@ -155,7 +155,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	def getDownloadInfo(self, linkDict):
 		sourcePage = linkDict["sourceUrl"]
 
-		self.log.info("Retreiving item: %s", sourcePage)
+		self.log.info("Retrieving item: %s", sourcePage)
 
 		self.updateDbEntry(linkDict["sourceUrl"], dlState=1)
 

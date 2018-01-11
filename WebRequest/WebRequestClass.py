@@ -231,7 +231,7 @@ class WebGetRobust(PhantomJSMixin.WebGetPjsMixin, ChromiumMixin.WebGetCrMixin):
 			except ValueError:
 				if attempts < 1:
 					attempts += 1
-					self.log.error("JSON Parsing issue retreiving content from page!")
+					self.log.error("JSON Parsing issue retrieving content from page!")
 					for line in traceback.format_exc().split("\n"):
 						self.log.error("%s", line.rstrip())
 					self.log.error("Retrying!")
@@ -377,7 +377,7 @@ class WebGetRobust(PhantomJSMixin.WebGetPjsMixin, ChromiumMixin.WebGetCrMixin):
 						self.log.warning("Cloudflare failure! Doing automatic step-through.")
 						self.stepThroughCloudFlare(requestedUrl, titleNotContains="Just a moment...")
 			except UnicodeEncodeError:
-				self.log.critical("Unrecoverable Unicode issue retreiving page - %s", requestedUrl)
+				self.log.critical("Unrecoverable Unicode issue retrieving page - %s", requestedUrl)
 				for line in traceback.format_exc().split("\n"):
 					self.log.critical("%s", line.rstrip())
 				self.log.critical("Parameters:")

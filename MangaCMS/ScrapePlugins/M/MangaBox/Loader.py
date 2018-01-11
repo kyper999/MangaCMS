@@ -468,7 +468,7 @@ Observed API calls
 		Lastly, the "updatedDate" field is relevant, because it gets passed as a param in the image requests.
 
 # Fetching images:
-	Retreiving the images for a release is /fairly/ straight forward.
+	Retrieving the images for a release is /fairly/ straight forward.
 
 	First, the 'baseUrl" field is taken. Then, to get the list of image names,
 		>- {baseurl} + "/" + "filenames.txt" + "?" + {updatedDate}

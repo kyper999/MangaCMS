@@ -58,7 +58,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	def getDownloadInfo(self, linkDict):
 
 		content_id = linkDict["sourceUrl"]
-		self.log.info("Retreiving metadata for item: %s", content_id)
+		self.log.info("Retrieving metadata for item: %s", content_id)
 
 
 		if not content_id.startswith("http"):

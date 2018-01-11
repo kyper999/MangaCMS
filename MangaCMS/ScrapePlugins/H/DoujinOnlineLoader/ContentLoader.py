@@ -219,7 +219,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			self.updateDbEntry(linkDict["sourceUrl"], dlState=1)
 
 			sourcePage = linkDict["sourceUrl"]
-			self.log.info("Retreiving item: %s", sourcePage)
+			self.log.info("Retrieving item: %s", sourcePage)
 			soup = self.wg.getSoup(sourcePage, addlHeaders={'Referer': 'https://doujinshi.online/'})
 			if not soup:
 				self.log.critical("No download at url %s! SourceUrl = %s", sourcePage, linkDict["sourceUrl"])

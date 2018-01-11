@@ -88,7 +88,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			imageUrls = self.getImageUrls(sourceUrl)
 
 			if not imageUrls:
-				self.log.critical("Failure on retreiving content at %s", sourceUrl)
+				self.log.critical("Failure on retrieving content at %s", sourceUrl)
 				self.log.critical("Page not found - 404")
 				self.updateDbEntry(sourceUrl, dlState=-1)
 				return
@@ -144,11 +144,11 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			return
 
 		except ScrapeExceptions.NotMangaException:
-			self.log.critical("Failure on retreiving content at %s", sourceUrl)
+			self.log.critical("Failure on retrieving content at %s", sourceUrl)
 			self.log.critical("That URL isn't a manga release!")
 			self.updateDbEntry(sourceUrl, dlState=-2)
 		except Exception:
-			self.log.critical("Failure on retreiving content at %s", sourceUrl)
+			self.log.critical("Failure on retrieving content at %s", sourceUrl)
 			self.log.critical("Traceback = %s", traceback.format_exc())
 			self.updateDbEntry(sourceUrl, dlState=-1)
 

@@ -70,7 +70,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	def getDownloadInfo(self, linkDict, retag=False):
 		sourcePage = linkDict["sourceUrl"]
 
-		self.log.info("Retreiving item: %s", sourcePage)
+		self.log.info("Retrieving item: %s", sourcePage)
 
 		try:
 			soup = self.wg.getSoup(sourcePage, addlHeaders={'Referer': self.urlBase})
@@ -222,11 +222,11 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			linkInfo = self.getDownloadInfo(link)
 			self.doDownload(linkInfo, link)
 		except urllib.error.URLError:
-			self.log.error("Failure retreiving content for link %s", link)
+			self.log.error("Failure retrieving content for link %s", link)
 			self.log.error("Traceback: %s", traceback.format_exc())
 			self.updateDbEntry(link["sourceUrl"], dlState=-1, downloadPath="ERROR", fileName="ERROR: FAILED")
 		except IOError:
-			self.log.error("Failure retreiving content for link %s", link)
+			self.log.error("Failure retrieving content for link %s", link)
 			self.log.error("Traceback: %s", traceback.format_exc())
 			self.updateDbEntry(link["sourceUrl"], dlState=-2, downloadPath="ERROR", fileName="ERROR: MISSING")
 

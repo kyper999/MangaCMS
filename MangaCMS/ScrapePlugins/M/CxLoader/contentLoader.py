@@ -64,7 +64,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		try:
 			content, headerName = self.getLinkFile(sourceUrl)
 		except:
-			self.log.error("Unrecoverable error retreiving content %s", link)
+			self.log.error("Unrecoverable error retrieving content %s", link)
 			self.log.error("Traceback: %s", traceback.format_exc())
 
 			self.updateDbEntry(sourceUrl, dlState=-1)
