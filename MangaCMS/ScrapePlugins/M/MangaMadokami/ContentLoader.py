@@ -38,12 +38,12 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	tableKey = "mk"
 	dbName = settings.DATABASE_DB_NAME
 
-	retreivalThreads = 8
+	retreivalThreads = 5
 
 	tableName = "MangaItems"
 	urlBase = "https://manga.madokami.al/"
 
-	itemLimit = 250
+	itemLimit = 500
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)

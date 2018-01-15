@@ -5,7 +5,7 @@ from contextlib import contextmanager
 def testSetup(load=True):
 
 	import runStatus
-	runStatus.preloadDicts = False
+	runStatus.preloadDicts = load
 	runStatus.run = True
 
 	import MangaCMS.lib.logSetup

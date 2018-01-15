@@ -124,7 +124,7 @@ scrapePlugins = {
 	75 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.MangazukiRun,       hours(12)),
 
 	80 : (MangaCMS.ScrapePlugins.M.MangaMadokami.Run,                    hours(4)),
-	81 : (MangaCMS.ScrapePlugins.M.BooksMadokami.Run,                    hours(4)),
+	#81 : (MangaCMS.ScrapePlugins.M.BooksMadokami.Run,                    hours(4)),
 
 }
 

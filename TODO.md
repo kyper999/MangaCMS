@@ -1,7 +1,8 @@
 Add: 
 	https://www.manga.club/
 	https://www.lezhin.com/en
-
+	http://helveticascans.com/r/directory/
+	
 To Check:
 	80 : (ScrapePlugins.M.MangaMadokami.Run,                    hours(4)),
 	81 : (ScrapePlugins.M.BooksMadokami.Run,                    hours(4)),
