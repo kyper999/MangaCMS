@@ -89,7 +89,6 @@ class SeriesEnqueuer(MangaCMS.ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperD
 
 
 	def getItemFromContainer(self, row):
-
 		cells = row.find_all("td")
 
 		if len(cells) != 5:
@@ -123,18 +122,17 @@ class SeriesEnqueuer(MangaCMS.ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperD
 	def fetchItemFromRow(self, row):
 		# for item in items:
 		# 	self.log.info( item)
-		#
 
 		self.log.info("Loading items for series '%s'", row["seriesName"])
-
 
 
 		url = self.seriesUrl % row["seriesId"]
 		soup = self.wg.getSoup(url)
 
 		# Find the divs containing either new files, or the day a file was uploaded
-		itemRows = soup.find_all("tr", class_=re.compile("chapter_row"))
+		itemRows = soup.find_all("tr", class_="chapter_row")
 
+		self.log.info("Found %s table rows", len(itemRows))
 
 		items = 0
 		newItems = 0
@@ -208,8 +206,8 @@ if __name__ == '__main__':
 
 
 		test = {
-			'seriesId'   : 'houkage-no-ikemengohan-r23039',
-			'seriesName' : 'Houkage no Ikemengohan',
+			'seriesId'   : 'cardcaptor-sakura-clear-card-arc-r18987',
+			'seriesName' : 'Cardcaptor Sakura - Clear Card Arc',
 		}
 		fl.fetchItemFromRow(test)
 
