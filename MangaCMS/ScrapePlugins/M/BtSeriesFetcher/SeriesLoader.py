@@ -139,7 +139,5 @@ if __name__ == '__main__':
 
 	with tb.testSetup(load=False):
 		fl = SeriesLoader()
-
-		fl.scanForSeries(rangeOverride=101)
-		# fl.go()
+		fl.scanForSeries(rangeOverride=500)
 

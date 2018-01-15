@@ -13,6 +13,7 @@ import dateutil.parser
 import settings
 import datetime
 import urllib.error
+import WebRequest
 import traceback
 
 from MangaCMS.ScrapePlugins.M.BtLoader.common import checkLogin
@@ -95,15 +96,24 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 		cells = row.find_all("td")
 
 		if len(cells) != 5:
+			if " chapters hidden in " in row.get_text():
+				return None
 			self.log.error("Invalid number of TD items in row!")
+			for line in row.prettify().split("\n"):
+				self.log.error('	%s', line)
 			return None
 
 		chapter, lang, dummy_scanlator, dummy_uploader, uploadDate = cells
 
+		if lang is None:
+			self.log.error("Row with no language tag")
+			for line in row.prettify().split("\n"):
+				self.log.error('	%s', line)
+			return None
 
 		# Skip uploads in other languages
 		if DOWNLOAD_ONLY_LANGUAGE and not DOWNLOAD_ONLY_LANGUAGE in str(lang):
-			self.log.info("Skipping due to language filter")
+			self.log.info("Skipping due to language filter (%s)", lang.div.get('title', "Unknown!") if lang.div else "Unknown and no div?")
 			return None
 
 
@@ -175,12 +185,18 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 				tmp.append(executor.submit(self.fetchItemsForSeries, seriesUrl, historical))
 			for future in tmp:
 				# items = self.fetchItemsForSeries(seriesUrl, historical)
-				items = future.result()
-				for item in items:
-					ret.append(item)
-				if not runStatus.run:
-					self.log.info( "Breaking due to exit flag being set")
-					break
+				try:
+					items = future.result()
+
+					for item in items:
+						ret.append(item)
+					if not runStatus.run:
+						self.log.info( "Breaking due to exit flag being set")
+						break
+				except WebRequest.FetchFailureError:
+					self.log.error("Failed fetching future!")
+					for line in traceback.format_exc().split("\n"):
+						self.log.error(line)
 
 		return ret
 

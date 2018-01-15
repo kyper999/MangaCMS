@@ -93,8 +93,7 @@ class SeriesEnqueuer(MangaCMS.ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperD
 		cells = row.find_all("td")
 
 		if len(cells) != 5:
-			# self.log.error("Invalid number of TD items in row!")
-
+			self.log.error("Invalid number of TD items in row!")
 			return None
 
 		chapter, lang, dummy_scanlator, dummy_uploader, uploadDate = cells
@@ -102,6 +101,7 @@ class SeriesEnqueuer(MangaCMS.ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperD
 
 		# Skip uploads in other languages
 		if DOWNLOAD_ONLY_LANGUAGE and not DOWNLOAD_ONLY_LANGUAGE in str(lang):
+			self.log.info("Skipping due to language")
 			return None
 
 
@@ -113,7 +113,8 @@ class SeriesEnqueuer(MangaCMS.ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperD
 		item["date"] = calendar.timegm(addDate.timetuple())
 		item["dlLink"] = chapter.a["href"]
 
-		if not 'http://bato.to/reader#' in item["dlLink"]:
+		if not '://bato.to/reader#' in item["dlLink"]:
+
 			return False
 
 		return item
@@ -129,11 +130,12 @@ class SeriesEnqueuer(MangaCMS.ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperD
 
 
 		url = self.seriesUrl % row["seriesId"]
-		page = self.wg.getpage(url)
-		soup = bs4.BeautifulSoup(page, "lxml")
+		soup = self.wg.getSoup(url)
 
 		# Find the divs containing either new files, or the day a file was uploaded
 		itemRows = soup.find_all("tr", class_=re.compile("chapter_row"))
+
+
 		items = 0
 		newItems = 0
 		for itemRow in itemRows:
@@ -202,8 +204,15 @@ if __name__ == '__main__':
 
 	with tb.testSetup():
 		fl = SeriesEnqueuer()
-		fl.go(historical=True)
-		fl.go()
+		# fl.do_fetch_content()
+
+
+		test = {
+			'seriesId'   : 'houkage-no-ikemengohan-r23039',
+			'seriesName' : 'Houkage no Ikemengohan',
+		}
+		fl.fetchItemFromRow(test)
+
 		# fl.getSeriesUrls()
 
 		# fl.getAllItems()
