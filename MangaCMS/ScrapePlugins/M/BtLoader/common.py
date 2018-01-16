@@ -23,7 +23,7 @@ def checkLogin(wg):
 
 	soup = wg.getSoup("https://bato.to/forums/index.php?app=core&module=global&section=login")
 	userl = soup.find("a", id='user_link')
-	if userl and "Welcome, {}".format(settings.batotoSettings['login']).lower() in userl.get_text().lower():
+	if userl and "welcome, {}".format(settings.batotoSettings['login']).lower() in userl.get_text().lower():
 		return True
 	elif userl:
 		print("Warning: Found user link, but not login info")
@@ -43,7 +43,7 @@ def checkLogin(wg):
 
 
 	userl = login.find("a", id='user_link')
-	if userl and "Welcome, {}".format(settings.batotoSettings['login']).lower() in userl.get_text().lower():
+	if userl and "welcome, {}".format(settings.batotoSettings['login']).lower() in userl.get_text().lower():
 		print("Logged in successfully")
 		return True
 	raise ValueError("Failed to log in!")
