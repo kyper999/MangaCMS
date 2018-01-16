@@ -208,19 +208,19 @@ if __name__ == '__main__':
 
 	with tb.testSetup():
 		fl = SeriesEnqueuer()
-		# fl.do_fetch_content()
+		fl.do_fetch_content()
 
 
-		test = {
-			'seriesId'   : 'lies-of-the-sheriff-evans-dead-or-love-r21685',
-			'seriesName' : 'Lies of the Sheriff Evans: Dead or Love',
-		}
-		fl.fetchItemFromRow(test)
-		test = {
-			'seriesId'   : 'cardcaptor-sakura-clear-card-arc-r18987',
-			'seriesName' : 'Cardcaptor Sakura - Clear Card Arc',
-		}
-		fl.fetchItemFromRow(test)
+		# test = {
+		# 	'seriesId'   : 'lies-of-the-sheriff-evans-dead-or-love-r21685',
+		# 	'seriesName' : 'Lies of the Sheriff Evans: Dead or Love',
+		# }
+		# fl.fetchItemFromRow(test)
+		# test = {
+		# 	'seriesId'   : 'cardcaptor-sakura-clear-card-arc-r18987',
+		# 	'seriesName' : 'Cardcaptor Sakura - Clear Card Arc',
+		# }
+		# fl.fetchItemFromRow(test)
 
 		# fl.getSeriesUrls()
 
