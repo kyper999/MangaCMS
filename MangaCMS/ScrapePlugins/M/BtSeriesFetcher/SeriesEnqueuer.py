@@ -190,6 +190,7 @@ class SeriesEnqueuer(MangaCMS.ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperD
 
 
 		self.resetStuckSeriesItems()
+		checkLogin(self.wg)
 		self.log.info("Getting feed items")
 		rows = self.getSeriesRowsByValue(dlState=0)
 		self.log.info("Have %s new items to scan for items.", len(rows))
@@ -200,16 +201,9 @@ class SeriesEnqueuer(MangaCMS.ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperD
 			self.log.info("Waiting for executor to complete.")
 
 
-
-
-
-			# return
-
 		self.log.info("Complete")
 
 
-	def setup(self):
-		checkLogin(self.wg)
 
 
 if __name__ == '__main__':

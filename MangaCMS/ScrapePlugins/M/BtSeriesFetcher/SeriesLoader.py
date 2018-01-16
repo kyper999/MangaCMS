@@ -38,10 +38,6 @@ class SeriesLoader(MangaCMS.ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperDbB
 	wantedIds       = set()
 
 
-	def setup(self):
-		checkLogin(self.wg)
-
-
 	def extractSeriesDef(self, inTr):
 		isSeries = inTr.find("td", colspan=5)
 		if not isSeries:
@@ -133,6 +129,7 @@ class SeriesLoader(MangaCMS.ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperDbB
 
 	def do_fetch_feeds(self):
 
+		checkLogin(self.wg)
 		self.log.info("Looking for new series to download")
 		self.scanForSeries()
 

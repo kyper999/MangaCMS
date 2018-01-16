@@ -29,10 +29,6 @@ class SeriesScraperDbBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraper
 
 		self.wg = WebRequest.WebGetRobust(logPath=self.loggerPath+".Web")
 
-		self.setup()
-
-	def setup(self):
-		pass
 
 	def checkIfWantToFetchSeries(self, seriesName):
 
