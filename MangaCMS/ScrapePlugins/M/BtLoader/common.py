@@ -32,10 +32,11 @@ def checkLogin(wg):
 	auth_key = soup.find("input", attrs={"name":'auth_key'})
 
 	login_data = {
-		"auth_key" :     auth_key['value'],
+		"auth_key"     : auth_key['value'],
 		"ips_username" : settings.batotoSettings['login'],
 		"ips_password" : settings.batotoSettings['passWd'],
-		"rememberMe" :   "1",
+		"rememberMe"   : "1",
+		"referer"      : "https://bato.to/forums/index.php?app=core&amp;module=global&amp;section=login",
 		}
 
 	login = wg.getSoup("https://bato.to/forums/index.php?app=core&module=global&section=login&do=process", postData=login_data)
