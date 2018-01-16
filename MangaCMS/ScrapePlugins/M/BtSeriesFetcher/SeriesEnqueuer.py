@@ -13,6 +13,7 @@ import dateutil.parser
 import urllib.error
 
 
+from concurrent.futures import ThreadPoolExecutor
 import runStatus
 
 import bs4
@@ -164,6 +165,26 @@ class SeriesEnqueuer(MangaCMS.ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperD
 
 		self.log.info("Found %s items for %s, %s were new.", items, row["seriesName"], newItems)
 
+	def fetch_for_row(self, row):
+		if not runStatus.run:
+			self.log.info( "Breaking due to exit flag being set")
+			return
+		try:
+			self.updateSeriesDbEntryById(row["dbId"], dlState=1)
+			self.fetchItemFromRow(row)
+			self.updateSeriesDbEntryById(row["dbId"], dlState=2, lastUpdate=time.time())
+		except urllib.error.URLError:
+			self.log.error("Failure fetching pave: '%s'",  self.seriesUrl % row["seriesId"])
+			for line in traceback.format_exc().split("\n"):
+				self.log.error("%s", line)
+
+		except WebRequest.WebGetException:
+			self.log.error("Failure fetching pave: '%s'",  self.seriesUrl % row["seriesId"])
+			for line in traceback.format_exc().split("\n"):
+				self.log.error("%s", line)
+
+
+
 
 	def do_fetch_content(self):
 
@@ -172,25 +193,13 @@ class SeriesEnqueuer(MangaCMS.ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperD
 		self.log.info("Getting feed items")
 		rows = self.getSeriesRowsByValue(dlState=0)
 		self.log.info("Have %s new items to scan for items.", len(rows))
-		for row in rows:
-			try:
-				self.updateSeriesDbEntryById(row["dbId"], dlState=1)
-				self.fetchItemFromRow(row)
-				self.updateSeriesDbEntryById(row["dbId"], dlState=2, lastUpdate=time.time())
-			except urllib.error.URLError:
-				self.log.error("Failure fetching pave: '%s'",  self.seriesUrl % row["seriesId"])
-				for line in traceback.format_exc().split("\n"):
-					self.log.error("%s", line)
+		with ThreadPoolExecutor(max_workers=5) as executor:
+			for row in rows:
+				executor.submit(self.fetch_for_row, row)
 
-			except WebRequest.WebGetException:
-				self.log.error("Failure fetching pave: '%s'",  self.seriesUrl % row["seriesId"])
-				for line in traceback.format_exc().split("\n"):
-					self.log.error("%s", line)
+			self.log.info("Waiting for executor to complete.")
 
 
-			if not runStatus.run:
-				self.log.info( "Breaking due to exit flag being set")
-				break
 
 
 

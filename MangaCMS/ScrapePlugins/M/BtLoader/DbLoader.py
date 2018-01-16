@@ -179,7 +179,7 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	def getItemsFromSeriesUrls(self, seriesItems, historical):
 		ret = []
 		self.log.info("Have %s items to fetch data for.", len(seriesItems))
-		with ThreadPoolExecutor(max_workers=2) as executor:
+		with ThreadPoolExecutor(max_workers=5) as executor:
 			tmp = []
 			for seriesUrl in seriesItems:
 				tmp.append(executor.submit(self.fetchItemsForSeries, seriesUrl, historical))
