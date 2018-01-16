@@ -11,6 +11,7 @@ import datetime
 
 import MangaCMS.ScrapePlugins.SeriesRetreivalDbBase
 import nameTools as nt
+from MangaCMS.ScrapePlugins.M.BtLoader.common import checkLogin
 
 
 DOWNLOAD_ONLY_LANGUAGE = "English"
@@ -35,6 +36,11 @@ class SeriesLoader(MangaCMS.ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperDbB
 	listTableName   = "MangaSeries"
 
 	wantedIds       = set()
+
+
+	def setup(self):
+		checkLogin(self.wg)
+
 
 	def extractSeriesDef(self, inTr):
 		isSeries = inTr.find("td", colspan=5)

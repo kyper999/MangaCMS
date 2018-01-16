@@ -19,6 +19,8 @@ import bs4
 import re
 import MangaCMS.ScrapePlugins.SeriesRetreivalDbBase
 
+from MangaCMS.ScrapePlugins.M.BtLoader.common import checkLogin
+
 
 # Only downlad items in language specified.
 # Set to None to disable filtering (e.g. fetch ALL THE FILES).
@@ -100,7 +102,7 @@ class SeriesEnqueuer(MangaCMS.ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperD
 
 		# Skip uploads in other languages
 		if DOWNLOAD_ONLY_LANGUAGE and not DOWNLOAD_ONLY_LANGUAGE in str(lang):
-			self.log.info("Skipping due to language")
+			self.log.info("Skipping due to language filter (%s)", lang.div.get('title', "Unknown!") if lang.div else "Unknown and no div?")
 			return None
 
 
@@ -128,6 +130,9 @@ class SeriesEnqueuer(MangaCMS.ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperD
 
 		url = self.seriesUrl % row["seriesId"]
 		soup = self.wg.getSoup(url)
+
+		with open("test.html", "w") as fp:
+			fp.write(soup.prettify())
 
 		# Find the divs containing either new files, or the day a file was uploaded
 		itemRows = soup.find_all("tr", class_="chapter_row")
@@ -194,6 +199,8 @@ class SeriesEnqueuer(MangaCMS.ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperD
 		self.log.info("Complete")
 
 
+	def setup(self):
+		checkLogin(self.wg)
 
 
 if __name__ == '__main__':
@@ -204,6 +211,11 @@ if __name__ == '__main__':
 		# fl.do_fetch_content()
 
 
+		test = {
+			'seriesId'   : 'lies-of-the-sheriff-evans-dead-or-love-r21685',
+			'seriesName' : 'Lies of the Sheriff Evans: Dead or Love',
+		}
+		fl.fetchItemFromRow(test)
 		test = {
 			'seriesId'   : 'cardcaptor-sakura-clear-card-arc-r18987',
 			'seriesName' : 'Cardcaptor Sakura - Clear Card Arc',

@@ -21,15 +21,20 @@ from concurrent.futures import ThreadPoolExecutor
 
 def checkLogin(wg):
 
-	soup = wg.getSoup("https://bato.to/forums/index.php?app=core&module=global&section=login")
-	userl = soup.find("a", id='user_link')
+	forum_root = wg.getSoup("https://bato.to/forums/")
+
+
+	userl = forum_root.find("a", id='user_link')
 	if userl and "welcome, {}".format(settings.batotoSettings['login']).lower() in userl.get_text().lower():
 		return True
 	elif userl:
 		print("Warning: Found user link, but not login info")
 		print("This is possibly a problem")
+	else:
+		print("No user link found. Trying to auth.")
 
-	auth_key = soup.find("input", attrs={"name":'auth_key'})
+	login_page = wg.getSoup("https://bato.to/forums/")
+	auth_key = login_page.find("input", attrs={"name":'auth_key'})
 
 	login_data = {
 		"auth_key"     : auth_key['value'],
@@ -40,7 +45,6 @@ def checkLogin(wg):
 		}
 
 	login = wg.getSoup("https://bato.to/forums/index.php?app=core&module=global&section=login&do=process", postData=login_data)
-
 
 	userl = login.find("a", id='user_link')
 	if userl and "welcome, {}".format(settings.batotoSettings['login']).lower() in userl.get_text().lower():

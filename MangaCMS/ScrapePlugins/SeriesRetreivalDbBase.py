@@ -15,14 +15,11 @@ QUERY_DEBUG = False
 
 class SeriesScraperDbBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
-
-
 	pluginType = "SeriesContentLoader"
 
 	@abc.abstractmethod
 	def seriesTableName(self):
 		return None
-
 
 
 	def __init__(self):
@@ -32,6 +29,10 @@ class SeriesScraperDbBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraper
 
 		self.wg = WebRequest.WebGetRobust(logPath=self.loggerPath+".Web")
 
+		self.setup()
+
+	def setup(self):
+		pass
 
 	def checkIfWantToFetchSeries(self, seriesName):
 
