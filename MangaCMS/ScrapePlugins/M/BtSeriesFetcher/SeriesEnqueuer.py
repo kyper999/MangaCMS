@@ -143,7 +143,6 @@ class SeriesEnqueuer(MangaCMS.ScrapePlugins.SeriesRetreivalDbBase.SeriesScraperD
 			if item:
 				items += 1
 
-
 				# # Flags has to be an empty string, because the DB is annoying.
 				# #
 				# # TL;DR, comparing with LIKE in a column that has NULLs in it is somewhat broken.
