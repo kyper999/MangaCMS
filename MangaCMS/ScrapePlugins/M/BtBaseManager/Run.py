@@ -20,9 +20,9 @@ class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
 	def _go(self):
 		self.log.info("BtBase calling plugins.")
 
-		self.log.info("BtBase calling Series Monitor.")
-		monitor = MangaCMS.ScrapePlugins.M.BtSeriesFetcher.Run.Runner()
-		monitor.go()
+		# self.log.info("BtBase calling Series Monitor.")
+		# monitor = MangaCMS.ScrapePlugins.M.BtSeriesFetcher.Run.Runner()
+		# monitor.go()
 
 		self.log.info("BtBase calling Downloader.")
 

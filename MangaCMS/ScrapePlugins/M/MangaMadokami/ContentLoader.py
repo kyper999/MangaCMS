@@ -38,7 +38,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	tableKey = "mk"
 	dbName = settings.DATABASE_DB_NAME
 
-	retreivalThreads = 5
+	retreivalThreads = 2
 
 	tableName = "MangaItems"
 	urlBase = "https://manga.madokami.al/"

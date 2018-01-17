@@ -19,8 +19,6 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 	# Abstract class (must be subclassed)
 	__metaclass__ = abc.ABCMeta
 
-	pluginType = "Downloader"
-
 	pluginType = "ContentRetreiver"
 
 	itemLimit = 250

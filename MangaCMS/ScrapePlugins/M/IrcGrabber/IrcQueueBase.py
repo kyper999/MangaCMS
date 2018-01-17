@@ -10,6 +10,8 @@ import MangaCMS.ScrapePlugins.MangaScraperDbBase
 
 class IrcQueueBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
+	pluginType = "IrcSiteMonitor"
+
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 		self.wg = WebRequest.WebGetRobust(logPath=self.loggerPath+".Web")

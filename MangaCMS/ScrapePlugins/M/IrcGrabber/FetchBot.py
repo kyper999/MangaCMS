@@ -22,6 +22,7 @@ import abc
 class DbWrapper(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 	pluginName = "IrcDb Wrapper"
+	pluginType = "IrcContentRetreiver"
 
 	loggerPath = "Main.Manga.IRC.db"
 
