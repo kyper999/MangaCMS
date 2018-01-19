@@ -85,11 +85,12 @@ def runPlugin(plug):
 			print("	Plugin {} -> {}!".format(key, plgd['name']))
 		return
 
-	import utilities.testBase as tb
-	with tb.testSetup(load=False):
-		to_run = plgs[plug]
-		runner = to_run['runner']()
-		runner.go()
+	import nameTools as nt
+	nt.dirNameProxy.startDirObservers()
+
+	to_run = plgs[plug]
+	runner = to_run['runner']()
+	runner.go()
 
 
 def retagPlugin(plug):
