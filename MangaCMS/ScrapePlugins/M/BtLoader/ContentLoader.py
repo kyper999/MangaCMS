@@ -31,7 +31,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	tableName = "MangaItems"
 
 
-	retreivalThreads = 10
+	retreivalThreads = 30
 
 	itemLimit = 500
 

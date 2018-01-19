@@ -85,9 +85,11 @@ def runPlugin(plug):
 			print("	Plugin {} -> {}!".format(key, plgd['name']))
 		return
 
-	to_run = plgs[plug]
-	runner = to_run['runner']()
-	runner.go()
+	import utilities.testBase as tb
+	with tb.testSetup(load=False):
+		to_run = plgs[plug]
+		runner = to_run['runner']()
+		runner.go()
 
 
 def retagPlugin(plug):
