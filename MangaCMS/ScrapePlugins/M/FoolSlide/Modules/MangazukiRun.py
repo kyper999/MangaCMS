@@ -24,7 +24,7 @@ class FeedLoader(MangaCMS.ScrapePlugins.M.FoolSlide.FoolSlideFetchBase.FoolFeedL
 	tableName = "MangaItems"
 
 	urlBase = "https://mangazuki.co/"
-	feedUrl = urlBase+"latest/{num}/"
+	feedUrl = urlBase+"latest-release?page={num}"
 
 class ContentLoader(MangaCMS.ScrapePlugins.M.FoolSlide.FoolSlideDownloadBase.FoolContentLoader):
 

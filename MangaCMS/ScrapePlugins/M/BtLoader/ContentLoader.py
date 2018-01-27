@@ -31,9 +31,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	tableName = "MangaItems"
 
 
-	retreivalThreads = 30
+	retreivalThreads = 15
 
-	itemLimit = 500
+	itemLimit = 2500
 
 	def setup(self):
 		checkLogin(self.wg)
@@ -239,8 +239,8 @@ if __name__ == "__main__":
 	with tb.testSetup(load=False):
 
 		run = ContentLoader()
-		# run.do_fetch_content()
-		got = run.getContainerPages("https://bato.to/reader#1ed17397f42a174a")
+		run.do_fetch_content()
+		# got = run.getContainerPages("https://bato.to/reader#1ed17397f42a174a")
 		# print(got)
 		# run.getMainItems()
 		# run.checkLogin()

@@ -214,6 +214,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 	def getLink(self, linkDict):
+		images = None
 
 		try:
 			self.updateDbEntry(linkDict["sourceUrl"], dlState=1)

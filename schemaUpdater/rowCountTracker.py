@@ -79,13 +79,9 @@ def doTableCounts(conn, table):
 	sources = [val[0] for val in rets]
 
 
-
-
 	# We need to zero the existing data.
-
-
 	for source in sources:
-		cur.execute("UPDATE MangaItemCounts SET quantity=0 WHERE sourceSite=%s;", (source, ))
+		cur.execute("DELETE FROM MangaItemCounts WHERE sourceSite=%s;", (source, ))
 		for val in values:
 			cur.execute("""SELECT COUNT(*) FROM {tableName} WHERE sourceSite=%s AND dlState=%s;""".format(tableName=table), (source, val))
 			count = cur.fetchall().pop()[0]

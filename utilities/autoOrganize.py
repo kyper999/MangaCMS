@@ -121,7 +121,11 @@ def consolidateMangaFolders(dirPath, smartMode=True):
 				elif r2 > r1:
 					doMove = "forward"
 				else:
-					doMove = ''
+					if dirName.lower().strip() == dir2Name.lower().strip():
+						doMove = 'levenshtein'
+					else:
+						doMove = ''
+
 
 				if not doMove or not smartMode:
 					doMove = query_response("move files ('f' dir 1 -> dir 2. 'r' dir 1 <- dir 2. 'l' use levenshtein distance. 'n' do not move)?")

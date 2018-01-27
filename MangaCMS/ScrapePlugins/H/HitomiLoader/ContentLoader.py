@@ -5,17 +5,10 @@ import re
 
 import os
 import os.path
-import sys
-
-import random
-import json
-import sys
-import zipfile
-
 import time
-import pprint
+
+
 import urllib.parse
-import traceback
 
 import bs4
 
@@ -113,7 +106,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 					"type",
 					]
 
-		print("soup.h2", )
+		# print("soup.h2", )
 
 		category = "Unknown?"
 
@@ -149,7 +142,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			atag = self.format_tag(atag)
 			tags.append(atag)
 
-		print(category, tags)
+		# print(category, tags)
 		return category, tags, artist_str
 
 	def getDownloadInfo(self, linkDict):
@@ -157,7 +150,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		self.log.info("Retrieving item: %s", sourcePage)
 
-		# self.updateDbEntry(linkDict["sourceUrl"], dlState=1)
+		self.updateDbEntry(linkDict["sourceUrl"], dlState=1)
 
 		soup = self.wg.getSoup(sourcePage, addlHeaders={'Referer': 'https://hitomi.la/'})
 
@@ -211,20 +204,68 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		self.log.info("retreived image '%s' with a size of %0.3f K", fileN, len(content)/1000.0)
 		return fileN, content
 
+	def extract_cdn_subdomain(self, url):
+		# var number_of_frontends = 2;
+		number_of_frontends = 2
+		# function subdomain_from_galleryid(g) {
+		#         if (adapose) {
+		#                 return '0';
+		#         }
+		#         return String.fromCharCode(97 + (g % number_of_frontends));
+		# }
+
+		# function subdomain_from_url(url, base) {
+		#         var retval = 'a';
+		#         if (base) {
+		#                 retval = base;
+		#         }
+
+		#         var r = /\/(\d+)\//;
+		#         var m = r.exec(url);
+		#         var g;
+		#         if (m) {
+		#                 g = parseInt(m[1]);
+		#         }
+		#         if (g) {
+		#                 retval = subdomain_from_galleryid(g) + retval;
+		#         }
+
+		#         return retval;
+		# }
+
+		# function url_from_url(url, base) {
+		#         return url.replace(/\/\/..?\.hitomi\.la\//, '//'+subdomain_from_url(url, base)+'.hitomi.la/');
+		# }
+
+		chunks = [tmp for tmp in url.split("/") if tmp and all([char in '0123456789' for char in tmp])]
+
+		if len(chunks) != 1:
+			raise RuntimeError("Too many (or too few) chunks: '%s'" % chunks)
+
+		g = int(chunks[0])
+
+		subid = chr(97 + (g % number_of_frontends)) + "a"
+
+		return subid
+
+
 	def getImages(self, linkDict):
 
-		print("getImage", linkDict)
+		# print("getImage", linkDict)
 
 		soup = self.wg.getSoup(linkDict['spage'], addlHeaders={'Referer': linkDict["sourceUrl"]})
 
 		raw_imgs = soup.find_all('div', class_="img-url")
 
 		imageurls = []
+
+
 		for div in raw_imgs:
 			imgurl = div.get_text().strip()
-			imgurl = re.sub(r"\/\/..?\.hitomi\.la\/", r'https://la.hitomi.la/', imgurl, flags=re.IGNORECASE)
+			# print("ImageURL:", imgurl)
+			imgurl = re.sub(r"\/\/..?\.hitomi\.la\/", 'https://{}.hitomi.la/'.format(self.extract_cdn_subdomain(imgurl)), imgurl, flags=re.IGNORECASE)
+			# print("ImageURL:", imgurl)
 			imageurls.append((imgurl, linkDict['spage']))
-
 		if not imageurls:
 			return []
 
@@ -248,33 +289,14 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			self.updateDbEntry(linkDict["sourceUrl"], dlState=-2, downloadPath="ERROR", fileName="ERROR: FAILED")
 			return False
 
+		return
+
 		if images and title:
 			fileN = title+" "+artist+".zip"
 			fileN = nt.makeFilenameSafe(fileN)
 			wholePath = os.path.join(linkDict["dirPath"], fileN)
 
 			wholePath = self.save_image_set(wholePath, images)
-
-
-			# # self.log.info("geturl with processing", fileN)
-			# wholePath = self.insertCountIfFilenameExists(wholePath)
-			# self.log.info("Complete filepath: %s", wholePath)
-
-			# 		#Write all downloaded files to the archive.
-
-			# try:
-			# 	arch = zipfile.ZipFile(wholePath, "w")
-			# except OSError:
-			# 	title = title.encode('ascii','ignore').decode('ascii')
-			# 	fileN = title+".zip"
-			# 	fileN = nt.makeFilenameSafe(fileN)
-			# 	wholePath = os.path.join(linkDict["dirPath"], fileN)
-			# 	arch = zipfile.ZipFile(wholePath, "w")
-
-			# for imageName, imageContent in images:
-			# 	arch.writestr(imageName, imageContent)
-			# arch.close()
-
 
 			self.log.info("Successfully Saved to path: %s", wholePath)
 
@@ -290,7 +312,6 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 			self.updateDbEntry(linkDict["sourceUrl"], dlState=2)
-
 
 			return wholePath
 
@@ -313,5 +334,5 @@ if __name__ == "__main__":
 
 		run = ContentLoader()
 		# run.getDownloadInfo({'sourceUrl':'https://hitomi.la/galleries/284.html'})
-		run.go()
+		run.do_fetch_content()
 

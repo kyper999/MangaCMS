@@ -17,6 +17,7 @@ import nameTools as nt
 import time
 import urllib.parse
 import settings
+import pprint
 
 FAILED = -1
 QUEUED = 0
@@ -42,6 +43,7 @@ DNLDED = 2
 	errored = False
 	if lastErr > (time.time() - 60*60*24): # If the last error was within the last 24 hours
 		errored = ut.timeAgo(lastErr)
+
 
 
 	%>
@@ -118,33 +120,58 @@ DNLDED = 2
 	for item in pluginList:
 		allPlugins[item[0]] = item[1:]
 
+	items = ap.attr.sidebarItemList
 
+	normal = [tmp for tmp in items if tmp['type'] == 'Manga' and tmp['renderSideBar'] and tmp['dbKey'] and allPlugins.get(tmp["dbKey"], False)]
+	dead = [tmp for tmp in items if tmp['type'] == 'Manga' and tmp['renderSideBar'] and tmp['dbKey'] and not allPlugins.get(tmp["dbKey"], False)]
+	pron = [tmp for tmp in items if tmp['type'] == 'Porn' and tmp['renderSideBar'] and tmp['dbKey']]
+	other = [tmp for tmp in items if tmp['type'] != 'Porn' and tmp['type'] != 'Manga' and tmp['type'] and tmp['renderSideBar']]
+
+	normal.sort(key=lambda tmp: tmp['name'])
+	dead.sort(key=lambda tmp: tmp['name'])
+	pron.sort(key=lambda tmp: tmp['name'])
+	other.sort(key=lambda tmp: tmp['name'])
 
 	%>
 	<div class='contentdiv'>
 		<h1>Status:</h1>
-
-		% for item in ap.attr.sidebarItemList:
+		<h4>Active Manga Plugins</h4>
+		% for item in normal:
 			<%
-			if not ut.ip_in_whitelist():
-				if item['type'] == "Porn":
-					continue
-
-			if not item["renderSideBar"]:
-				continue
-			if not item["dbKey"]:
-				continue
-
-
-			vals = allPlugins.pop(item["dbKey"], False)
-			print(vals)
-			## vals = sm.getStatus(cur, item["dbKey"])
-
+			vals = allPlugins.get(item["dbKey"], False)
 			renderStatus(item["name"], item['cssClass']+" statediv", statusDict, item["dictKey"], vals)
-
 			%>
 		% endfor
 		<hr>
+		% if ut.ip_in_whitelist():
+			<h4>Active Hentai Plugins</h4>
+			% for item in pron:
+				<%
+				vals = allPlugins.get(item["dbKey"], False)
+				renderStatus(item["name"], item['cssClass']+" statediv", statusDict, item["dictKey"], vals)
+				%>
+			% endfor
+			<hr>
+		% endif
+
+		<h4>Other plugins</h4>
+		% for item in other:
+			<%
+			vals = allPlugins.get(item["dbKey"], False)
+			renderStatus(item["name"], item['cssClass']+" statediv", statusDict, item["dictKey"], vals)
+			%>
+		% endfor
+		<hr>
+
+		<h4>Dead Plugins</h4>
+		% for item in dead:
+			<%
+			vals = allPlugins.get(item["dbKey"], False)
+			renderStatus(item["name"], item['cssClass']+" statediv", statusDict, item["dictKey"], vals)
+			%>
+		% endfor
+		<hr>
+		<h4>All scheduled modules</h4>
 		% for key, value in allPlugins.items():
 			<%
 			if key.endswith("Scrape"):
