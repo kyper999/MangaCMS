@@ -33,7 +33,6 @@ import MangaCMS.ScrapePlugins.M.MangaHere.Run
 import MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run
 import MangaCMS.ScrapePlugins.M.McLoader.Run
 import MangaCMS.ScrapePlugins.M.MerakiScans.Run
-import MangaCMS.ScrapePlugins.M.SurasPlace.Run
 import MangaCMS.ScrapePlugins.M.WebtoonLoader.Run            # Yeah. There is webtoon.com. and WebtoonsReader.com. Confusing much?
 import MangaCMS.ScrapePlugins.M.YoMangaLoader.Run
 import MangaCMS.ScrapePlugins.M.ZenonLoader.Run

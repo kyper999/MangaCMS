@@ -8,8 +8,6 @@ import MangaCMS.ScrapePlugins.M.BuMonitor.MonitorRun
 import MangaCMS.ScrapePlugins.M.BuMonitor.ChangeMonitor
 import MangaCMS.ScrapePlugins.H.DjMoeLoader.DbLoader
 
-import MangaCMS.ScrapePlugins.M.BtSeriesFetcher.SeriesEnqueuer
-import MangaCMS.ScrapePlugins.M.BtLoader.DbLoader
 
 
 '''
@@ -22,8 +20,6 @@ toInit = [
 	MangaCMS.ScrapePlugins.M.BuMonitor.MonitorRun.BuWatchMonitor,
 	MangaCMS.ScrapePlugins.M.BuMonitor.ChangeMonitor.BuDateUpdater,
 	MangaCMS.ScrapePlugins.H.DjMoeLoader.DbLoader.DbLoader,
-	MangaCMS.ScrapePlugins.M.BtSeriesFetcher.SeriesEnqueuer.SeriesEnqueuer,
-	MangaCMS.ScrapePlugins.M.BtLoader.DbLoader.DbLoader,
 	]
 
 

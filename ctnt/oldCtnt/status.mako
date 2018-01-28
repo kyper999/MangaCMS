@@ -123,7 +123,7 @@ DNLDED = 2
 	items = ap.attr.sidebarItemList
 
 	normal = [tmp for tmp in items if tmp['type'] == 'Manga' and tmp['renderSideBar'] and tmp['dbKey'] and allPlugins.get(tmp["dbKey"], False)]
-	dead = [tmp for tmp in items if tmp['type'] == 'Manga' and tmp['renderSideBar'] and tmp['dbKey'] and not allPlugins.get(tmp["dbKey"], False)]
+	dead = [tmp for tmp in items if tmp['type'] == 'Manga' and tmp['renderSideBar'] and tmp['dbKey'] and allPlugins.get(tmp["dbKey"], False) == False]
 	pron = [tmp for tmp in items if tmp['type'] == 'Porn' and tmp['renderSideBar'] and tmp['dbKey']]
 	other = [tmp for tmp in items if tmp['type'] != 'Porn' and tmp['type'] != 'Manga' and tmp['type'] and tmp['renderSideBar']]
 
@@ -139,6 +139,7 @@ DNLDED = 2
 		% for item in normal:
 			<%
 			vals = allPlugins.get(item["dbKey"], False)
+
 			renderStatus(item["name"], item['cssClass']+" statediv", statusDict, item["dictKey"], vals)
 			%>
 		% endfor
