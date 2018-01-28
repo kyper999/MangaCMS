@@ -5,7 +5,6 @@ if __name__ == "__main__":
 	MangaCMS.lib.logSetup.initLogging()
 
 import MangaCMS.ScrapePlugins.M.BuMonitor.Run
-import MangaCMS.ScrapePlugins.M.BtBaseManager.Run
 
 
 import MangaCMS.ScrapePlugins.H.ASMHentaiLoader.Run
@@ -21,23 +20,23 @@ import MangaCMS.ScrapePlugins.H.TsuminoLoader.Run
 
 
 
-import MangaCMS.ScrapePlugins.M.McLoader.Run
-import MangaCMS.ScrapePlugins.M.CxLoader.Run
-import MangaCMS.ScrapePlugins.M.WebtoonLoader.Run            # Yeah. There is webtoon.com. and WebtoonsReader.com. Confusing much?
-import MangaCMS.ScrapePlugins.M.KissLoader.Run
-import MangaCMS.ScrapePlugins.M.DynastyLoader.Run
 import MangaCMS.ScrapePlugins.M.Crunchyroll.Run
-import MangaCMS.ScrapePlugins.M.IrcGrabber.IrcEnqueueRun
+import MangaCMS.ScrapePlugins.M.CxLoader.Run
+import MangaCMS.ScrapePlugins.M.DynastyLoader.Run
+import MangaCMS.ScrapePlugins.M.GameOfScanlationLoader.Run
 import MangaCMS.ScrapePlugins.M.IrcGrabber.BotRunner
+import MangaCMS.ScrapePlugins.M.IrcGrabber.IrcEnqueueRun
 import MangaCMS.ScrapePlugins.M.Kawaii.Run
-import MangaCMS.ScrapePlugins.M.ZenonLoader.Run
+import MangaCMS.ScrapePlugins.M.KissLoader.Run
 import MangaCMS.ScrapePlugins.M.MangaBox.Run
 import MangaCMS.ScrapePlugins.M.MangaHere.Run
 import MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run
+import MangaCMS.ScrapePlugins.M.McLoader.Run
 import MangaCMS.ScrapePlugins.M.MerakiScans.Run
-import MangaCMS.ScrapePlugins.M.YoMangaLoader.Run
 import MangaCMS.ScrapePlugins.M.SurasPlace.Run
-import MangaCMS.ScrapePlugins.M.GameOfScanlationLoader.Run
+import MangaCMS.ScrapePlugins.M.WebtoonLoader.Run            # Yeah. There is webtoon.com. and WebtoonsReader.com. Confusing much?
+import MangaCMS.ScrapePlugins.M.YoMangaLoader.Run
+import MangaCMS.ScrapePlugins.M.ZenonLoader.Run
 
 import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.CanisMajorRun
 import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.ChibiMangaRun
@@ -73,7 +72,6 @@ def minutes(num):
 # All they do is specify the order in which plugins
 # are run, initially, starting after 1-minue*{key} intervals
 scrapePlugins = {
-	0   : (MangaCMS.ScrapePlugins.M.BtBaseManager.Run,                   hours( 1)),
 	1   : (MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run,               hours( 6)),
 	2   : (MangaCMS.ScrapePlugins.M.BuMonitor.Run,                       hours( 1)),
 
