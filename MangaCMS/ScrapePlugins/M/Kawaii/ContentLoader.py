@@ -145,12 +145,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 				self.updateDbEntry(sourceUrl, dlState=-1, seriesName=seriesName, originName=chapterVol, tags="error-404")
 				return
 
-			#Write all downloaded files to the archive.
-			arch = zipfile.ZipFile(fqFName, "w")
-			for imageName, imageContent in images:
-				arch.writestr(imageName, imageContent)
-			arch.close()
-
+			fqFName = self.save_image_set(fqFName, images)
 
 			dedupState = MangaCMS.cleaner.processDownload.processDownload(seriesName, fqFName, deleteDups=True, rowId=link['dbId'])
 			self.log.info( "Done")

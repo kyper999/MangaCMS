@@ -1,22 +1,17 @@
 
 
-import MangaCMS.lib.logSetup
-import runStatus
-if __name__ == "__main__":
-	runStatus.preloadDicts = False
 
-
-import settings
 import os
 import os.path
+import sys
 
 import nameTools as nt
 
+import ast
 import time
 
 import urllib.parse
-import html.parser
-import zipfile
+import pprint
 import traceback
 import bs4
 import re
@@ -25,6 +20,7 @@ import MangaCMS.ScrapePlugins.RetreivalBase
 
 from concurrent.futures import ThreadPoolExecutor
 
+import MangaCMS.lib.logSetup
 import MangaCMS.cleaner.processDownload
 
 class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
@@ -35,7 +31,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	tableName = "MangaItems"
 
 
-	retreivalThreads = 5
+	retreivalThreads = 2
+	urlBase    = "https://mangadex.com/"
 
 
 	def getImage(self, imageUrl, referrer):
@@ -50,35 +47,60 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		return fileN, content
 
 
-	def proceduralGetImages(self, link):
-		baseUrl = link
+
+
+	def getImageUrls(self, chapUrl):
+		soup = self.wg.getSoup(chapUrl)
+
+
+		js_segments = soup.find_all("script", type="text/javascript")
+
+		# print(js_segments)
+		literal_regex = re.compile(r'(?<=var)(.+?)(?=;)', re.DOTALL)
+
+
+		js_vars = {}
+		for js_segment in js_segments:
+			matches = literal_regex.findall(str(js_segment))
+			for match in matches:
+				key, val = match.split("=", 1)
+				key = key.strip()
+				val = val.strip()
+				try:
+					js_vars[key] = ast.literal_eval(val)
+				except Exception as e:
+					# print("Wat", val, e)
+					pass
+
+		expect_keys = ['page_array', 'server', 'dataurl']
+		if not all([key in js_vars for key in expect_keys]):
+			self.log.error("Missing content variables from manga page: '%s'", chapUrl)
+			return []
+
+		image_urls = []
+		for img_file in js_vars['page_array']:
+			img_url = js_vars['server'] + js_vars['dataurl'] + "/" + img_file
+			img_url = urllib.parse.urljoin(self.urlBase, img_url)
+			image_urls.append((img_url, chapUrl))
+
+
+		self.log.info("Found %s images", len(image_urls))
+
+		return image_urls
+
+
+
+	def getImages(self, link):
+
+		imageUrls = self.getImageUrls(link)
 
 		images = []
-		while baseUrl in link:
-			page = self.wg.getSoup(link)
-			container = page.find('section', class_='read_img')
-			imageContainer = container.find_all('img')
 
-			imgurls = [img['src'] for img in imageContainer if '/media/images/loading.gif' not in img['src']]
-
-			assert len(imgurls) == 1, "Wrong number of images: %s (%s)" % (len(imgurls), imgurls)
-			imgUrl = imgurls[0]
-
-			if imgUrl.startswith("//"):
-				imgUrl = "http:" + imgUrl
-
-
-			assert '/media/images/loading.gif' not in imgUrl
-			imgdat = self.getImage(imgUrl, link)
-
-
-			assert imgdat
-			assert len(imgdat) == 2
-			images.append(imgdat)
-			link = container.a['href']
-
-			if link.startswith("//"):
-				link = "http:" + link
+		image_counter = 1
+		for imgUrl, referrerUrl in imageUrls:
+			imageName, imageContent = self.getImage(imgUrl, referrerUrl)
+			imageName = "{:04d} - {}".format(image_counter, imageName)
+			images.append([imageName, imageContent])
 
 		return images
 
@@ -105,7 +127,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 			chapterName = nt.makeFilenameSafe(link["originName"])
 
-			fqFName = os.path.join(dlPath, chapterName+" [MangaDex].zip")
+			fqFName = os.path.join(dlPath, chapterName+".zip")
 
 			loop = 1
 			prefix, ext = os.path.splitext(fqFName)
@@ -114,7 +136,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 				loop += 1
 			self.log.info("Saving to archive = %s", fqFName)
 
-			images = self.proceduralGetImages(sourceUrl)
+			images = self.getImages(sourceUrl)
 
 			self.log.info("Creating archive with %s images", len(images))
 
@@ -144,7 +166,57 @@ if __name__ == '__main__':
 	with tb.testSetup():
 		cl = ContentLoader()
 		# cl.proceduralGetImages('http://www.MangaDex.co/manga/totsugami/v05/c030/')
-		# cl.getLink({'seriesName': 'Totsugami', 'originName': 'Totsugami 32 - Vol 05', 'retreivalTime': 1414512000.0, 'dlState': 0, 'sourceUrl': 'http://www.MangaDex.co/manga/totsugami/v05/c032/', 'flags':None})
+		# cl.getLink(
+		# 		{
+		# 		    'originName': 'D-Frag! - Ch. 69 Thank you very much! [MangaDex, Hot Chocolate Scans]',
+		# 		    'downloadPath': None,
+		# 		    'sourceUrl': 'https://mangadex.com/chapter/19083',
+		# 		    'sourceId': None,
+		# 		    # 'retreivalTime': time.struct_time(tm_year = 2018, tm_mon = 1, tm_mday = 28, tm_hour = 5, tm_min = 29, tm_sec = 31, tm_wday = 6, tm_yday = 28, tm_isdst = 0),
+		# 		    'dbId': 2943680,
+		# 		    'flags': None,
+		# 		    'tags': None,
+		# 		    'lastUpdate': 0.0,
+		# 		    'note': None,
+		# 		    'seriesName': 'D-Frag!',
+		# 		    'dlState': 0,
+		# 		    'fileName': None
+		# 		}
+		# 	)
+		# cl.getLink(
+		# 		{
+		# 		    'originName': "Mousou Telepathy - Ch. 166 That's Where He's Different [MangaDex, Helvetica Scans]",
+		# 		    'downloadPath': None,
+		# 		    'sourceUrl': 'https://mangadex.com/chapter/19131',
+		# 		    'sourceId': None,
+		# 		    # 'retreivalTime': time.struct_time(tm_year = 2018, tm_mon = 1, tm_mday = 28, tm_hour = 5, tm_min = 48, tm_sec = 7, tm_wday = 6, tm_yday = 28, tm_isdst = 0),
+		# 		    'dbId': 2943321,
+		# 		    'flags': None,
+		# 		    'tags': None,
+		# 		    'lastUpdate': 0.0,
+		# 		    'note': None,
+		# 		    'seriesName': 'Mousou Telepathy',
+		# 		    'dlState': 0,
+		# 		    'fileName': None
+		# 		}
+		# 	)
+		# cl.getLink(
+		# 		{
+		# 		    'sourceUrl': 'https://mangadex.com/chapter/19151',
+		# 		    'lastUpdate': 0.0,
+		# 		    'dbId': 2943493,
+		# 		    # 'retreivalTime': time.struct_time(tm_year = 2018, tm_mon = 1, tm_mday = 28, tm_hour = 6, tm_min = 25, tm_sec = 24, tm_wday = 6, tm_yday = 28, tm_isdst = 0),
+		# 		    'note': None,
+		# 		    'sourceId': None,
+		# 		    'flags': None,
+		# 		    'seriesName': 'Yakumo-san wa Edzuke ga Shitai.',
+		# 		    'fileName': None,
+		# 		    'dlState': 0,
+		# 		    'tags': None,
+		# 		    'originName': "Yakumo-san wa Edzuke ga Shitai. - Vol. 5 Ch. 29 Yamato's Answer [MangaDex, /a/nonymous]",
+		# 		    'downloadPath': None
+		# 		}
+		# 	)
 
 		# inMarkup = cl.wg.getpage(pg)
 		# cl.getImageUrls(inMarkup, pg)

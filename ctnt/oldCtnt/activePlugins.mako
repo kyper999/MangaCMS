@@ -419,6 +419,18 @@ sidebarItemList = [
 		},
 
 		{
+			"num"           : 33,
+			'dbKey'         : "MangaDex",
+			'name'          : "MangaDex",
+			'dictKey'       : "mdx",
+			'cssClass'      : "mdxId",
+			'showOnHome'    : False,
+			'renderSideBar' : True,
+			'genRow'        : True,
+			'type'          : 'Manga'
+		},
+
+		{
 			"num"           : 31,
 			'dbKey'         : "BuMon",
 			'name'          : "MU Mon",

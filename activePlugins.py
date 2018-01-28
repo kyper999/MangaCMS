@@ -29,6 +29,7 @@ import MangaCMS.ScrapePlugins.M.IrcGrabber.IrcEnqueueRun
 import MangaCMS.ScrapePlugins.M.Kawaii.Run
 import MangaCMS.ScrapePlugins.M.KissLoader.Run
 import MangaCMS.ScrapePlugins.M.MangaBox.Run
+import MangaCMS.ScrapePlugins.M.MangaDex.Run
 import MangaCMS.ScrapePlugins.M.MangaHere.Run
 import MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run
 import MangaCMS.ScrapePlugins.M.McLoader.Run
@@ -71,6 +72,7 @@ def minutes(num):
 # All they do is specify the order in which plugins
 # are run, initially, starting after 1-minue*{key} intervals
 scrapePlugins = {
+	0   : (MangaCMS.ScrapePlugins.M.MangaDex.Run,                        hours( 2)),
 	1   : (MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run,               hours( 6)),
 	2   : (MangaCMS.ScrapePlugins.M.BuMonitor.Run,                       hours( 1)),
 

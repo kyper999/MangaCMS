@@ -60,6 +60,7 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 		pages = self.getUpdatedSeries(self.seriesBase)
 
 
+
 		self.log.info("Found %s total items", len(pages))
 		return pages
 
@@ -93,7 +94,7 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 			lang = lang.img['title']
 			if lang != DOWNLOAD_ONLY_LANGUAGE:
-				self.log.warning("Skipping non-english item: {}", lang)
+				self.log.warning("Skipping non-english item: %s", lang)
 
 			item = {}
 
@@ -151,6 +152,40 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 		return ret
 
+	def get_history(self):
+		idx = 0
+		found = 0
+		have_spages = True
+
+		while have_spages:
+			soup = self.wg.getSoup("https://mangadex.com/titles/{idx}".format(idx=idx))
+			idx += 100
+			main_div = soup.find("div", class_='table-responsive')
+			tmp_list = []
+			if main_div:
+				for row in main_div.find_all("tr"):
+					if row.a:
+						surl = urllib.parse.urljoin(self.urlBase, row.a['href'])
+						tmp_list.append(surl)
+
+						ret = []
+						items = self.getChapterLinkFromSeriesPage(surl)
+						for item in items:
+							if item in ret:
+								raise ValueError("Duplicate items in ret?")
+							ret.append(item)
+							found += 1
+						self._processLinksIntoDB(ret)
+						self.log.info("Found %s items so far", found)
+
+
+			have_spages = len(tmp_list)
+
+
+
+
+		# self.log.info("Found %s total items", len(pages))
+		# return pages
 
 
 if __name__ == '__main__':
@@ -158,8 +193,9 @@ if __name__ == '__main__':
 
 	with tb.testSetup():
 		fl = FeedLoader()
-		fl.do_fetch_feeds()
-		# fl.setup()
+		fl.setup()
+		fl.get_history()
+		# fl.do_fetch_feeds()
 		# print(fl.getUpdatedSeriesPages())
 		# print(fl.getAllItems())
 		# fl.resetStuckItems()
