@@ -28,9 +28,6 @@ import MangaCMS.ScrapePlugins.H.TsuminoLoader.ContentLoader
 import MangaCMS.ScrapePlugins.H.TsuminoLoader.DbLoader
 import MangaCMS.ScrapePlugins.M.BooksMadokami.ContentLoader
 import MangaCMS.ScrapePlugins.M.BooksMadokami.DbLoader
-import MangaCMS.ScrapePlugins.M.BtLoader.ContentLoader
-import MangaCMS.ScrapePlugins.M.BtLoader.DbLoader
-import MangaCMS.ScrapePlugins.M.BtSeriesFetcher.SeriesLoader
 import MangaCMS.ScrapePlugins.M.Crunchyroll.ContentLoader
 import MangaCMS.ScrapePlugins.M.Crunchyroll.DbLoader
 import MangaCMS.ScrapePlugins.M.CxLoader.contentLoader
@@ -89,9 +86,6 @@ files = [
 	MangaCMS.ScrapePlugins.H.TsuminoLoader.DbLoader,
 	MangaCMS.ScrapePlugins.M.BooksMadokami.ContentLoader,
 	MangaCMS.ScrapePlugins.M.BooksMadokami.DbLoader,
-	MangaCMS.ScrapePlugins.M.BtLoader.ContentLoader,
-	MangaCMS.ScrapePlugins.M.BtLoader.DbLoader,
-	MangaCMS.ScrapePlugins.M.BtSeriesFetcher.SeriesLoader,
 	MangaCMS.ScrapePlugins.M.Crunchyroll.ContentLoader,
 	MangaCMS.ScrapePlugins.M.Crunchyroll.DbLoader,
 	MangaCMS.ScrapePlugins.M.CxLoader.contentLoader,
