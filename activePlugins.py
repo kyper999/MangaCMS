@@ -18,8 +18,6 @@ import MangaCMS.ScrapePlugins.H.PururinLoader.Run
 import MangaCMS.ScrapePlugins.H.SadPandaLoader.Run
 import MangaCMS.ScrapePlugins.H.TsuminoLoader.Run
 
-
-
 import MangaCMS.ScrapePlugins.M.Crunchyroll.Run
 import MangaCMS.ScrapePlugins.M.CxLoader.Run
 import MangaCMS.ScrapePlugins.M.DynastyLoader.Run
@@ -34,6 +32,7 @@ import MangaCMS.ScrapePlugins.M.MangaHere.Run
 import MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run
 import MangaCMS.ScrapePlugins.M.McLoader.Run
 import MangaCMS.ScrapePlugins.M.MerakiScans.Run
+import MangaCMS.ScrapePlugins.M.MangaZuki.Run
 import MangaCMS.ScrapePlugins.M.WebtoonLoader.Run            # Yeah. There is webtoon.com. and WebtoonsReader.com. Confusing much?
 import MangaCMS.ScrapePlugins.M.YoMangaLoader.Run
 import MangaCMS.ScrapePlugins.M.ZenonLoader.Run
@@ -52,9 +51,6 @@ import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.ShoujoSenseRun
 import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.TripleSevenRun
 import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.TwistedHelRun
 import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.VortexRun
-import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.MangazukiRun
-
-
 
 import MangaCMS.ScrapePlugins.M.MangaMadokami.Run
 import MangaCMS.ScrapePlugins.M.BooksMadokami.Run
@@ -72,7 +68,7 @@ def minutes(num):
 # All they do is specify the order in which plugins
 # are run, initially, starting after 1-minue*{key} intervals
 scrapePlugins = {
-	0   : (MangaCMS.ScrapePlugins.M.MangaDex.Run,                        hours( 2)),
+	0   : (MangaCMS.ScrapePlugins.M.MangaDex.Run,                        hours( 1)),
 	1   : (MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run,               hours( 6)),
 	2   : (MangaCMS.ScrapePlugins.M.BuMonitor.Run,                       hours( 1)),
 
@@ -91,6 +87,7 @@ scrapePlugins = {
 	25  : (MangaCMS.ScrapePlugins.M.YoMangaLoader.Run,                   hours(12)),
 	26  : (MangaCMS.ScrapePlugins.M.GameOfScanlationLoader.Run,          hours(12)),
 	27  : (MangaCMS.ScrapePlugins.M.MerakiScans.Run,                     hours(12)),
+	28  : (MangaCMS.ScrapePlugins.M.MangaZuki.Run,                       hours(12)),
 
 
 	41  : (MangaCMS.ScrapePlugins.H.HBrowseLoader.Run,                   hours( 2)),
@@ -120,10 +117,9 @@ scrapePlugins = {
 	72 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.TripleSevenRun,     hours(12)),
 	73 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.TwistedHelRun,      hours(12)),
 	74 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.VortexRun,          hours(12)),
-	75 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.MangazukiRun,       hours(12)),
 
 	80 : (MangaCMS.ScrapePlugins.M.MangaMadokami.Run,                    hours(4)),
-	#81 : (MangaCMS.ScrapePlugins.M.BooksMadokami.Run,                    hours(4)),
+	81 : (MangaCMS.ScrapePlugins.M.BooksMadokami.Run,                    hours(4)),
 
 }
 

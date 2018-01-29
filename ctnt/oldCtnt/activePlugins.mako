@@ -419,6 +419,18 @@ sidebarItemList = [
 		},
 
 		{
+			"num"           : 31,
+			'dbKey'         : "BuMon",
+			'name'          : "MU Mon",
+			'dictKey'       : None,
+			'cssClass'      : "buId",
+			'showOnHome'    : False,
+			'renderSideBar' : True,
+			'genRow'        : False,
+			'type'          : 'Info'
+		},
+
+		{
 			"num"           : 33,
 			'dbKey'         : "MangaDex",
 			'name'          : "MangaDex",
@@ -431,15 +443,15 @@ sidebarItemList = [
 		},
 
 		{
-			"num"           : 31,
-			'dbKey'         : "BuMon",
-			'name'          : "MU Mon",
-			'dictKey'       : None,
-			'cssClass'      : "buId",
+			"num"           : 34,
+			'dbKey'         : "MangaZuki",
+			'name'          : "MangaZuki",
+			'dictKey'       : "mzk",
+			'cssClass'      : "mzkId",
 			'showOnHome'    : False,
 			'renderSideBar' : True,
-			'genRow'        : False,
-			'type'          : 'Info'
+			'genRow'        : True,
+			'type'          : 'Manga'
 		},
 
 		###################################################################################################################

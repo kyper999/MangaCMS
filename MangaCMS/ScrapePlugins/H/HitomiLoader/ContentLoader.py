@@ -289,8 +289,6 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			self.updateDbEntry(linkDict["sourceUrl"], dlState=-2, downloadPath="ERROR", fileName="ERROR: FAILED")
 			return False
 
-		return
-
 		if images and title:
 			fileN = title+" "+artist+".zip"
 			fileN = nt.makeFilenameSafe(fileN)
