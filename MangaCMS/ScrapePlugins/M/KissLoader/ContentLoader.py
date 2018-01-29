@@ -260,7 +260,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		'''
 		poke through cloudflare
 		'''
-		if not self.wg.stepThroughCloudFlare("http://kissmanga.com", 'KissManga'):
+		if not self.wg.stepThroughJsWaf("http://kissmanga.com", 'KissManga'):
 			raise ValueError("Could not access site due to cloudflare protection.")
 
 

@@ -82,7 +82,7 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
 	def setup(self):
-		self.wg.stepThroughCloudFlare("http://pururin.us/", titleContains="Pururin")
+		self.wg.stepThroughJsWaf("http://pururin.us/", titleContains="Pururin")
 
 
 

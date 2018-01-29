@@ -101,7 +101,7 @@ class Loader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	def getSeriesUrls(self):
 		ret = set()
 
-		self.wg.stepThroughCloudFlare(self.seriesBase % 1, titleContains='Series List')
+		self.wg.stepThroughJsWaf(self.seriesBase % 1, titleContains='Series List')
 
 		page = 1
 		while True:

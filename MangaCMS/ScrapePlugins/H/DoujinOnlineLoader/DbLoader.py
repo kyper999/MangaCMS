@@ -76,7 +76,7 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 		# 	self.log.info(item)
 		#
 
-		# self.wg.stepThroughCloudFlare("https://DoujinOnline.la/", titleContains="DoujinOnline.la")
+		# self.wg.stepThroughJsWaf("https://DoujinOnline.la/", titleContains="DoujinOnline.la")
 
 		ret = []
 

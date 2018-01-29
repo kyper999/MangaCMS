@@ -322,7 +322,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 	def setup(self):
-		self.wg.stepThroughCloudFlare(self.urlBase, titleContains="Hitomi")
+		self.wg.stepThroughJsWaf(self.urlBase, titleContains="Hitomi")
 
 
 if __name__ == "__main__":

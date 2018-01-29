@@ -94,7 +94,7 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 		# 	self.log.info(item)
 		#
 
-		# self.wg.stepThroughCloudFlare("https://hitomi.la/", titleContains="Hitomi.la")
+		# self.wg.stepThroughJsWaf("https://hitomi.la/", titleContains="Hitomi.la")
 
 		ret = []
 

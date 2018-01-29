@@ -202,7 +202,7 @@ Not found
 		return ret
 
 	def setup(self):
-		cf_ok = self.wg.stepThroughCloudFlare("http://kissmanga.com/", titleContains='Read manga online in high quality')
+		cf_ok = self.wg.stepThroughJsWaf("http://kissmanga.com/", titleContains='Read manga online in high quality')
 		self.log.info("CF Access return value: %s", cf_ok)
 		if not cf_ok:
 			raise ValueError("Could not access site due to cloudflare protection.")

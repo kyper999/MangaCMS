@@ -2,13 +2,13 @@
 	"folders":
 	[
 		{
-			"path": "/N/Scripts/MangaCMS"
+			"path": "."
 		},
 		{
-			"path": "N:/Scripts/MangaCMS"
+			"path": "N:\\Scripts\\Deduper"
 		},
 		{
-			"path": "/N/Scripts/Deduper"
+			"path": "N:\\Scripts\\WebRequest"
 		}
 	],
 	"settings":
@@ -20,7 +20,7 @@
 				"N:/Scripts/MangaCMS"
 			],
 			"use_icons": "true",
-			"working_dir":  "N:/Scripts/MangaCMS"
+			"working_dir": "N:/Scripts/MangaCMS"
 		}
 	}
 }

@@ -299,7 +299,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 	def setup(self):
-		self.wg.stepThroughCloudFlare(self.urlBase, titleContains="Pururin")
+		self.wg.stepThroughJsWaf(self.urlBase, titleContains="Pururin")
 
 
 

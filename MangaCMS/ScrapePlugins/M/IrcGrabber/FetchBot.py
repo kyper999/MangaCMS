@@ -294,7 +294,6 @@ class FetcherBot(MangaCMS.ScrapePlugins.M.IrcGrabber.IrcBot.TestBot):
 				self.timer = time.time()
 				return
 
-
 			todo = self.trgr.retreiveTodoLinkFromDB()
 			if todo:   # Have something to download via Trigger
 				self.db = self.trgr

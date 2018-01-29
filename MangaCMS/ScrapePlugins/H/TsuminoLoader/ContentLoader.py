@@ -263,7 +263,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			self.updateDbEntry(link["sourceUrl"], dlState=-1, downloadPath="ERROR", fileName="ERROR: FAILED")
 
 	def setup(self):
-		self.wg.stepThroughCloudFlare(self.urlBase, titleContains="Tsumino")
+		self.wg.stepThroughJsWaf(self.urlBase, titleContains="Tsumino")
 
 if __name__ == "__main__":
 	import utilities.testBase as tb
