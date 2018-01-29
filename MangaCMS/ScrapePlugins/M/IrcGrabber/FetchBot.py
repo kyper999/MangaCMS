@@ -115,17 +115,24 @@ class DbWrapper(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 class DbXdccWrapper(DbWrapper):
 	tableKey = "irc-irh"
 
+	def __init__(self, log_suffix):
+		self.loggerPath = self.loggerPath + "<{}>".format(log_suffix)
+		super().__init__()
+
 class DbTriggerWrapper(DbWrapper):
 	tableKey = "irc-trg"
+
+	def __init__(self, log_suffix):
+		self.loggerPath = self.loggerPath + "<{}>".format(log_suffix)
+		super().__init__()
 
 
 
 class FetcherBot(MangaCMS.ScrapePlugins.M.IrcGrabber.IrcBot.TestBot):
 
-
-	def __init__(self, xdccInterface, triggerInterface, *args, **kwargs):
-		self.xdcc     = xdccInterface
-		self.trgr     = triggerInterface
+	def __init__(self, nickname, realname, server, port=9999):
+		self.xdcc     = DbXdccWrapper(server)
+		self.trgr     = DbTriggerWrapper(server)
 
 		self.db       = None
 		self.run      = True
@@ -143,7 +150,7 @@ class FetcherBot(MangaCMS.ScrapePlugins.M.IrcGrabber.IrcBot.TestBot):
 		# Time to wait between requesting someing over XDCC, and marking the request as failed due to timeout
 		self.xdcc_wait_time   = 120
 
-		super(FetcherBot, self).__init__(*args, **kwargs)
+		super(FetcherBot, self).__init__(nickname, realname, server, port)
 
 
 	def get_filehandle(self, fileName):
@@ -345,11 +352,8 @@ class IrcRetreivalInterface(object):
 		irc_highway_server = "irc.irchighway.net"
 		irc_rizon_server   = "irc.rizon.net"
 
-		xdccSource = DbXdccWrapper()
-		trgrSource = DbTriggerWrapper()
-
-		self.irc_highway_bot = FetcherBot(xdccSource, trgrSource, settings.ircBot["name"], settings.ircBot["rName"], irc_highway_server)
-		self.rizon_bot       = FetcherBot(xdccSource, trgrSource, settings.ircBot["name"], settings.ircBot["rName"], irc_rizon_server)
+		self.irc_highway_bot = FetcherBot(settings.ircBot["name"], settings.ircBot["rName"], irc_highway_server)
+		self.rizon_bot       = FetcherBot(settings.ircBot["name"], settings.ircBot["rName"], irc_rizon_server)
 
 	def startBot(self):
 
