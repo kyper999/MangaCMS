@@ -105,7 +105,7 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 		return ret
 
 	def getFeed(self):
-		toScan = fl.getSeriesListing()
+		toScan = self.getSeriesListing()
 
 		ret = []
 

@@ -136,12 +136,15 @@ class FetcherBot(MangaCMS.ScrapePlugins.M.IrcGrabber.IrcBot.TestBot):
 		self.currentItem = None
 		self.todo        = []
 
+		self.base_channels = ['#madokami']
+
 		self.timer            = None
 
 		# Time to wait between requesting someing over XDCC, and marking the request as failed due to timeout
 		self.xdcc_wait_time   = 120
 
 		super(FetcherBot, self).__init__(*args, **kwargs)
+
 
 	def get_filehandle(self, fileName):
 		# We're already receiving the file at this point, apparently.
@@ -231,6 +234,7 @@ class FetcherBot(MangaCMS.ScrapePlugins.M.IrcGrabber.IrcBot.TestBot):
 			self.log.info("Already on channels %s", self.channels)
 			self.connection.join("#"+reqItem["info"]["channel"])
 			time.sleep(3)
+		self.log.info("Joined channels %s", self.channels)
 
 		self.currentItem = reqItem
 		self.changeState("xdcc requested")
@@ -270,17 +274,12 @@ class FetcherBot(MangaCMS.ScrapePlugins.M.IrcGrabber.IrcBot.TestBot):
 		self.log.info("XDCC Finished!")
 		self.log.info("Item = '%s'", self.currentItem)
 
-
-
 		self.currentItem = None
 		self.received_bytes = 0
 
 
 	def stepStateMachine(self):
 		if self.state == "idle":
-
-
-
 			todo = self.xdcc.retreiveTodoLinkFromDB()
 			if todo:   # Have something to download via XDCC
 				self.db = self.xdcc
@@ -334,25 +333,36 @@ class FetcherBot(MangaCMS.ScrapePlugins.M.IrcGrabber.IrcBot.TestBot):
 		self.log.info("IRC Interface connected to server %s", self.server_list)
 
 
+		for channel in self.base_channels:
+			if not channel in self.channels:
+				self.log.info("Need to join: %s", channel)
+				self.connection.join(channel)
+
 
 
 class IrcRetreivalInterface(object):
 	def __init__(self):
-		server = "irc.irchighway.net"
+		irc_highway_server = "irc.irchighway.net"
+		irc_rizon_server   = "irc.rizon.net"
 
 		xdccSource = DbXdccWrapper()
 		trgrSource = DbTriggerWrapper()
 
-		self.bot = FetcherBot(xdccSource, trgrSource, settings.ircBot["name"], settings.ircBot["rName"], server)
+		self.irc_highway_bot = FetcherBot(xdccSource, trgrSource, settings.ircBot["name"], settings.ircBot["rName"], irc_highway_server)
+		self.rizon_bot       = FetcherBot(xdccSource, trgrSource, settings.ircBot["name"], settings.ircBot["rName"], irc_rizon_server)
 
 	def startBot(self):
 
-		self.ircThread = threading.Thread(target=self.bot.startup)
-		self.ircThread.start()
+		self.irc_highway_Thread = threading.Thread(target=self.irc_highway_bot.startup)
+		self.irc_highway_Thread.start()
+
+		self.irc_rizon_Thread = threading.Thread(target=self.rizon_bot.startup)
+		self.irc_rizon_Thread.start()
 
 	def stopBot(self):
 		print("Calling stopBot")
-		self.bot.run = False
+		self.irc_highway_bot.run = False
+		self.rizon_bot.run       = False
 		print("StopBot Called")
 
 

@@ -73,9 +73,9 @@ scrapePlugins = {
 	2   : (MangaCMS.ScrapePlugins.M.BuMonitor.Run,                       hours( 1)),
 
 	11  : (MangaCMS.ScrapePlugins.M.McLoader.Run,                        hours(12)),  # every 12 hours, it's just a single scanlator site.
-	12  : (MangaCMS.ScrapePlugins.M.IrcGrabber.IrcEnqueueRun,            hours(12)),  # Queue up new items from IRC bots.
 	# 13  : (MangaCMS.ScrapePlugins.M.CxLoader.Run,                        hours(12)),  # every 12 hours, it's just a single scanlator site.
-	15  : (MangaCMS.ScrapePlugins.M.IrcGrabber.BotRunner,                hours( 1)),  # Irc bot never returns. It runs while the app is live. Rerun interval doesn't matter, as a result.
+	# 12  : (MangaCMS.ScrapePlugins.M.IrcGrabber.IrcEnqueueRun,            hours(12)),  # Queue up new items from IRC bots.
+	# 15  : (MangaCMS.ScrapePlugins.M.IrcGrabber.BotRunner,                hours( 1)),  # Irc bot never returns. It runs while the app is live. Rerun interval doesn't matter, as a result.
 	16  : (MangaCMS.ScrapePlugins.M.MangaHere.Run,                       hours(12)),
 	17  : (MangaCMS.ScrapePlugins.M.WebtoonLoader.Run,                   hours( 8)),
 	18  : (MangaCMS.ScrapePlugins.M.DynastyLoader.Run,                   hours( 8)),

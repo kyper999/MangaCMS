@@ -142,15 +142,14 @@ class TestBot(irc.bot.SingleServerIRCBot):
 			self.xdcc_receive_finish()
 
 	def on_nicknameinuse(self, connection, event):
+		self.log.warning("Nickname %s is in use, adding a trailing '_'", connection.get_nickname() )
 		connection.nick(connection.get_nickname() + "_")
 
 	def on_welcome(self, c, e):
-		self.log.info("On Welcome.")
+		self.log.info("On Welcome. Connected with nickname: %s.", c.get_nickname())
 		self.welcomed = True
 		if hasattr(self, "welcome_func"):
 			self.welcome_func(c, e)
-
-
 
 	def on_privmsg(self, c, e):
 		self.log.info("On Privmsg = '%s', '%s'", c, e)
@@ -183,8 +182,8 @@ class TestBot(irc.bot.SingleServerIRCBot):
 		nick = e.source.nick
 		c = self.connection
 
-		# if cmd.startswith(settings.ircBot["pubmsg_prefix"]):
-		# 	c.privmsg(e.channel, str(cmd[len(settings.ircBot["pubmsg_prefix"]):]))
+		if cmd.startswith(settings.ircBot["pubmsg_prefix"]):
+			c.privmsg(e.channel, str(cmd[len(settings.ircBot["pubmsg_prefix"]):]))
 		if cmd == "dcc":
 			dcc = self.dcc_listen()
 			self.log.info("Starting DCC - Command: '%s'", "CHAT chat %s %d" % (ip_quad_to_numstr(dcc.localaddress), dcc.localport))
