@@ -131,7 +131,7 @@ Not found
 		titleA = soup.find("a", class_='bigChar')
 		return {"seriesName": titleA.get_text()}
 
-	def getChaptersFromSeriesPage(self, soup, historical=False):
+	def getChaptersFromSeriesPage(self, soup):
 		table = soup.find('table', class_='listing')
 
 		items = []
@@ -148,17 +148,8 @@ Not found
 
 			items.append(item)
 
-		ret = []
 
-		if not historical:
-			maxDate = max([item["retreivalTime"] for item in items])
-			for item in items:
-				if item["retreivalTime"] == maxDate:
-					ret.append(item)
-		else:
-			ret = items
-
-		return ret
+		return items
 
 	def getChapterLinkFromSeriesPage(self, seriesUrl, historical=False):
 		ret = []
@@ -170,7 +161,7 @@ Not found
 
 		seriesInfo = self.getSeriesInfoFromSoup(soup)
 
-		chapters = self.getChaptersFromSeriesPage(soup, historical)
+		chapters = self.getChaptersFromSeriesPage(soup)
 		for chapter in chapters:
 
 			for key, val in seriesInfo.items(): # Copy series info into each chapter
@@ -189,7 +180,7 @@ Not found
 
 		for url in toScan:
 			try:
-				items = self.getChapterLinkFromSeriesPage(url, historical)
+				items = self.getChapterLinkFromSeriesPage(url)
 				for item in items:
 					if item in ret:
 						self.log.warn("Duplicate items in ret?")
@@ -214,7 +205,7 @@ if __name__ == '__main__':
 
 	with tb.testSetup(load=False):
 		fl = FeedLoader()
-		fl.do_fetch_feeds(historical=False)
+		# fl.do_fetch_feeds(historical=False)
 		# fl.go(historical=True)
 		# fl.getSeriesUrls()
 

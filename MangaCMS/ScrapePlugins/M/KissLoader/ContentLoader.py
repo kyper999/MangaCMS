@@ -31,7 +31,7 @@ import MangaCMS.ScrapePlugins.ScrapeExceptions as ScrapeExceptions
 import MangaCMS.cleaner.processDownload
 import magic
 
-import execjs
+import threading
 
 class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
@@ -46,7 +46,11 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 	retreivalThreads = 3
 
-	itemLimit = 200
+	itemLimit = 500
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.cr_lock = threading.Lock()
 
 	def check_recaptcha(self, pgurl, soup=None, markup=None):
 		if markup:
@@ -139,23 +143,30 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 	def getImageUrls(self, baseUrl):
 
-		pgctnt, filename, mimetype = self.wg.getItemPhantomJS(baseUrl)
 
-		pgctnt = self.check_recaptcha(pgurl=baseUrl, markup=pgctnt)
+		with self.wg.chromiumContext() as cr:
+			print("ChromiumContext:", cr)
+			resp = cr.blocking_navigate_and_get_source(baseUrl)
 
-		linkRe = re.compile(r'lstImages\.push\((wrapKA\(".+?"\))\);')
-
-		links = linkRe.findall(pgctnt)
+			pgctnt = self.check_recaptcha(pgurl=baseUrl, markup=resp['content'])
 
 
-		pages = []
-		for item in links:
-			tgt = self.wg.pjs_driver.execute_script("return %s" % item)
-			if not tgt.startswith("http"):
-				raise ScrapeExceptions.LimitedException("URL Decryption failed!")
-			pages.append(tgt)
+			linkRe = re.compile(r'lstImages\.push\((wrapKA\(".+?"\))\);')
 
-		self.log.info("Found %s pages", len(pages))
+			links = linkRe.findall(pgctnt)
+
+			pages = []
+			for item in links:
+				resp_asm = cr.execute_javascript("function() { return %s; }" % item, returnByValue=True)
+
+				# This is horrible.
+				tgt = resp_asm['result']['result']['value']['value']
+
+				if not tgt.startswith("http"):
+					raise ScrapeExceptions.LimitedException("URL Decryption failed!")
+				pages.append(tgt)
+
+			self.log.info("Found %s pages", len(pages))
 
 
 		return pages
@@ -169,13 +180,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 	def getLink(self, link):
-
-
 		sourceUrl  = link["sourceUrl"]
-		print("Link", link)
-
-
-
 		seriesName = link['seriesName']
 
 
@@ -253,7 +258,6 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			self.log.critical("Failure on retrieving content at %s", sourceUrl)
 			self.log.critical("Traceback = %s", traceback.format_exc())
 			self.updateDbEntry(sourceUrl, dlState=-1)
-
 
 
 	def setup(self):
