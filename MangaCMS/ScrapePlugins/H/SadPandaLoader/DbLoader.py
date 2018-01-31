@@ -13,6 +13,7 @@ import time
 import calendar
 import random
 import runStatus
+import nameTools as nt
 
 from . import LoginMixin
 
@@ -24,8 +25,8 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase, LoginMixin.ExLoginM
 	loggerPath = "Main.Manga.SadPanda.Fl"
 	pluginName = "SadPanda Link Retreiver"
 	tableKey    = "sp"
-	urlBase = "http://exhentai.org/"
-	urlFeed = "http://exhentai.org/?page={num}&f_search={search}"
+	urlBase = "https://exhentai.org/"
+	urlFeed = "https://exhentai.org/?page={num}&f_search={search}"
 
 
 	tableName = "HentaiItems"
@@ -53,6 +54,10 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase, LoginMixin.ExLoginM
 			self.log.critical("Could not get page from SadPanda!")
 			self.log.critical(traceback.format_exc())
 			return None
+
+		with open("sp_search_{}_{}.html".format(nt.makeFilenameSafe(tag), time.time()), "w") as fp:
+			fp.write(soup.prettify())
+
 
 		return soup
 
@@ -101,6 +106,7 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase, LoginMixin.ExLoginM
 	def getFeed(self, searchTag, includeExpunge=False, pageOverride=None):
 		ret = []
 
+		self.log.info("Loading feed for search: '%s'", searchTag)
 		soup = self.loadFeed(searchTag, pageOverride, includeExpunge)
 
 		itemTable = soup.find("table", class_="itg")
@@ -176,6 +182,6 @@ if __name__ == "__main__":
 		# login()
 		run = DbLoader()
 		run.checkLogin()
-		run.go()
+		run.do_fetch_feeds()
 
 

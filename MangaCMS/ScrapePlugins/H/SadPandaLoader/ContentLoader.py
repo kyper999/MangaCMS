@@ -74,7 +74,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase, LoginMix
 					tag = tag.replace("  ", " ")
 				tag = tag.strip()
 				tag = tag.replace(" ", "-")
-				tagList.append(tag)
+				tagList.append(tag.lower())
 
 
 		for tag in settings.sadPanda['sadPandaExcludeTags']:
@@ -100,6 +100,12 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase, LoginMix
 					self.deleteRowsByValue(sourceUrl=sourceUrl)
 					return False
 
+		if not any([tmp in tagList for tmp in settings.tagHighlight]):
+			self.log.info("Blocked item! Deleting row from database.")
+			self.log.info("Item tags = '%s'", tagList)
+			self.log.info("Blocked tag = '%s'", tag)
+			self.deleteRowsByValue(sourceUrl=sourceUrl)
+			return False
 
 		tags = " ".join(tagList)
 		self.log.info("Adding tags: '%s'", tags)

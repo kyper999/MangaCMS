@@ -95,6 +95,7 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 			lang = lang.img['title']
 			if lang != DOWNLOAD_ONLY_LANGUAGE:
 				self.log.warning("Skipping non-english item: %s", lang)
+				continue
 
 			item = {}
 

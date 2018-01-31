@@ -133,6 +133,44 @@ if __name__ == "__main__":
 		# 2 : (TextScrape.ReTranslations.Run,                  60*60*24*1)   # There's not much to actually scrape here, and it's google, so I don't mind hitting their servers a bit.
 	# }
 
+	run = [
+			MangaCMS.ScrapePlugins.H.PururinLoader.Run,
+			MangaCMS.ScrapePlugins.H.NHentaiLoader.Run,
+			MangaCMS.ScrapePlugins.H.SadPandaLoader.Run,
+			MangaCMS.ScrapePlugins.H.DjMoeLoader.Run,
+			MangaCMS.ScrapePlugins.H.HitomiLoader.Run,
+			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.CanisMajorRun,
+			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.ChibiMangaRun,
+			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.DokiRun,
+			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.GoMangaCoRun,
+			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.IlluminatiMangaRun,
+			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.JaptemMangaRun,
+			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.MangatopiaRun,
+			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.RoseliaRun,
+			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.S2Run,
+			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.SenseRun,
+			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.ShoujoSenseRun,
+			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.TripleSevenRun,
+			MangaCMS.ScrapePlugins.M.MangaZuki.Run,
+			MangaCMS.ScrapePlugins.M.MangaMadokami.Run,
+			MangaCMS.ScrapePlugins.M.BooksMadokami.Run,
+			MangaCMS.ScrapePlugins.M.CxLoader.Run,
+			MangaCMS.ScrapePlugins.M.ZenonLoader.Run,
+			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.TwistedHelRun,
+			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.VortexRun,
+			MangaCMS.ScrapePlugins.M.McLoader.Run,
+			MangaCMS.ScrapePlugins.M.MangaHere.Run,
+			MangaCMS.ScrapePlugins.M.WebtoonLoader.Run,
+			MangaCMS.ScrapePlugins.M.DynastyLoader.Run,
+			MangaCMS.ScrapePlugins.M.KissLoader.Run,
+			MangaCMS.ScrapePlugins.M.Crunchyroll.Run,
+			MangaCMS.ScrapePlugins.M.Kawaii.Run,
+			MangaCMS.ScrapePlugins.M.MangaBox.Run,
+			MangaCMS.ScrapePlugins.M.YoMangaLoader.Run,
+			MangaCMS.ScrapePlugins.M.GameOfScanlationLoader.Run,
+			MangaCMS.ScrapePlugins.H.HBrowseLoader.Run,
+		]
+
 	print("Test run!")
 	import nameTools as nt
 
@@ -156,44 +194,7 @@ if __name__ == "__main__":
 			print("Multiple keyboard interrupts. Raising")
 			raise KeyboardInterrupt
 
-	run = [
-			MangaCMS.ScrapePlugins.H.PururinLoader.Run,
-			MangaCMS.ScrapePlugins.H.NHentaiLoader.Run,
-			MangaCMS.ScrapePlugins.H.SadPandaLoader.Run,
-			MangaCMS.ScrapePlugins.H.DjMoeLoader.Run,
-			MangaCMS.ScrapePlugins.H.DjMoeLoader.Retag,
-			MangaCMS.ScrapePlugins.H.HitomiLoader.Run,
-			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.CanisMajorRun,
-			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.ChibiMangaRun,
-			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.DokiRun,
-			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.GoMangaCoRun,
-			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.IlluminatiMangaRun,
-			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.JaptemMangaRun,
-			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.MangatopiaRun,
-			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.RoseliaRun,
-			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.S2Run,
-			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.SenseRun,
-			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.ShoujoSenseRun,
-			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.TripleSevenRun,
-			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.MangazukiRun,
-			MangaCMS.ScrapePlugins.M.MangaMadokami.Run,
-			MangaCMS.ScrapePlugins.M.BooksMadokami.Run,
-			MangaCMS.ScrapePlugins.M.CxLoader.Run,
-			MangaCMS.ScrapePlugins.M.ZenonLoader.Run,
-			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.TwistedHelRun,
-			MangaCMS.ScrapePlugins.M.FoolSlide.Modules.VortexRun,
-			MangaCMS.ScrapePlugins.M.McLoader.Run,
-			MangaCMS.ScrapePlugins.M.MangaHere.Run,
-			MangaCMS.ScrapePlugins.M.WebtoonLoader.Run,
-			MangaCMS.ScrapePlugins.M.DynastyLoader.Run,
-			MangaCMS.ScrapePlugins.M.KissLoader.Run,
-			MangaCMS.ScrapePlugins.M.Crunchyroll.Run,
-			MangaCMS.ScrapePlugins.M.Kawaii.Run,
-			MangaCMS.ScrapePlugins.M.MangaBox.Run,
-			MangaCMS.ScrapePlugins.M.YoMangaLoader.Run,
-			MangaCMS.ScrapePlugins.M.GameOfScanlationLoader.Run,
-			MangaCMS.ScrapePlugins.H.HBrowseLoader.Run,
-		]
+
 	signal.signal(signal.SIGINT, signal_handler)
 	import sys
 	import traceback

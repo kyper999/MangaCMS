@@ -35,19 +35,6 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	urlBase    = "https://mangadex.com/"
 
 
-	def getImage(self, imageUrl, referrer):
-
-		content, handle = self.wg.getpage(imageUrl, returnMultiple=True, addlHeaders={'Referer': referrer})
-		if not content or not handle:
-			raise ValueError("Failed to retreive image from page '%s'!" % referrer)
-
-		fileN = urllib.parse.unquote(urllib.parse.urlparse(handle.geturl())[2].split("/")[-1])
-		fileN = bs4.UnicodeDammit(fileN).unicode_markup
-		self.log.info("retreived image '%s' with a size of %0.3f K", fileN, len(content)/1000.0)
-		return fileN, content
-
-
-
 
 	def getImageUrls(self, chapUrl):
 		soup = self.wg.getSoup(chapUrl)
@@ -98,10 +85,12 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		image_counter = 1
 		for imgUrl, referrerUrl in imageUrls:
-			imageName, imageContent = self.getImage(imgUrl, referrerUrl)
-			imageName = "{:04d} - {}".format(image_counter, imageName)
+			imageContent, imageName = self.wg.getFileAndName(imgUrl, addlHeaders={'Referer': referrerUrl})
+			img_postf = urllib.parse.urlsplit(imgUrl).path.split("/")[-1]
+			imageName = "{:04d} - {} {}".format(image_counter, imageName, img_postf)
+			self.log.info("Found %s byte image named %s", len(imageContent), imageName)
 			images.append([imageName, imageContent])
-
+			image_counter += 1
 		return images
 
 

@@ -34,87 +34,89 @@ class ExLoginMixin(object):
 			self.log.info("Logged in successfully!")
 
 		confdict = {
-			'uh'          : 'y',
-			'xr'          : 'a',
-			'rx'          : '0',
-			'ry'          : '0',
-			'tl'          : 'r',
-			'ar'          : '0',
-			'dm'          : 'l',
-			'prn'         : 'y',
-			'f_doujinshi' : 'on',
-			'f_manga'     : 'on',
-			'f_artistcg'  : 'on',
-			'f_gamecg'    : 'on',
-			'f_western'   : 'on',
-			'f_non-h'     : 'on',
-			'f_imageset'  : 'on',
-			'f_cosplay'   : 'on',
-			'f_asianporn' : 'on',
-			'f_misc'      : 'on',
-			'favorite_0'  : 'Favorites+0',
-			'favorite_1'  : 'Favorites+1',
-			'favorite_2'  : 'Favorites+2',
-			'favorite_3'  : 'Favorites+3',
-			'favorite_4'  : 'Favorites+4',
-			'favorite_5'  : 'Favorites+5',
-			'favorite_6'  : 'Favorites+6',
-			'favorite_7'  : 'Favorites+7',
-			'favorite_8'  : 'Favorites+8',
-			'favorite_9'  : 'Favorites+9',
-			'xl_1034'     : 'on',
-			'xl_1044'     : 'on',
-			'xl_1054'     : 'on',
-			'xl_1064'     : 'on',
-			'xl_1074'     : 'on',
-			'xl_1084'     : 'on',
-			'xl_1094'     : 'on',
-			'xl_1104'     : 'on',
-			'xl_1114'     : 'on',
-			'xl_1124'     : 'on',
-			'xl_1134'     : 'on',
-			'xl_1144'     : 'on',
-			'xl_1154'     : 'on',
-			'xl_1278'     : 'on',
-			'xl_1279'     : 'on',
-			'xl_2048'     : 'on',
-			'xl_2049'     : 'on',
-			'xl_2058'     : 'on',
-			'xl_2068'     : 'on',
-			'xl_2078'     : 'on',
-			'xl_2088'     : 'on',
-			'xl_2098'     : 'on',
-			'xl_2108'     : 'on',
-			'xl_2118'     : 'on',
-			'xl_2128'     : 'on',
-			'xl_2138'     : 'on',
-			'xl_2148'     : 'on',
-			'xl_2158'     : 'on',
-			'xl_2168'     : 'on',
-			'xl_2178'     : 'on',
-			'xl_2302'     : 'on',
-			'xl_2303'     : 'on',
-			'fs'          : 'p',
-			'ru'          : 'RRGGB',
-			'rc'          : '3',
-			'lt'          : 'm',
-			'ts'          : 'm',
-			'tr'          : '2',
-			'cs'          : 'a',
-			'sc'          : '0',
-			'to'          : 'a',
-			'pn'          : '0',
-			'hp'          : '',
-			'hk'          : '',
-			'sa'          : 'y',
-			'oi'          : 'n',
-			'apply'       : 'Apply',
+
+			'uh'          : 'y',                # New
+			'xr'          : 'a',                # New
+			'rx'          : '0',                # New
+			'ry'          : '0',                # New
+			'tl'          : 'r',                # New
+			'ar'          : '0',                # New
+			'dm'          : 'l',                # New
+			'prn'         : 'n',                # New
+			'f_doujinshi' : 'on',               # New
+			'f_manga'     : 'on',               # New
+			'f_artistcg'  : 'on',               # New
+			'f_gamecg'    : 'on',               # New
+			'f_western'   : 'on',               # New
+			'f_non-h'     : 'on',               # New
+			'f_imageset'  : 'on',               # New
+			'f_cosplay'   : 'on',               # New
+			'f_asianporn' : 'on',               # New
+			'f_misc'      : 'on',               # New
+			'favorite_0'  : 'Favorites+0',      # New
+			'favorite_1'  : 'Favorites+1',      # New
+			'favorite_2'  : 'Favorites+2',      # New
+			'favorite_3'  : 'Favorites+3',      # New
+			'favorite_4'  : 'Favorites+4',      # New
+			'favorite_5'  : 'Favorites+5',      # New
+			'favorite_6'  : 'Favorites+6',      # New
+			'favorite_7'  : 'Favorites+7',      # New
+			'favorite_8'  : 'Favorites+8',      # New
+			'favorite_9'  : 'Favorites+9',      # New
+			'fs'          : 'p',                # New
+			'ru'          : 'RRGGB',            # New
+			'xl_2048'     : 'on',               # New
+			'xl_2049'     : 'on',               # New
+			'xl_1034'     : 'on',               # New
+			'xl_2058'     : 'on',               # New
+			'xl_1044'     : 'on',               # New
+			'xl_2068'     : 'on',               # New
+			'xl_1054'     : 'on',               # New
+			'xl_2078'     : 'on',               # New
+			'xl_1064'     : 'on',               # New
+			'xl_2088'     : 'on',               # New
+			'xl_1074'     : 'on',               # New
+			'xl_2098'     : 'on',               # New
+			'xl_1084'     : 'on',               # New
+			'xl_2108'     : 'on',               # New
+			'xl_1094'     : 'on',               # New
+			'xl_2118'     : 'on',               # New
+			'xl_1104'     : 'on',               # New
+			'xl_2128'     : 'on',               # New
+			'xl_1114'     : 'on',               # New
+			'xl_2138'     : 'on',               # New
+			'xl_1124'     : 'on',               # New
+			'xl_2148'     : 'on',               # New
+			'xl_1134'     : 'on',               # New
+			'xl_2158'     : 'on',               # New
+			'xl_1144'     : 'on',               # New
+			'xl_2168'     : 'on',               # New
+			'xl_1154'     : 'on',               # New
+			'xl_2178'     : 'on',               # New
+			'xl_1278'     : 'on',               # New
+			'xl_2302'     : 'on',               # New
+			'xl_1279'     : 'on',               # New
+			'xl_2303'     : 'on',               # New
+			'xu'          : '',                 # New
+			'rc'          : '3',                # New
+			'lt'          : 'm',                # New
+			'ts'          : 'm',                # New
+			'tr'          : '2',                # New
+			'cs'          : 'a',                # New
+			'sc'          : '0',                # New
+			'to'          : 'a',                # New
+			'pn'          : '0',                # New
+			'hh'          : '',                 # New
+			'sa'          : 'y',                # New
+			'oi'          : 'b55ba7',           # New
+			'apply'       : 'Apply',            # New
+
 			}
 		headers = {
-			'Referer': 'http://g.e-hentai.org/uconfig.php',
-			'Host': 'g.e-hentai.org'
+			'Referer': 'http://e-hentai.org/uconfig.php',
+			'Host': 'e-hentai.org'
 		}
-		getPage = self.wg.getpage(r"http://g.e-hentai.org/uconfig.php", postData=confdict, addlHeaders=headers)
+		getPage = self.wg.getpage(r"http://e-hentai.org/uconfig.php", postData=confdict, addlHeaders=headers)
 
 		self.permuteCookies()
 		self.wg.saveCookies()
