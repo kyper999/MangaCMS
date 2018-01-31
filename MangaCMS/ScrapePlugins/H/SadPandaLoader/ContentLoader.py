@@ -101,9 +101,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase, LoginMix
 					return False
 
 		if not any([tmp in tagList for tmp in settings.tagHighlight]):
-			self.log.info("Blocked item! Deleting row from database.")
+			self.log.info("Missing any highlighted tag. Not fetching!")
 			self.log.info("Item tags = '%s'", tagList)
-			self.log.info("Blocked tag = '%s'", tag)
 			self.deleteRowsByValue(sourceUrl=sourceUrl)
 			return False
 

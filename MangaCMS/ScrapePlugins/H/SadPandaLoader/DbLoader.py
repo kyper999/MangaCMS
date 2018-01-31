@@ -55,8 +55,8 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase, LoginMixin.ExLoginM
 			self.log.critical(traceback.format_exc())
 			return None
 
-		with open("sp_search_{}_{}.html".format(nt.makeFilenameSafe(tag), time.time()), "w") as fp:
-			fp.write(soup.prettify())
+		# with open("sp_search_{}_{}.html".format(nt.makeFilenameSafe(tag), time.time()), "w") as fp:
+		# 	fp.write(soup.prettify())
 
 
 		return soup
