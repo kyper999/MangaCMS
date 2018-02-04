@@ -700,7 +700,8 @@ class CleanerBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 		ids = [(tmp[0], ) for tmp in matches]
 
-		tagagg = " ".join([tmp[1] for tmp in matches])
+		tagagg = [tmp[1] for tmp in matches if tmp[1]]
+		tagagg = " ".join([tmp if tmp else "" for tmp in tagagg])
 		lcSet = set(tagagg.lower().split(" "))
 
 		keep_tags = [tag for tag in lcSet if any([item in tag for item in wanted])]
@@ -713,7 +714,8 @@ class CleanerBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 			print("row", os.path.exists(fqpath), downloadPath, fileName)
 			print("Tags", tags)
 
-			os.remove(fqpath)
+			if os.path.exists(fqpath):
+				os.remove(fqpath)
 
 			cur.execute("""DELETE FROM {tableName} WHERE dbid = %s""".format(tableName=self.tableName), (dbid, ))
 		elif not keep_tags:
@@ -722,10 +724,11 @@ class CleanerBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 			print(fqpath)
 			print(matches)
 
-			os.remove(fqpath)
-
 			for item_id in ids:
 				cur.execute("""DELETE FROM {tableName} WHERE dbid = %s""".format(tableName=self.tableName), (item_id, ))
+
+			if os.path.exists(fqpath):
+				os.remove(fqpath)
 
 		else:
 			print("Keeeping")
@@ -733,12 +736,6 @@ class CleanerBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 			print(fqpath)
 
 	def cleanJapaneseOnly(self):
-		'''
-		So I've accidentally been introducing duplicate tags into the h-tag database. Not totally sure where
-		(I added some protective {str}.lower() calls in a few places to see if it helps), but it's annoying.
-		Anyways, this extracts all the tags, consolidates and lower-cases them, and then reinserts the
-		fixed values.
-		'''
 		print("cleanJapaneseOnly")
 
 		bad_tags = [r'%language-japanese%', r'%language-日本語%', r'%language-chinese%',]
@@ -759,8 +756,38 @@ class CleanerBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 					lcSet = set(tags.lower().split(" "))
 
-					if any([tmp in lcSet for tmp in settings.deleted_indicators]):
-						continue
+					# if any([tmp in lcSet for tmp in settings.deleted_indicators]):
+					# 	continue
+
+					match = [tag for tag in lcSet if any([item in tag for item in wanted])]
+					if not match:
+						self.__delete(cur, dbId, wanted)
+
+				print(len(items))
+	def cleanYaoiOnly(self):
+		print("cleanJapaneseOnly")
+
+		bad_tags = [r'%males-only%', r'%guys-only%', r'%yaoi%']
+
+		wanted = [tmp.lower() for tmp in settings.tags_keep]
+
+
+
+		for bad in bad_tags:
+
+			with self.transaction() as cur:
+				print("Searching for tag %s" % bad)
+				cur.execute("""SELECT dbId, tags FROM {tableName} WHERE tags LIKE %s""".format(tableName=self.tableName), (bad, ))
+				items = cur.fetchall()
+				print("Processing %s results", len(items))
+
+				for dbId, tags in items:
+
+					lcSet = set(tags.lower().split(" "))
+
+					# if any([tmp in lcSet for tmp in settings.deleted_indicators]):
+					# 	print("Skipping:", tags)
+					# 	continue
 
 					match = [tag for tag in lcSet if any([item in tag for item in wanted])]
 					if not match:

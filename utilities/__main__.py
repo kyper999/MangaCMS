@@ -172,6 +172,9 @@ help_strings = [
 	"	clean_japanese_only",
 	"		Clear out item in the H database that is not translated and has no tags we care about.",
 	"	",
+	"	clean_yaoi_only",
+	"		Clear out item in the H database that is yaoi and has no tags we care about.",
+	"	",
 	"	aggregate_crosslinks",
 	"		Aggregate cross_linked entries in the H database.",
 	"	",
@@ -233,6 +236,9 @@ def fix_h_tags_case():
 def clean_japanese_only():
 	cleaner = utilities.cleanDb.HCleaner('None')
 	cleaner.cleanJapaneseOnly()
+def clean_yaoi_only():
+	cleaner = utilities.cleanDb.HCleaner('None')
+	cleaner.cleanYaoiOnly()
 def aggregate_crosslinks():
 	cleaner = utilities.cleanDb.HCleaner('None')
 	cleaner.aggregateCrossLinks()
@@ -425,6 +431,7 @@ single_arg_funcs = {
 	"fix_djm"                 : fix_djm,
 	"fix_h_tags_case"         : fix_h_tags_case,
 	"clean_japanese_only"     : clean_japanese_only,
+	"clean_yaoi_only"         : clean_yaoi_only,
 	"aggregate_crosslinks"    : aggregate_crosslinks,
 	"fix_single_letter_tags"  : fix_single_letter_tags,
 	"reprocess_damaged"       : reprocess_damaged,

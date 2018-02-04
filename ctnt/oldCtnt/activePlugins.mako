@@ -628,6 +628,18 @@ sidebarItemList = [
 			'type'          : 'Porn'
 		},
 
+		{
+			"num"           : 113,
+			'dbKey'         : "Tsumino",
+			'name'          : "Tsumino",
+			'dictKey'       : "ts",
+			'cssClass'      : "tsId",
+			'showOnHome'    : True,
+			'renderSideBar' : True,
+			'genRow'        : True,
+			'type'          : 'Porn'
+		},
+
 
 	]
 
