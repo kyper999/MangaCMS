@@ -5,16 +5,14 @@ import MangaCMS.ScrapePlugins.RunBase
 
 class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
 
-	loggerPath = "Main.Manga.Bu.Run"
-	pluginName = "BuMon"
+	loggerPath = "Main.Manga.Bu.BuRescan"
+	pluginName = "BuRescan"
 
 	def _go(self):
 
 		runner = MonitorRun.BuWatchMonitor()
-		runner.go()
+		runner.getAllManga()
 
-		chMon = ChangeMonitor.BuDateUpdater()
-		chMon.go()
 
 
 

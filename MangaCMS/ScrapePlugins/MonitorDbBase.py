@@ -389,6 +389,7 @@ class MonitorDbBase(MangaCMS.DbBase.DbBase):
 						self.log.warning("Name disconnect!")
 						self.log.warning("New name='%s', old name='%s'.", name, row["buName"])
 						self.log.warning("Whole row=%s", row)
+						self.log.warning("Updating name")
 						self.updateDbEntry(row["dbId"], buName=name, commit=False, lastChanged=0, lastChecked=0, cur=cur)
 
 				else:

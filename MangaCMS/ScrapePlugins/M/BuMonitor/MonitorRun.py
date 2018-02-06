@@ -13,6 +13,8 @@ import dateutil.parser
 import MangaCMS.ScrapePlugins.MonitorDbBase
 # import TextScrape.NovelMixin
 
+from . import bu_common
+
 def toInt(inStr):
 	return int(''.join(ele for ele in inStr if ele.isdigit()))
 
@@ -28,37 +30,12 @@ class BuWatchMonitor(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 	changedTableName = "muItemChanged"
 	itemReleases     = "muReleases"
 
-	baseURL          = "http://www.mangaupdates.com/"
-	baseListURL      = r"http://www.mangaupdates.com/mylist.html"
-	baseReleasesURL  = r"https://www.mangaupdates.com/releases.html"
+	baseURL          = "https://www.mangaupdates.com/"
+	baseListURL      = "https://www.mangaupdates.com/mylist.html"
+	baseReleasesURL  = "https://www.mangaupdates.com/releases.html"
 
 	dbName = settings.DATABASE_DB_NAME
 
-
-
-	# -----------------------------------------------------------------------------------
-	# Login Management tools
-	# -----------------------------------------------------------------------------------
-
-
-	def checkLogin(self):
-
-		checkPage = self.wg.getpage(self.baseListURL)
-		if "You must be a user to access this page." in checkPage:
-			self.log.info("Whoops, need to get Login cookie")
-		else:
-			self.log.info("Still logged in")
-			return
-
-		logondict = {"username" : settings.buSettings["login"], "password" : settings.buSettings["passWd"], "act" : "login"}
-		getPage = self.wg.getpage(r"http://www.mangaupdates.com/login.html", postData=logondict)
-		if "No user found, or error. Try again." in getPage:
-			self.log.error("Login failed!")
-			raise ValueError("Cannot login to MangaUpdates. Is your login/password valid?")
-		elif "You are currently logged in as" in getPage:
-			self.log.info("Logged in successfully!")
-
-		self.wg.saveCookies()
 
 
 	# -----------------------------------------------------------------------------------
@@ -67,7 +44,7 @@ class BuWatchMonitor(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 
 
 	def go(self):
-		self.checkLogin()
+		bu_common.checkLogin(self.log, self.wg)
 
 		self.scanRecentlyUpdated()
 
@@ -83,16 +60,16 @@ class BuWatchMonitor(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 
 
 	def getListNames(self):
-		self.checkLogin()
+		bu_common.checkLogin(self.log, self.wg)
 
 		listDict = {}
-		listDict["Reading"] = r"http://www.mangaupdates.com/mylist.html"  # The reading list is not specifically named.
+		listDict["Reading"] = self.baseListURL  # The reading list is not specifically named.
 
-		pageCtnt = self.wg.getpage(self.baseListURL)
+		soup = self.wg.getSoup(self.baseListURL)
 
-		soup = bs4.BeautifulSoup(pageCtnt, "lxml")
 		add_seriesSegment = soup.find("div", id="add_series")
 		listList = add_seriesSegment.find_previous_sibling("p", class_="text")
+
 		for item in listList("a"):
 			if "mylist.html" in item["href"] and not "act=edit" in item["href"]:  # We don't want the "edit lists" list option.
 				listDict[item.text] = item["href"]
@@ -262,6 +239,10 @@ class BuWatchMonitor(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 				continue
 
 			title, dummy_genre, dummy_year, dummy_rating = tds
+
+			if title.a.get("title", False):
+				title.a.decompose()
+
 			mId = title.a["href"].replace('https://www.mangaupdates.com/series.html?id=', '')
 			# print("title", title.get_text(), mId)
 
@@ -278,7 +259,7 @@ class BuWatchMonitor(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 	def getAllManga(self):
 		urlFormat = 'https://www.mangaupdates.com/series.html?page={page}&perpage=100'
 		self.log.info("MU Updater scanning MangaUpdates to get all available manga.")
-		run = 456
+		run = 1
 		while run:
 			url = urlFormat.format(page=run)
 
@@ -304,11 +285,12 @@ class BuWatchMonitor(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 if __name__ == "__main__":
 	import utilities.testBase as tb
 
-	with tb.testSetup():
+	with tb.testSetup(load=False):
 
 
 		mon = BuWatchMonitor()
-		mon.go()
+		# mon.getListNames()
+		# mon.go()
 		# mon.scanRecentlyUpdated()
-		# mon.getAllManga()
+		mon.getAllManga()
 

@@ -11,6 +11,7 @@ import settings
 
 import os.path
 import MangaCMS.ScrapePlugins.MonitorDbBase
+from . import bu_common
 
 # Check items on user's watched list for changes every day
 CHECK_INTERVAL       = 60 * 60 * 24 *  3  # Every 3 days
@@ -30,8 +31,8 @@ class BuDateUpdater(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 	changedTableName = "muItemChanged"
 	itemReleases     = "muReleases"
 
-	baseURL          = "http://www.mangaupdates.com/"
-	itemURL          = 'http://www.mangaupdates.com/series.html?id={buId}'
+	baseURL          = "https://www.mangaupdates.com/"
+	itemURL          = 'https://www.mangaupdates.com/series.html?id={buId}'
 
 
 
@@ -47,43 +48,19 @@ class BuDateUpdater(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 	# goBigThreads = 1
 
 
-	# -----------------------------------------------------------------------------------
-	# Login Management tools
-	# -----------------------------------------------------------------------------------
-
-	def checkLogin(self):
-
-		checkPage = self.wg.getpage(r"http://www.mangaupdates.com/mylist.html")
-		if "You must be a user to access this page." in checkPage:
-			self.log.info("Whoops, need to get Login cookie")
-		else:
-			self.log.info("Still logged in")
-			return
-
-		logondict = {"username" : settings.buSettings["login"], "password" : settings.buSettings["passWd"], "act" : "login"}
-		getPage = self.wg.getpage(r"http://www.mangaupdates.com/login.html", postData=logondict)
-		if "No user found, or error. Try again." in getPage:
-			self.log.error("Login failed!")
-			with open("pageTemp.html", "wb") as fp:
-				fp.write(getPage)
-		elif "You are currently logged in as" in getPage:
-			self.log.info("Logged in successfully!")
-
-		self.wg.saveCookies()
-
 
 	# -----------------------------------------------------------------------------------
 	# Management Stuff
 	# -----------------------------------------------------------------------------------
 
 	def go(self):
-		self.checkLogin()
+		bu_common.checkLogin(self.log, self.wg)
 		items = self.getItemsToCheck()
 		self.checkItems(items)
 
 	def gobig(self):
 		self.log.info("Going big! Running ALL THE THREADS!")
-		self.checkLogin()
+		bu_common.checkLogin(self.log, self.wg)
 		items = self.getItemsToCheck(noLimit=True, allTheItems=True)
 
 		self.log.info("Number of items to check: '%s'", len(items))
