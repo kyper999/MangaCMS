@@ -3,6 +3,12 @@
 	[
 		{
 			"path": "."
+		},
+		{
+			"path": "N:\\Scripts\\xaDownloader"
+		},
+		{
+			"path": "N:\\Scripts\\ReadableWebProxy"
 		}
 	],
 	"settings":

@@ -115,11 +115,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 			raise RuntimeError
 
-
-
-		print("read_link")
-		print(read_link)
-		print(jdat)
+		# print("read_link")
+		# print(read_link)
+		# print(jdat)
 
 
 		imageUrls = self.imageUrls(sourcePage, jdat)
@@ -138,22 +136,18 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 	def getImage(self, imageUrl, referrer, fidx):
 
-		content, handle = self.wg.getpage(imageUrl, returnMultiple=True, addlHeaders={'Referer': referrer})
-		if not content or not handle:
+		content, fname, mimetype = self.wg.getFileNameMime(imageUrl, returnMultiple=True, addlHeaders={'Referer': referrer})
+		if not content:
 			raise ValueError("Failed to retreive image from page '%s'!" % referrer)
 
-		fileN = urllib.parse.unquote(urllib.parse.urlparse(handle.geturl())[2].split("/")[-1])
-		fileN = bs4.UnicodeDammit(fileN).unicode_markup
-
-		mtype = magic.from_buffer(content, mime=True)
-		fext = mimetypes.guess_extension(mtype)
+		fext = mimetypes.guess_extension(mimetype)
 
 		# Assume jpeg if we can't figure it out, because it's probably safe.
-		if not fext:
+		if fext == '.a' or not fext:
 			fext = ".jpg"
 
 		filename = "{orig} {counter}{ext}".format(
-				orig    = fileN,
+				orig    = fname,
 				counter = str(fidx).zfill(4),
 				ext     = fext,
 			)

@@ -385,7 +385,7 @@ class MonitorDbBase(MangaCMS.DbBase.DbBase):
 			for name, mId in items:
 				row = self.getRowByValue(buId=mId, cur=cur)
 				if row:
-					if name.lower() != row["buName"].lower():
+					if name.strip() != row["buName"].strip():
 						self.log.warning("Name disconnect!")
 						self.log.warning("New name='%s', old name='%s'.", name, row["buName"])
 						self.log.warning("Whole row=%s", row)

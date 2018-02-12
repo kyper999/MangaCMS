@@ -215,7 +215,7 @@ class DirDeduper(MangaCMS.DbBase.DbBase):
 		mismatch_ids = set()
 		with self.context_cursor() as cur:
 			cur.execute("""SELECT dbid, sourcesite, filename, downloadpath
-							FROM {tableName} WHERE dlstate=2 AND filename IS NOT NULL AND downloadpath IS NOT NULL ORDER BY dbid ASC""".format(tableName=self.tableName))
+							FROM {tableName} WHERE filename IS NOT NULL AND downloadpath IS NOT NULL ORDER BY dbid ASC""".format(tableName=self.tableName))
 			ret = cur.fetchall()
 
 		for dbid, sourcesite, filename, downloadpath in ret:
@@ -243,6 +243,14 @@ class DirDeduper(MangaCMS.DbBase.DbBase):
 				# 	print(downloadpath == ndl, filename == nf)
 
 		self.log.info("Mismatching plugins: %s", mismatch_ids)
+
+		print("Fixing null paths.")
+		with self.context_cursor() as cur:
+			cur.execute("""UPDATE {tableName} SET downloadpath = %s WHERE downloadpath = %s""".format(tableName=self.tableName), (None, ""))
+			cur.execute("""UPDATE {tableName} SET filename = %s WHERE filename = %s""".format(tableName=self.tableName), (None, ""))
+
+
+
 	def cleanHistory(self):
 
 
@@ -271,10 +279,11 @@ class DirDeduper(MangaCMS.DbBase.DbBase):
 			if downloadpath.startswith("/"):
 				fpath = os.path.join(downloadpath, filename)
 			elif filename.startswith("/"):   # So... these are getting swapped. Somehow.
-				self.log.warning("File has path and filename swapped! Source: %s", sourcesite)
-				raise RuntimeError("File has path and filename swapped! Source: %s" % sourcesite)
+				self.log.warning("File has path and filename swapped! Source: %s, %s", sourcesite, (downloadpath, filename))
+				raise RuntimeError("File has path and filename swapped! Source: %s, %s" % sourcesite, (downloadpath, filename))
 			else:
-				raise RuntimeError("File has path and filename swapped! Source: %s" % sourcesite)
+				self.log.warning("No path starts with a slash! Source: %s, %s", sourcesite, (downloadpath, filename))
+				raise RuntimeError("No path starts with a slash! Source: %s, %s" % sourcesite, (downloadpath, filename))
 
 			if tags and 'dup-checked' in taglist or 'missing-file' in taglist:
 				# self.log.info("File %s was dup-checked in the current session. Skipping.", fpath)

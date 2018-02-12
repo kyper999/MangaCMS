@@ -377,13 +377,13 @@ def three_arg_auto_clean(arg1, arg2):
 		return
 	deduplicator.remoteInterface.iterateClean(arg1, arg2)
 
-def three_arg_h_fix(arg1, arg2):
-	if not os.path.exists(arg2):
-		print("Passed path '%s' does not exist!" % arg2)
-		return
+# def three_arg_h_fix(arg1, arg2):
+# 	if not os.path.exists(arg2):
+# 		print("Passed path '%s' does not exist!" % arg2)
+# 		return
 
-	cleaner = utilities.cleanDb.HCleaner(arg1)
-	cleaner.resetMissingDownloads(arg2)
+# 	cleaner = utilities.cleanDb.HCleaner(arg1)
+# 	cleaner.resetMissingDownloads(arg2)
 
 def three_arg_phash_clean(arg1, arg2):
 	if not os.path.exists(arg1):
@@ -461,7 +461,7 @@ triple_arg_funcs = {
 	"dir_clean"     : three_arg_dir_clean,
 	"move_unlinked" : three_arg_move_unlinked,
 	"auto_clean"    : three_arg_auto_clean,
-	"h_fix"         : three_arg_h_fix,
+	# "h_fix"         : three_arg_h_fix,
 	"phash_clean"   : three_arg_phash_clean,
 
 }

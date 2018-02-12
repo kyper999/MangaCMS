@@ -44,13 +44,15 @@ class ViewerSession(object):
 		if not self.archHandle:
 			raise ValueError()
 
-		self.archFiles = self.archHandle.getFileList()
 		ret = []
-		for item in self.archFiles:
+		fcnt = 0
+		for item in self.archHandle.getFileList():
+			fcnt += 1
 			if nt.isProbablyImage(item):
 				ret.append(item)
 		if not ret:
-			raise ValueError("No Images in archive! \n Archive contents = %s" % "\n		".join(self.archFiles))
+			raise ValueError("No Images in archive (but %s files)! \n Archive contents = %s" %
+				(fcnt, "\n		".join(self.archHandle.getFileList())))
 		return ret
 
 	def buildImageLookupDict(self):
@@ -72,7 +74,7 @@ class ViewerSession(object):
 			return keys
 
 		except AttributeError:
-			raise ValueError("No Images in archive! \n Archive contents = %s" % "\n		".join(self.archFiles))
+			raise ValueError("No Images in archive! \n Archive contents = %s" % "\n		".join(self.archHandle.getFileList()))
 
 	def getItemByKey(self, itemKey):
 		if not itemKey in self.items:

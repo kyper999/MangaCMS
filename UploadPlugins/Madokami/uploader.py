@@ -23,6 +23,7 @@ import psycopg2
 
 COMPLAIN_ABOUT_DUPS = True
 
+from utilities.askUser import query_response_bool
 import urllib.parse
 import MangaCMS.ScrapePlugins.MangaScraperDbBase
 
@@ -147,8 +148,8 @@ class MkUploader(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 		n1 = lv.distance(dir1, canonName)
 		n2 = lv.distance(dir2, canonName)
 
-		self.log.info("	%s - '%s'", n1, dir1)
-		self.log.info("	%s - '%s'", n2, dir2)
+		self.log.info("	%s - '%s' https://manga.madokami.al/%s/", n1, dir1, pathBase_1)
+		self.log.info("	%s - '%s' https://manga.madokami.al/%s/", n2, dir2, pathBase_2)
 
 		# I'm using less then or equal, so situations where
 		# both names are equadistant get aggregated anyways.
@@ -159,14 +160,15 @@ class MkUploader(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 			src = os.path.join(pathBase_1, dir1)
 			dst = os.path.join(pathBase_2, dir2)
 
-
-		self.moveItemsInDir(src, dst)
-		self.log.info("Removing directory '%s'", src)
-		try:
-			self.sftp.mkdir("/Admin cleanup/autoclean dirs")
-		except:
-			pass
-		self.sftp.rename(src, "/Admin cleanup/autoclean dirs/garbage dir %s" % src.replace("/", ";").replace(" ", "_"))
+		doMove = query_response_bool("Do move?")
+		if doMove:
+			self.moveItemsInDir(src, dst)
+			self.log.info("Removing directory '%s'", src)
+			try:
+				self.sftp.mkdir("/Admin cleanup/autoclean dirs")
+			except:
+				pass
+			self.sftp.rename(src, "/Admin cleanup/autoclean dirs/garbage dir %s" % src.replace("/", ";").replace(" ", "_"))
 
 		return dst
 

@@ -3,6 +3,8 @@ import time
 import abc
 import zipfile
 import traceback
+import magic
+import mimetypes
 import os.path
 from concurrent.futures import ThreadPoolExecutor
 
@@ -218,6 +220,15 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 				for imageName, imageContent in image_list:
 					assert isinstance(imageName, str)
 					assert isinstance(imageContent, bytes)
+
+					_, ext = os.path.splitext(str)
+					if not ext:
+						self.log.warning("Missing extension in archive file: %s", imageName)
+						mtype = magic.from_buffer(imageContent, mime=True)
+						fext = mimetypes.guess_extension(mtype)
+						self.log.warning("Appending guessed file-extension %s", fext)
+						imageName += fext
+
 					arch.writestr(imageName, imageContent)
 				arch.close()
 				return fqfilename
