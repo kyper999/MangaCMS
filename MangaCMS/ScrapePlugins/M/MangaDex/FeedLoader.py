@@ -74,7 +74,7 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 	def getChaptersFromSeriesPage(self, soup):
 		sname = soup.find("h3", class_='panel-title').get_text(strip=True)
-		table = soup.find('div', id='torrents')
+		table = soup.find('div', id='chapters')
 
 		# import pdb
 		# pdb.set_trace()
@@ -85,12 +85,12 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 				continue  # Skip the table header row
 
 			tds = row.find_all("td")
-			if len(tds) != 7:
+			if len(tds) != 6:
 				self.log.warning("Invalid number of table entries: %s", len(tds))
 				self.log.warning("Row: %s", row)
 				continue
 
-			chapter_name, lang, group, dummy_uploader, dummy_success, dummy_views, ultime = tds
+			chapter_name, lang, group, dummy_uploader, dummy_views, ultime = tds
 
 			lang = lang.img['title']
 			if lang != DOWNLOAD_ONLY_LANGUAGE:
@@ -200,6 +200,7 @@ if __name__ == '__main__':
 		# print(fl.getUpdatedSeriesPages())
 		# print(fl.getAllItems())
 		# fl.resetStuckItems()
+		# cl = fl.getChapterLinkFromSeriesPage("https://mangadex.com/manga/8246")
 		# cl = fl.getChapterLinkFromSeriesPage("https://mangadex.com/manga/19969")
 		# cl = fl.getChapterLinkFromSeriesPage("https://mangadex.com/manga/9134")
 		# print(cl)

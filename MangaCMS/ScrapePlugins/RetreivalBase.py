@@ -209,9 +209,9 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 		fqfilename = self.insertCountIfFilenameExists(fqfilename)
 		self.log.info("Complete filepath: %s", fqfilename)
 
-
+		assert len(image_list) >= 1
 		chop = len(fileN)-4
-
+		
 		while 1:
 			try:
 				arch = zipfile.ZipFile(fqfilename, "w")
@@ -220,11 +220,13 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 				for imageName, imageContent in image_list:
 					assert isinstance(imageName, str)
 					assert isinstance(imageContent, bytes)
-
-					_, ext = os.path.splitext(str)
+					
+					mtype = magic.from_buffer(imageContent, mime=True)
+					assert "image" in mtype.lower()
+						
+					_, ext = os.path.splitext(imageName)
 					if not ext:
 						self.log.warning("Missing extension in archive file: %s", imageName)
-						mtype = magic.from_buffer(imageContent, mime=True)
 						fext = mimetypes.guess_extension(mtype)
 						self.log.warning("Appending guessed file-extension %s", fext)
 						imageName += fext
