@@ -18,10 +18,10 @@ from sqlalchemy.ext.associationproxy import association_proxy
 
 import queue
 
-from settings import DATABASE_IP            as C_DATABASE_IP
-from settings import DATABASE_DB_NAME       as C_DATABASE_DB_NAME
-from settings import DATABASE_USER          as C_DATABASE_USER
-from settings import DATABASE_PASS          as C_DATABASE_PASS
+from settings import NEW_DATABASE_IP            as C_DATABASE_IP
+from settings import NEW_DATABASE_DB_NAME       as C_DATABASE_DB_NAME
+from settings import NEW_DATABASE_USER          as C_DATABASE_USER
+from settings import NEW_DATABASE_PASS          as C_DATABASE_PASS
 
 
 if '__pypy__' in sys.builtin_module_names:

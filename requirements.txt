@@ -7,3 +7,4 @@ apscheduler
 webrequest
 sqlalchemy_jsonfield
 alembic
+sqlalchemy_utils
