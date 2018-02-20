@@ -58,7 +58,7 @@ def upgrade():
     )
     op.create_table('manga_releases',
     sa.Column('id', sa.BigInteger(), nullable=False),
-    sa.Column('state', postgresql.ENUM('new', 'fetching', 'processing', 'complete', 'error', 'removed', 'disabled', 'upload', name='dlstate_enum'), nullable=False),
+    sa.Column('state', postgresql.ENUM('new', 'fetching', 'processing', 'complete', 'error', 'removed', 'disabled', 'upload', 'missing', name='dlstate_enum'), nullable=False),
     sa.Column('err_str', sa.Text(), nullable=True),
     sa.Column('source_site', sa.Text(), nullable=False),
     sa.Column('source_id', sa.Text(), nullable=False),

@@ -98,6 +98,8 @@ class MangaReleases(Base):
 	last_checked        = Column(DateTime, nullable=False, default=datetime.datetime.min)
 
 	was_duplicate       = Column(Boolean, default=False, nullable=False)
+	phash_duplicate     = Column(Boolean, default=False, nullable=False)
+	uploaded            = Column(Boolean, default=False, nullable=False)
 
 	dirstate            = Column(dir_type, nullable=False, default="unknown")
 
