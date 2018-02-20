@@ -25,7 +25,7 @@ COMPLAIN_ABOUT_DUPS = True
 
 from utilities.askUser import query_response_bool
 import urllib.parse
-import MangaCMS.ScrapePlugins.MangaScraperDbBase
+import MangaCMSOld.ScrapePlugins.MangaScraperDbBase
 
 import stat
 
@@ -51,7 +51,7 @@ def splitall(path):
 			allparts.insert(0, parts[1])
 	return allparts
 
-class MkUploader(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
+class MkUploader(MangaCMSOld.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 	# log = logging.getLogger("Main.Mk.Uploader")
 
 

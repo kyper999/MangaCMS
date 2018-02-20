@@ -4,8 +4,8 @@ print("Utilities Startup")
 import runStatus
 runStatus.preloadDicts = False
 
-import MangaCMS.lib.logSetup
-MangaCMS.lib.logSetup.initLogging()
+import MangaCMSOld.lib.logSetup
+MangaCMSOld.lib.logSetup.initLogging()
 
 import signal
 import sys

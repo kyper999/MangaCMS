@@ -1,7 +1,7 @@
 
 
 import settings
-import MangaCMS.DbBase
+import MangaCMSOld.DbBase
 import time
 
 # This is a class used for situations where a script needs access to the database, but I don't
@@ -10,7 +10,7 @@ import time
 # It's terrible practice, but laaaazy, and sometimes I do just
 # need to hack a one-time-use thing together.
 
-class CountCleaner(MangaCMS.DbBase.DbBase):
+class CountCleaner(MangaCMSOld.DbBase.DbBase):
 
 	pluginType = "Utility"
 

@@ -2,20 +2,20 @@ import sys
 sys.path.insert(0,"..")
 import os.path
 
-import MangaCMS.lib.logSetup
+import MangaCMSOld.lib.logSetup
 if __name__ == "__main__":
-	MangaCMS.lib.logSetup.initLogging()
+	MangaCMSOld.lib.logSetup.initLogging()
 
 import shutil
-import MangaCMS.DbBase
+import MangaCMSOld.DbBase
 import os
 import nameTools as nt
-import MangaCMS.cleaner.processDownload
+import MangaCMSOld.cleaner.processDownload
 from concurrent.futures import ThreadPoolExecutor
 
 import Levenshtein as lv
 
-class ItemImporter(MangaCMS.DbBase.DbBase):
+class ItemImporter(MangaCMSOld.DbBase.DbBase):
 	loggerPath = "Main.ItemImporter"
 	tableName  = "MangaItems"
 
@@ -62,7 +62,7 @@ class ItemImporter(MangaCMS.DbBase.DbBase):
 								shutil.move(item, dstPath)
 
 								# Set pron to True, to prevent accidental uploading.
-								MangaCMS.cleaner.processDownload.processDownload(guess2, dstPath, deleteDups=True, includePHash=True, pron=True, crossReference=False)
+								MangaCMSOld.cleaner.processDownload.processDownload(guess2, dstPath, deleteDups=True, includePHash=True, pron=True, crossReference=False)
 
 							except KeyboardInterrupt:
 								shutil.move(dstPath, item)

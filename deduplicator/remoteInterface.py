@@ -3,7 +3,7 @@ import rpyc
 import time
 import os.path
 import os
-import MangaCMS.ScrapePlugins.MangaScraperDbBase
+import MangaCMSOld.ScrapePlugins.MangaScraperDbBase
 import settings
 
 def go():
@@ -11,7 +11,7 @@ def go():
 	print("exiting")
 
 
-class RemoteInt(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
+class RemoteInt(MangaCMSOld.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 	loggerPath = "Main.DirDedup"
 	tableName  = "MangaItems"
 
@@ -44,7 +44,7 @@ class RemoteInt(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 def cleanDirectory(dirPath, delDir):
 
 	import magic
-	import MangaCMS.cleaner.processDownload
+	import MangaCMSOld.cleaner.processDownload
 
 
 	print("Processing subdirectory '%s'" % dirPath)
@@ -74,7 +74,7 @@ def cleanDirectory(dirPath, delDir):
 
 		if fType == 'application/zip' or fType == 'application/x-rar':
 			print(basePath)
-			MangaCMS.cleaner.processDownload.dedupItem(basePath, delDir)
+			MangaCMSOld.cleaner.processDownload.dedupItem(basePath, delDir)
 			# run.processNewArchive(fileP)
 
 

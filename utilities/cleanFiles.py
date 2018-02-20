@@ -2,9 +2,9 @@
 # sys.path.insert(0,"..")
 import os.path
 import os
-import MangaCMS.lib.logSetup
+import MangaCMSOld.lib.logSetup
 if __name__ == "__main__":
-	MangaCMS.lib.logSetup.initLogging()
+	MangaCMSOld.lib.logSetup.initLogging()
 
 import UniversalArchiveInterface
 import traceback
@@ -12,11 +12,11 @@ import traceback
 import runStatus
 runStatus.preloadDicts = False
 
-import MangaCMS.cleaner.archCleaner
+import MangaCMSOld.cleaner.archCleaner
 
 def cleanArchives(baseDir):
 	print(baseDir)
-	cleaner = MangaCMS.cleaner.archCleaner.ArchCleaner()
+	cleaner = MangaCMSOld.cleaner.archCleaner.ArchCleaner()
 
 	for root, dirs, files in os.walk(baseDir):
 		for name in files:

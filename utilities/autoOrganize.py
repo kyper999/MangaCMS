@@ -7,7 +7,7 @@ import os.path
 import os
 import shutil
 import settings
-import MangaCMS.ScrapePlugins.MonitorDbBase
+import MangaCMSOld.ScrapePlugins.MonitorDbBase
 
 
 import psycopg2
@@ -21,7 +21,7 @@ from utilities.askUser import query_response, query_response_bool
 # from deduplicator.DbUtilities import DedupManager
 
 
-class DbInterface(MangaCMS.ScrapePlugins.MonitorDbBase.MonitorDbBase):
+class DbInterface(MangaCMSOld.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 
 	loggerPath       = "Main.Org.Tool"
 	pluginName       = "Organization Tool"

@@ -2,19 +2,19 @@
 # sys.path.insert(0,"..")
 import os.path
 
-import MangaCMS.lib.logSetup
+import MangaCMSOld.lib.logSetup
 if __name__ == "__main__":
-	MangaCMS.lib.logSetup.initLogging()
+	MangaCMSOld.lib.logSetup.initLogging()
 
 
 import urllib.parse
 import os
 import settings
-import MangaCMS.DbBase
+import MangaCMSOld.DbBase
 import nameTools as nt
 
 
-class BookCleaner(MangaCMS.DbBase.DbBase):
+class BookCleaner(MangaCMSOld.DbBase.DbBase):
 	loggerPath = "Main.Pc"
 	tableName  = "MangaItems"
 	pluginType = "Utility"

@@ -4,9 +4,9 @@
 Do the initial database setup, so a functional system can be bootstrapped from an empty database.
 '''
 
-import MangaCMS.ScrapePlugins.M.BuMonitor.MonitorRun
-import MangaCMS.ScrapePlugins.M.BuMonitor.ChangeMonitor
-import MangaCMS.ScrapePlugins.H.DjMoeLoader.DbLoader
+import MangaCMSOld.ScrapePlugins.M.BuMonitor.MonitorRun
+import MangaCMSOld.ScrapePlugins.M.BuMonitor.ChangeMonitor
+import MangaCMSOld.ScrapePlugins.H.DjMoeLoader.DbLoader
 
 
 
@@ -17,9 +17,9 @@ Each plugin is instantiated, and then the plugin database setup method is called
 
 '''
 toInit = [
-	MangaCMS.ScrapePlugins.M.BuMonitor.MonitorRun.BuWatchMonitor,
-	MangaCMS.ScrapePlugins.M.BuMonitor.ChangeMonitor.BuDateUpdater,
-	MangaCMS.ScrapePlugins.H.DjMoeLoader.DbLoader.DbLoader,
+	MangaCMSOld.ScrapePlugins.M.BuMonitor.MonitorRun.BuWatchMonitor,
+	MangaCMSOld.ScrapePlugins.M.BuMonitor.ChangeMonitor.BuDateUpdater,
+	MangaCMSOld.ScrapePlugins.H.DjMoeLoader.DbLoader.DbLoader,
 	]
 
 
@@ -32,6 +32,6 @@ def checkInitTables():
 			tmp.checkInitSeriesDb()
 
 if __name__ == "__main__":
-	import MangaCMS.lib.logSetup
-	MangaCMS.lib.logSetup.initLogging()
+	import MangaCMSOld.lib.logSetup
+	MangaCMSOld.lib.logSetup.initLogging()
 	checkInitTables()

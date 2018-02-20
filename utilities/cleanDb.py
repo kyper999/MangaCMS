@@ -7,9 +7,9 @@ import gzip
 import json
 import time
 
-import MangaCMS.lib.logSetup
+import MangaCMSOld.lib.logSetup
 if __name__ == "__main__":
-	MangaCMS.lib.logSetup.initLogging()
+	MangaCMSOld.lib.logSetup.initLogging()
 
 
 import runStatus
@@ -17,8 +17,8 @@ runStatus.preloadDicts = False
 
 import traceback
 import re
-import MangaCMS.DbBase
-import MangaCMS.ScrapePlugins.MangaScraperDbBase
+import MangaCMSOld.DbBase
+import MangaCMSOld.ScrapePlugins.MangaScraperDbBase
 import nameTools as nt
 import shutil
 import settings
@@ -26,10 +26,10 @@ import hashlib
 
 
 import utilities.EmptyRetreivalDb
-import MangaCMS.cleaner.processDownload
+import MangaCMSOld.cleaner.processDownload
 
 
-class PathCleaner(MangaCMS.DbBase.DbBase):
+class PathCleaner(MangaCMSOld.DbBase.DbBase):
 	loggerPath = "Main.Pc"
 	tableName  = "MangaItems"
 	pluginName = "PathCleanerUtil"
@@ -432,7 +432,7 @@ class PathCleaner(MangaCMS.DbBase.DbBase):
 
 
 
-				dedupState = MangaCMS.cleaner.processDownload.processDownload("imported", dstPath, pron=True, deleteDups=True)
+				dedupState = MangaCMSOld.cleaner.processDownload.processDownload("imported", dstPath, pron=True, deleteDups=True)
 
 
 				tags = dedupState + ' ' + ' '.join(itemtags)
@@ -528,7 +528,7 @@ class PathCleaner(MangaCMS.DbBase.DbBase):
 			print(items[:5])
 
 
-class CleanerBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
+class CleanerBase(MangaCMSOld.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 	# QUERY_DEBUG = True
 
@@ -1142,7 +1142,7 @@ class CleanerBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 		for dbid, dlp, fn, itemtags in items:
 			fqp = os.path.join(dlp, fn)
 			print(os.path.exists(fqp), fqp)
-			dedupState = MangaCMS.cleaner.processDownload.processDownload("imported", fqp, pron=True, deleteDups=True)
+			dedupState = MangaCMSOld.cleaner.processDownload.processDownload("imported", fqp, pron=True, deleteDups=True)
 
 
 			tags = dedupState + ' ' + ' '.join(itemtags)
@@ -1244,5 +1244,5 @@ class HCleaner(CleanerBase):
 				self.log.info("Processed %s lines", lineproc)
 
 if __name__ == "__main__":
-	import MangaCMS.lib.logSetup
-	MangaCMS.lib.logSetup.initLogging()
+	import MangaCMSOld.lib.logSetup
+	MangaCMSOld.lib.logSetup.initLogging()

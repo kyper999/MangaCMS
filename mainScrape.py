@@ -10,11 +10,11 @@ if __name__ == "__main__":
 	runStatus.preloadDicts = True
 
 
-import MangaCMS.lib.logSetup
+import MangaCMSOld.lib.logSetup
 import settings
 import schemaUpdater.schemaRevisioner
 
-import MangaCMS.lib.statusManager
+import MangaCMSOld.lib.statusManager
 import time
 
 import runStatus
@@ -130,7 +130,7 @@ def scheduleJobs(sched, timeToStart):
 # proper system operation, reset database state,
 # check/update database schema, etc...
 def preflight():
-	MangaCMS.lib.logSetup.initLogging(logToDb=True)
+	MangaCMSOld.lib.logSetup.initLogging(logToDb=True)
 
 	# A side effect of get_plugins() is to validate there are no database key conflicts.
 	# This has been an issue in the past.
@@ -141,7 +141,7 @@ def preflight():
 	# runStatus.notq = UploadPlugins.Madokami.notifier.start_notifier()
 	runStatus.notq = None
 
-	MangaCMS.lib.statusManager.resetAllRunningFlags()
+	MangaCMSOld.lib.statusManager.resetAllRunningFlags()
 	schemaUpdater.schemaRevisioner.updateDatabaseSchema()
 
 	nt.dirNameProxy.startDirObservers()
