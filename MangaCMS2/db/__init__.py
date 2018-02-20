@@ -2,9 +2,11 @@
 
 
 # Import the DB things.
-from .db_models import Tags
-from .db_models import Releases
-from .db_models import ReleaseFile
+from .db_models import MangaTags
+from .db_models import MangaReleases
+from .db_models import MangaReleaseFile
+
+from .db_types import dlstate_enum
 
 from .db_base import Base
 

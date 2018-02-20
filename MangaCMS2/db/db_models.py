@@ -1,5 +1,5 @@
 
-import settings
+import datetime
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -11,7 +11,6 @@ from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy import BigInteger
 from sqlalchemy import Text
-from sqlalchemy import text
 from sqlalchemy import Float
 from sqlalchemy import Boolean
 from sqlalchemy import DateTime
@@ -19,6 +18,7 @@ from sqlalchemy import ForeignKey
 from sqlalchemy import PrimaryKeyConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import UniqueConstraint
+import sqlalchemy_jsonfield
 
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.associationproxy import association_proxy
@@ -29,20 +29,22 @@ from sqlalchemy.dialects.postgresql import ENUM
 
 import citext
 ischema_names['citext'] = citext.CIText
-dlstate_enum   = ENUM('new', 'fetching', 'processing', 'complete', 'error', 'removed', 'disabled', name='dlstate_enum')
+
+import settings
 
 from .db_base import Base
+from .db_types import dir_type
+from .db_types import dlstate_enum
 
-db_tags_link = Table(
+manga_tags_link = Table(
 		'db_tags_link', Base.metadata,
-		Column('releases_id', Integer, ForeignKey('db_files.id'), nullable=False),
-		Column('tags_id',     Integer, ForeignKey('db_tags.id'),  nullable=False),
+		Column('releases_id', Integer, ForeignKey('manga_files.id'), nullable=False),
+		Column('tags_id',     Integer, ForeignKey('manga_tags.id'),  nullable=False),
 		PrimaryKeyConstraint('releases_id', 'tags_id')
 	)
 
-
-class Tags(Base):
-	__tablename__ = 'db_tags'
+class MangaTags(Base):
+	__tablename__ = 'manga_tags'
 	id          = Column(Integer, primary_key=True)
 	tag         = Column(citext.CIText(), nullable=False, index=True)
 
@@ -50,68 +52,65 @@ class Tags(Base):
 			UniqueConstraint('tag'),
 		)
 
-def tag_creator(tag):
-	tmp = session.query(Tags)    \
-		.filter(Tags.tag == tag) \
+def manga_tag_creator(tag):
+	tmp = session.query(MangaTags)    \
+		.filter(MangaTags.tag == tag) \
 		.scalar()
 
 	if tmp:
 		return tmp
 
-	return Tags(tag=tag)
+	return MangaTags(tag=tag)
 
 
-class ReleaseFile(Base):
-	__tablename__ = 'db_files'
-	id          = Column(BigInteger, primary_key=True)
+class MangaReleaseFile(Base):
+	__tablename__ = 'manga_files'
+	id             = Column(BigInteger, primary_key=True)
 
-	filepath    = Column(citext.CIText(), nullable=False)
-	fhash       = Column(Text, nullable=False)
+	dirpath        = Column(Text, nullable=False)
+	filename       = Column(Text, nullable=False)
+	fhash          = Column(Text, nullable=False)
 
-	phash       = Column(BigInteger)
-	imgx        = Column(Integer)
-	imgy        = Column(Integer)
+	last_dup_check = Column(DateTime, nullable=False, default=datetime.datetime.min)
 
-	tags_rel      = relationship('Tags',       secondary=lambda: db_tags_link)
-	tags          = association_proxy('tags_rel',      'tag',       creator=tag_creator)
+	tags_rel       = relationship('MangaTags',            secondary=lambda: manga_tags_link)
+	tags           = association_proxy('tags_rel',   'tag',       creator=manga_tag_creator)
+
+	# releases       = relationship('MangaReleases')
 
 	__table_args__ = (
-		UniqueConstraint('filepath', 'filepath'),
+		UniqueConstraint('dirpath', 'filename'),
 		UniqueConstraint('fhash'),
-		Index('phash_bktree_idx', 'phash', postgresql_using="spgist")
 		)
 
 
-class Releases(Base):
-	__tablename__ = 'db_releases'
-	id          = Column(BigInteger, primary_key=True)
-	state       = Column(dlstate_enum, nullable=False, index=True, default='new')
-	err_str     = Column(Text)
-	postid      = Column(Integer, nullable=False, index=True)
+class MangaReleases(Base):
+	__tablename__ = 'manga_releases'
+	id                  = Column(BigInteger, primary_key=True)
+	state               = Column(dlstate_enum, nullable=False, index=True, default='new')
+	err_str             = Column(Text)
 
-	source      = Column(citext.CIText, nullable=False, index=True)
+	source_site         = Column(Text, nullable=False, index=True)  # Actual source site
+	source_id           = Column(Text, nullable=False, index=True)  # ID On source site. Usually (but not always) the item URL
 
-	fsize       = Column(BigInteger)
-	score       = Column(Float)
-	favourites  = Column(Integer)
+	posted_at           = Column(DateTime, nullable=False, default=datetime.datetime.min)
+	downloaded_at       = Column(DateTime, nullable=False, default=datetime.datetime.min)
+	last_checked        = Column(DateTime, nullable=False, default=datetime.datetime.min)
 
-	parent      = Column(Text)
+	was_duplicate       = Column(Boolean, default=False, nullable=False)
 
-	posted      = Column(DateTime)
+	dirstate            = Column(dir_type, nullable=False, default="unknown")
 
-	res_x       = Column(Integer)
-	res_y       = Column(Integer)
+	origin_name         = Column(Text)
 
+	additional_metadata = Column(sqlalchemy_jsonfield.JSONField())
 
-	status      = Column(Text)
-	rating      = Column(Text)
-
-	fileid        = Column(BigInteger, ForeignKey('db_files.id'))
-	file_rel      = relationship('ReleaseFile')
+	fileid              = Column(BigInteger, ForeignKey('manga_files.id'))
+	file                = relationship('MangaReleaseFile')
 
 	__table_args__ = (
-		UniqueConstraint('postid', 'source'),
-		Index('db_releases_source_state_id_idx', 'source', 'state', 'id')
+		UniqueConstraint('source_site', 'source_id'),
+		Index('db_releases_source_site_id_idx', 'source_site', 'source_id')
 		)
 
 

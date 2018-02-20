@@ -1,0 +1,9 @@
+
+beautifulsoup4
+pyramid
+cherrypy
+psycopg2
+apscheduler
+webrequest
+sqlalchemy_jsonfield
+alembic
