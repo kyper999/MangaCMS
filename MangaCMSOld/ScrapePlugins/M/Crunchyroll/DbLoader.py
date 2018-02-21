@@ -8,6 +8,7 @@ import urllib.parse
 import time
 import bs4
 
+import WebRequest
 import MangaCMSOld.ScrapePlugins.LoaderBase
 
 
@@ -168,7 +169,10 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 
 	def parseItem(self, pageUrl):
 
-		page = self.wg.getpage(pageUrl)
+		try:
+			page = self.wg.getpage(pageUrl)
+		except WebRequest.FetchFailureError:
+			return []
 		if not page:
 			return []
 

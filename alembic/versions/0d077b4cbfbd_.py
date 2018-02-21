@@ -13,6 +13,7 @@ branch_labels = None
 depends_on = None
 
 import datetime
+import tqdm
 import json
 import hashlib
 import os.path
@@ -47,17 +48,17 @@ def get_add_file(sess, fname, fpath):
 		.scalar()
 
 	if have:
-		print("Have row by path")
+		# print("Have row by path")
 		return have
 
 
-	print("Hashing file...", end="", flush=True)
+	# print("Hashing file...", end="", flush=True)
 	hash_md5 = hashlib.md5()
 	with open(fqname, "rb") as f:
 		for chunk in iter(lambda: f.read(4096*16), b""):
 			hash_md5.update(chunk)
 	fhash = hash_md5.hexdigest()
-	print("done.")
+	# print("done.")
 
 
 	have = sess.query(db.MangaReleaseFile)          \
@@ -65,7 +66,7 @@ def get_add_file(sess, fname, fpath):
 		.scalar()
 
 	if have:
-		print("Have by fhash")
+		# print("Have by fhash")
 		return have
 
 	new = db.MangaReleaseFile(
@@ -88,77 +89,97 @@ def upgrade():
 	print("Connection:", old_con)
 	print("Cursor:", old_cur)
 	print("Session:", sess)
-	old_cur.execute("SELECT sourcesite, dlstate, sourceurl, retreivaltime, lastupdate, sourceid, seriesname, filename, originname, downloadpath, flags, tags, note FROM mangaitems")
-	fetchchunk = 100
-	more = old_cur.fetchmany(size=fetchchunk)
-	while more:
-		print("Chunk:")
-		print(more)
-		more = old_cur.fetchmany(size=fetchchunk)
+	old_cur.execute("SELECT sourcesite, dlstate, sourceurl, retreivaltime, lastupdate, sourceid, seriesname, filename, originname, downloadpath, flags, tags, note FROM mangaitems ORDER BY dbid")
 
-		for item in more:
-			sourcesite, dlstate, sourceurl, retreivaltime, lastupdate, sourceid, seriesname, filename, originname, downloadpath, flags, tags, note = item
-			file = get_add_file(sess, filename, downloadpath)
-			print(file)
-			sess.flush()
+	fetchchunk = 1000
+	items = []
 
-			# print("'{}', '{}'".format(flags, tags))
-			tags = tags if tags else ""
-			flags = flags if flags else ""
+	print("Loading rows from DB")
+	prog = tqdm.tqdm()
+	chunk = old_cur.fetchmany(size=fetchchunk)
+	while chunk:
+		items.extend(chunk)
+		prog.update(len(chunk))
+		chunk = old_cur.fetchmany(size=fetchchunk)
 
-			additional_metadata = None
-			state_val = "new"
-			if file is None:
-				state_val = 'missing'
-				additional_metadata = {
-					'filename'     : filename,
-					'downloadpath' : downloadpath,
-				}
-			elif dlstate == 1:
-				state_val = 'fetching'
-			elif dlstate == 2:
-				state_val = 'complete'
-			elif dlstate == 3:
-				state_val = 'upload'
-			elif dlstate > 3:
-				state_val = 'disabled'
-			elif dlstate < 0:
-				state_val = 'error'
+	print("Loading rows from DB")
 
-			dirstate_val = "unknown"
-			if "haddir" in flags:
-				dirstate_val = "had_dir"
-			elif "new_dir" in flags:
-				dirstate_val = "new_dir"
+	new = 0
+	for item in tqdm.tqdm(items):
+		sourcesite, dlstate, sourceurl, retreivaltime, lastupdate, sourceid, seriesname, filename, originname, downloadpath, flags, tags, note = item
 
-			if sourceid:
-				loaded_meta = json.loads(sourceid)
-				if additional_metadata is None:
-					additional_metadata = {}
+		have = sess.query(db.MangaReleases)             \
+			.filter(db.MangaReleases.source_site == sourcesite)  \
+			.filter(db.MangaReleases.source_id == sourceurl) \
+			.count()
 
-				additional_metadata['sourceid'] = loaded_meta
+		if have:
+			continue
 
-			row = db.MangaReleases(
-					state               = state_val,
-					err_str             = None,
-					source_site         = sourcesite,
-					source_id           = sourceurl,
-					posted_at           = datetime.datetime.utcfromtimestamp(lastupdate),
-					downloaded_at       = datetime.datetime.utcfromtimestamp(retreivaltime),
-					phash_duplicate     = "phash-duplicate" in tags,
-					was_duplicate       = "was-duplicate" in tags,
-					uploaded            = "uploaded" in tags,
-					dirstate            = dirstate_val,
-					origin_name         = originname,
-					additional_metadata = additional_metadata,
-					fileid              = file.id if file else None,
-				)
-			sess.add(row)
-		print("Committing!")
-
+		file = get_add_file(sess, filename, downloadpath)
 		sess.flush()
-		sess.commit()
-		bind.execute("""COMMIT""")
+
+		# print("'{}', '{}'".format(flags, tags))
+		tags = tags if tags else ""
+		flags = flags if flags else ""
+
+		additional_metadata = None
+		state_val = "new"
+		if file is None:
+			state_val = 'missing'
+			additional_metadata = {
+				'filename'     : filename,
+				'downloadpath' : downloadpath,
+			}
+		elif dlstate == 1:
+			state_val = 'fetching'
+		elif dlstate == 2:
+			state_val = 'complete'
+		elif dlstate == 3:
+			state_val = 'upload'
+		elif dlstate > 3:
+			state_val = 'disabled'
+		elif dlstate < 0:
+			state_val = 'error'
+
+		dirstate_val = "unknown"
+		if "haddir" in flags:
+			dirstate_val = "had_dir"
+		elif "new_dir" in flags:
+			dirstate_val = "new_dir"
+
+		if sourceid:
+			loaded_meta = json.loads(sourceid)
+			if additional_metadata is None:
+				additional_metadata = {}
+
+			additional_metadata['sourceid'] = loaded_meta
+
+		row = db.MangaReleases(
+				state               = state_val,
+				err_str             = None,
+				source_site         = sourcesite,
+				source_id           = sourceurl,
+				posted_at           = datetime.datetime.utcfromtimestamp(lastupdate),
+				downloaded_at       = datetime.datetime.utcfromtimestamp(retreivaltime),
+				phash_duplicate     = "phash-duplicate" in tags,
+				was_duplicate       = "was-duplicate" in tags,
+				uploaded            = "uploaded" in tags,
+				dirstate            = dirstate_val,
+				origin_name         = originname,
+				additional_metadata = additional_metadata,
+				fileid              = file.id if file else None,
+			)
+		sess.add(row)
+
+		new += 1
+		if new > 1000:
+			new = 0
+			print("\nCommitting!\n")
+
+			sess.flush()
+			sess.commit()
+			bind.execute("""COMMIT""")
 
 	raise RuntimeError("Wat?")
 	pass
