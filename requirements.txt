@@ -3,7 +3,7 @@ beautifulsoup4==4.6.0
 pyramid
 cherrypy==14.0.0
 psycopg2
-apscheduler
+apscheduler==3.5.1
 webrequest
 sqlalchemy_jsonfield
 alembic
