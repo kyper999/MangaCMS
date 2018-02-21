@@ -4,7 +4,7 @@ pyramid==1.9.1
 cherrypy==14.0.0
 psycopg2==2.7.4
 apscheduler==3.5.1
-webrequest
+webrequest==0.0.15
 sqlalchemy_jsonfield
 alembic
 sqlalchemy_utils==0.33.0
