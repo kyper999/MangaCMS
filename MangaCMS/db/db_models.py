@@ -4,6 +4,7 @@ import datetime
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import scoped_session
+from sqlalchemy.orm import backref
 from sqlalchemy import Table
 from sqlalchemy import Index
 
@@ -126,15 +127,16 @@ class MangaTags(Base):
 			UniqueConstraint('tag'),
 		)
 
-def manga_tag_creator(tag):
-	tmp = session.query(MangaTags)    \
-		.filter(MangaTags.tag == tag) \
-		.scalar()
+	@classmethod
+	def get_or_create(cls, tag):
+		tmp = cls.query    \
+			.filter(cls.tag == tag) \
+			.scalar()
+		print("manga_tag_creator", tag)
+		if tmp:
+			return tmp
 
-	if tmp:
-		return tmp
-
-	return MangaTags(tag=tag)
+		return cls(tag=tag)
 
 ########################################################################################
 
@@ -154,15 +156,16 @@ class HentaiTags(Base):
 			UniqueConstraint('tag'),
 		)
 
-def hentai_tag_creator(tag):
-	tmp = session.query(HentaiTags)    \
-		.filter(HentaiTags.tag == tag) \
-		.scalar()
+	@classmethod
+	def get_or_create(cls, tag):
+		tmp = cls.query    \
+			.filter(cls.tag == tag) \
+			.scalar()
+		print("hentai_tag_creator", tag)
+		if tmp:
+			return tmp
 
-	if tmp:
-		return tmp
-
-	return HentaiTags(tag=tag)
+		return cls(tag=tag)
 
 
 ########################################################################################
@@ -182,11 +185,19 @@ class ReleaseFile(Base):
 
 	last_dup_check = Column(DateTime, nullable=False, default=datetime.datetime.min)
 
-	manga_tags_rel       = relationship('MangaTags',            secondary=lambda: manga_tags_link)
-	manga_tags           = association_proxy('tags_rel',   'tag',       creator=manga_tag_creator)
+	manga_tags_rel       = relationship('MangaTags',
+										secondary=manga_tags_link,
+										backref=backref("release_files", lazy='dynamic'),
+										collection_class=set)
+	manga_tags           = association_proxy('manga_tags_rel', 'tag', creator=MangaTags.get_or_create)
 
-	hentai_tags_rel      = relationship('HentaiTags',            secondary=lambda: hentai_tags_link)
-	hentai_tags          = association_proxy('tags_rel',   'tag',       creator=hentai_tag_creator)
+	hentai_tags_rel      = relationship('HentaiTags',
+										secondary=hentai_tags_link,
+										backref=backref("release_files", lazy='dynamic'),
+										collection_class=set)
+	hentai_tags          = association_proxy('hentai_tags_rel', 'tag', creator=HentaiTags.get_or_create)
+
+
 
 	# releases       = relationship('MangaReleases')
 
