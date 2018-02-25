@@ -1,0 +1,78 @@
+<!-- extend base layout -->
+{% extends "__base.html" %}
+{% import '_macros.html' as util_macros %}
+
+{% block content %}
+	{% include '_block_flash.html' %}
+	<div class="well">
+
+		<div class="subdiv skId">
+			<div class="contentdiv">
+				<h3>Manga (distinct)</h3>
+				<div id='mangatable'>
+					<center><img src='/static/img/loading-bar.gif' /></center>
+				</div>
+			</div>
+		</div>
+
+		{%- if ip_in_whitelist() -%}
+			<div class="subdiv fuFuId">
+				<div class="contentdiv">
+					<h3>Porn!</h3>
+					<div id='prontable'>
+						<center><img src='/static/img/loading-bar.gif' /></center>
+					</div>
+				</div>
+			</div>
+		{%- endif -%}
+
+
+	</div>
+
+{% endblock %}
+
+
+
+
+{%- block footer -%}
+
+
+	<script type="text/javascript">
+		$(document).ready(function() {
+			$.get("/manga/table/",
+				function( response, status, xhr )
+				{
+					if ( status == "error" )
+					{
+						var msg = "Sorry but there was an error: ";
+						$( "#error" ).html( msg + xhr.status + " " + xhr.statusText );
+					}
+					else
+					{
+						$('#mangatable').html(response);
+
+						{{util_macros.mouseOverJs(key="showTT")}}
+					}
+				}
+			);
+			$.get("/hentai/table/",
+				function( response, status, xhr )
+				{
+					if ( status == "error" )
+					{
+						var msg = "Sorry but there was an error: ";
+						$( "#error" ).html( msg + xhr.status + " " + xhr.statusText );
+					}
+					else
+					{
+						$('#prontable').html(response);
+
+						{{util_macros.mouseOverJs(key="showHT")}}
+					}
+				}
+			);
+
+		});
+	</script>
+
+{%- endblock -%}

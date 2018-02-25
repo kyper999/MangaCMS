@@ -1,0 +1,261 @@
+<!-- extend base layout -->
+{% extends "__base.html" %}
+{% import '_macros.html' as util_macros %}
+
+{%- macro manga_table_header() -%}
+	<table class='table-striped table table-bordered table-condensed fullwidth' style="table-layout: fixed;">
+
+		<tr>
+				<th class="uncoloured" style="width: 40px; min-width: 40px;">Date</th>
+				<th class="uncoloured" style="width: 20px; min-width: 20px;">St</th>
+				<th class="uncoloured" style="width: 20px; min-width: 20px;">Lo</th>
+				<th class="uncoloured" style="width: 250px; min-width: 200px;">Series</th>
+				<th class="uncoloured">BaseName</th>
+				<th class="uncoloured" style="width: 45px; min-width: 45px;">Rating</th>
+				<th class="uncoloured" style="width: 105px; min-width: 105px;">DLTime</th>
+		</tr>
+
+{%- endmacro -%}
+
+{%- macro render_manga_row(row, kwargs) -%}
+
+
+
+	## dbId,              \
+	## dlState,           \
+	## sourceSite,        \
+	## sourceUrl,         \
+	## retreivalTime,     \
+	## sourceId,          \
+	## sourceSeriesName,  \
+	## fileName,          \
+	## originName,        \
+	## downloadPath,      \
+	## flags,             \
+	## tags,              \
+	## note = row
+
+	## dlState = int(dlState)
+
+	## if sourceSeriesName == None:
+	## 	sourceSeriesName = "NONE"
+	## 	seriesName = "NOT YET DETERMINED"
+	## else:
+	## 	seriesName = nt.getCanonicalMangaUpdatesName(sourceSeriesName)
+
+	## # cleanedName = nt.prepFilenameForMatching(sourceSeriesName)
+	## itemInfo = nt.dirNameProxy[sourceSeriesName]
+	## if itemInfo["rating"]:
+	## 	rating = itemInfo["rating"]
+	## 	ratingNum = nt.ratingStrToFloat(rating)
+	## else:
+	## 	rating = ""
+	## 	ratingNum = nt.ratingStrToFloat(rating)
+
+	## # clamp times to now, if we have items that are in the future.
+	## # Work around for some time-zone fuckups in the MangaBaby Scraper.
+	## if retreivalTime > time.time():
+	## 	retreivalTime = time.time()
+
+	## addDate = time.strftime('%y-%m-%d %H:%M', time.localtime(retreivalTime))
+
+	## if not flags:
+	## 	flags = ""
+	## if not tags:
+	## 	tags = ""
+
+	## if dlState == 2:
+	## 	statusColour = colours["Done"]
+	## elif dlState == 3:
+	## 	statusColour = colours["Uploaded"]
+	## elif dlState == 1:
+	## 	statusColour = colours["working"]
+	## elif dlState == 0:
+	## 	statusColour = colours["queued"]
+	## else:
+	## 	statusColour = colours["error"]
+
+
+	## if downloadPath and fileName:
+	## 	filePath = os.path.join(downloadPath, fileName)
+	## 	if "=0=" in downloadPath:
+	## 		if os.path.exists(filePath):
+	## 			locationColour = colours["no match"]
+	## 		else:
+	## 			locationColour = colours["moved"]
+	## 	elif settings.pickedDir in downloadPath:
+	## 		locationColour = colours["picked"]
+	## 	elif "newdir" in flags:
+	## 		locationColour = colours["new dir"]
+	## 	else:
+	## 		locationColour = colours["valid cat"]
+	## else:
+	## 	if dlState == 0:
+	## 		locationColour = colours["queued"]
+	## 	elif dlState == 3:
+	## 		locationColour = colours["valid cat"]
+	## 	elif dlState == 1:
+	## 		locationColour = colours["working"]
+	## 	else:
+	## 		locationColour = colours["failed"]
+	## 	filePath = "N.A."
+
+	## toolTip  = filePath.replace('"', "") + "<br>"
+	## toolTip += "Original series name: " + sourceSeriesName.replace('"', "") + "<br>"
+	## toolTip += "Proper MangaUpdates name: " + seriesName.replace('"', "") + "<br>"
+	## toolTip += "cleanedName: " + itemInfo["dirKey"] + "<br>"
+	## toolTip += "itemInfo: " + str(itemInfo).replace('"', "") + "<br>"
+	## toolTip += "rowId: " + str(dbId) + "<br>"
+	## toolTip += "sourceUrl: " + sourceUrl + "<br>"
+	## toolTip += "dlState: " + str(dlState) + "<br>"
+	## toolTip += "tags: " + str(tags) + "<br>"
+	## toolTip += "Source: " + str(sourceSite) + "<br>"
+	## if os.path.exists(filePath):
+	## 	toolTip += "File found."
+	## else:
+	## 	toolTip += "File is missing!"
+
+	## cellId = None
+	## if dlState < 0:
+	## 	cellId = uuid.uuid1(0).hex
+
+	## shouldBold = False
+	## if originName and kwargs['boldNew']:
+	## 	chap = nt.extractChapterVol(originName)[0]
+	## 	if isinstance(chap, float):
+	## 		if chap < 10:
+	## 			shouldBold = True
+
+
+	<tr class="${sourceSite}_row">
+		<td>${ut.timeAgo(retreivalTime)}</td>
+		<td bgcolor=${statusColour} class="showTT" mouseovertext="${toolTip}" ${'onclick="event_%s()"' % cellId if cellId else ''}>
+			%if dlState==3:
+				<center>↑</center>
+			%elif dlState < 0:
+				<script>
+
+					function ajaxCallback(reqData, statusStr, jqXHR)
+					{
+						console.log("Ajax request succeeded");
+						console.log(reqData);
+						console.log(statusStr);
+
+						var status = $.parseJSON(reqData);
+						console.log(status)
+						if (status.Status == "Success")
+						{
+
+							alert("Succeeded!\n"+status.Message)
+							// TODO Make this change the page locally, change the cell colours and stuff.
+						}
+						else
+						{
+							alert("ERROR!\n"+status.Message)
+						}
+
+					};
+
+
+					function ${"event_%s()" % cellId}
+					{
+						var reset = window.confirm("Reset download state for item ${dbId}");
+						if (reset == true)
+						{
+							var ret = ({});
+							ret["reset-download"] = "${dbId}";
+							$.ajax("/api", {"data": ret, success: ajaxCallback});
+						}
+
+					}
+
+				</script>
+			%endif
+		</td>
+		<td bgcolor=${locationColour} class="showTT" mouseovertext="${toolTip}"></td>
+		<td>${ut.createReaderLink(seriesName.title(), itemInfo)}</td>
+		<td>
+
+			% if "phash-duplicate" in tags:
+				<span style="text-decoration: line-through; color: red;">
+					<span style="color: #000;">
+			% elif "deleted" in tags:
+				<strike>
+			% endif
+
+			% if ratingNum >= 2:
+				<b>
+			% endif
+
+			% if shouldBold:
+				<span style="color: red;">
+			% endif
+
+			${originName}
+
+
+			% if shouldBold:
+				</span>
+			% endif
+
+			% if ratingNum >= 2:
+				</b>
+			% endif
+
+			% if "phash-duplicate" in tags:
+					</span>
+				</span>
+			% elif "deleted" in tags:
+				</strike>
+			% endif
+
+		</td>
+		<td>${rating}</td>
+		<td>${addDate}</td>
+	</tr>
+
+{%- endmacro -%}
+
+
+{%- macro manga_table_footer() -%}
+	</table>
+{%- endmacro -%}
+
+
+{%- macro manga_block(block_item_list, params) -%}
+	<div>
+		{{manga_table_header()}}
+			{%- for db_row in block_item_list.items -%}
+				{{ render_manga_row(db_row, params) }}
+			{%- endfor -%}
+		{{manga_table_footer()}}
+	</div>
+{%- endmacro -%}
+
+
+{% block content %}
+	{% include '_block_flash.html' %}
+	<div class="well">
+		<h3>Manga {{"(distinct)" if params['distinct'] else ""}}</h3>
+
+		{{params}}
+		<div class="subdiv skId">
+			<div class="contentdiv">
+				<div id='mangatable'>
+					{{manga_block(items, params)}}
+				</div>
+			</div>
+		</div>
+
+		{{ util_macros.render_pagination(items, url_for_param=url_for_param) }}
+	</div>
+
+{% endblock %}
+
+
+
+
+{%- block footer -%}
+
+
+{%- endblock -%}

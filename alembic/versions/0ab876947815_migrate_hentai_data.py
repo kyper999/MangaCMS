@@ -327,8 +327,7 @@ def upgrade():
 			# print("Hashing file...", end="", flush=True)
 			hash_md5 = hashlib.md5()
 			with open(fqname, "rb") as f:
-				for chunk in iter(lambda: f.read(4096*16), b""):
-					hash_md5.update(chunk)
+				hash_md5.update(f.read())
 			fhash = hash_md5.hexdigest()
 			# print("done.")
 
@@ -415,7 +414,7 @@ def upgrade():
 			print(mode, "Connection:", old_con)
 			print(mode, "Cursor:", old_cur)
 			print(mode, "Session:", sess)
-			old_cur.execute("SELECT sourcesite, dlstate, sourceurl, retreivaltime, lastupdate, sourceid, seriesname, filename, originname, downloadpath, flags, tags, note FROM hentaiitems ORDER BY dbid ASC")
+			old_cur.execute("SELECT sourcesite, dlstate, sourceurl, retreivaltime, lastupdate, sourceid, seriesname, filename, originname, downloadpath, flags, tags, note FROM hentaiitems ORDER BY dbid DESC")
 
 			fetchchunk = 1000
 			items = []
@@ -508,7 +507,7 @@ def upgrade():
 			# print("Connection:", old_con)
 			# print("Cursor:", old_cur)
 			# print("Session:", sess)
-			old_cur.execute("SELECT sourcesite, dlstate, sourceurl, retreivaltime, lastupdate, sourceid, seriesname, filename, originname, downloadpath, flags, tags, note FROM mangaitems ORDER BY dbid ASC")
+			old_cur.execute("SELECT sourcesite, dlstate, sourceurl, retreivaltime, lastupdate, sourceid, seriesname, filename, originname, downloadpath, flags, tags, note FROM mangaitems ORDER BY dbid DESC")
 
 			fetchchunk = 1000
 			items = []

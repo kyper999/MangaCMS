@@ -1,0 +1,50 @@
+
+
+{%- macro render_pagination(pagination, url_for_param=None) -%}
+	<div class=pagination>
+	{%- for page in pagination.iter_pages() -%}
+		{%- if page -%}
+			{% if page != pagination.page %}
+				{% if url_for_param %}
+					<a href="{{ url_for(url_for_param, page=page, **request.args) }}">{{ page }}</a>
+				{% else %}
+					<a href="{{ page }}">{{ page }}</a>
+				{% endif %}
+			{% else %}
+				<strong>{{ page }}</strong>
+			{% endif %}
+		{%- else -%}
+			<span class=ellipsis>…</span>
+		{%- endif -%}
+	{%- endfor -%}
+	</div>
+{%- endmacro -%}
+
+{%- macro mouseOverJs(key='showTT') -%}
+
+		// Yeah, apparently you can have raw js in
+		// mako functions.
+
+		$(document).ready(function() {
+		// Tooltip only Text
+		$('.{{key}}').hover(function(){
+			// Hover over code
+			var mouseovertext = $(this).attr('mouseovertext');
+			$(this).data('tipText', mouseovertext).removeAttr('mouseovertext');
+			$('<p class="tooltip"></p>')
+			.html(mouseovertext)
+			.appendTo('body')
+			.fadeIn('slow');
+		}, function() {
+			// Hover out code
+			$(this).attr('mouseovertext', $(this).data('tipText'));
+			$('.tooltip').remove();
+		}).mousemove(function(e) {
+			var mousex = e.pageX + 20; //Get X coordinates
+			var mousey = e.pageY + 10; //Get Y coordinates
+			$('.tooltip')
+			.css({ top: mousey, left: mousex })
+		});
+		});
+
+{%- endmacro -%}
