@@ -7,7 +7,7 @@ babel
 sqlalchemy_jsonfield==0.7.0
 flask
 alembic==0.9.8
-flask-wtf
+flask-wtf==0.14.2
 cherrypy==14.0.0
 pyramid==1.9.1
 beautifulsoup4==4.6.0
