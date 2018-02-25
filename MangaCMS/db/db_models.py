@@ -80,18 +80,51 @@ class MangaTags(Base):
 		session.expunge(tmp)
 		return tmp
 
+	# @classmethod
+	# @cachetools.cached(cache=cachetools.TTLCache(tag_cache_size, tag_cache_ttl))
+	# def get_or_create(cls, tag):
+	# 	tmp = sess.query(cls)    \
+	# 		.filter(cls.tag == tag) \
+	# 		.scalar()
+	# 	if tmp:
+	# 		sess.expunge(tmp)
+	# 		return tmp
+
+	# 	# print("manga_tag_creator", tag)
+	# 	tmp = cls(tag=tag)
+	# 	sess.add(tmp)
+	# 	sess.commit()
+	# 	sess.expunge(tmp)
+	# 	return tmp
+
+	# @classmethod
+	# @cachetools.cached(cache=cachetools.TTLCache(tag_cache_size, tag_cache_ttl))
+	# def get_or_create(cls, tag):
+	# 	tmp = sess.query(cls)    \
+	# 		.filter(cls.tag == tag) \
+	# 		.scalar()
+	# 	if tmp:
+	# 		sess.expunge(tmp)
+	# 		return tmp
+
+	# 	# print("hentai_tag_creator", tag)
+	# 	tmp = cls(tag=tag)
+	# 	sess.add(tmp)
+	# 	sess.commit()
+	# 	sess.expunge(tmp)
+	# 	return tmp
 ########################################################################################
 
 hentai_files_tags_link = Table(
 		'hentai_files_tags_link', Base.metadata,
-		Column('releases_id', Integer, ForeignKey('release_files.id'), nullable=False),
-		Column('tags_id',     Integer, ForeignKey('hentai_tags.id'),  nullable=False),
+		Column('releases_id', Integer, ForeignKey('release_files.id'), nullable=False, index=True),
+		Column('tags_id',     Integer, ForeignKey('hentai_tags.id'),  nullable=False, index=True),
 		PrimaryKeyConstraint('releases_id', 'tags_id')
 	)
 hentai_releases_tags_link = Table(
 		'hentai_releases_tags_link', Base.metadata,
-		Column('releases_id', Integer, ForeignKey('hentai_releases.id'), nullable=False),
-		Column('tags_id',     Integer, ForeignKey('hentai_tags.id'),  nullable=False),
+		Column('releases_id', Integer, ForeignKey('hentai_releases.id'), nullable=False, index=True),
+		Column('tags_id',     Integer, ForeignKey('hentai_tags.id'),  nullable=False, index=True),
 		PrimaryKeyConstraint('releases_id', 'tags_id')
 	)
 
@@ -211,8 +244,8 @@ class ReleaseFile(Base):
 	id             = Column(BigInteger, primary_key=True)
 
 	dirpath        = Column(Text, nullable=False)
-	filename       = Column(Text, nullable=False)
-	fhash          = Column(Text, nullable=False)
+	filename       = Column(Text, nullable=False, index=True)
+	fhash          = Column(Text, nullable=False, index=True)
 	file_type      = Column(file_type, nullable=False, default="unknown")
 
 	was_duplicate       = Column(Boolean, default=False, nullable=False)
