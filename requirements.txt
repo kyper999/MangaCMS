@@ -1,6 +1,6 @@
 webrequest==0.0.15
 sqlalchemy_utils==0.33.0
-mdx_linkify
+mdx_linkify==1.1
 apscheduler==3.5.1
 psycopg2==2.7.4
 babel
