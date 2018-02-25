@@ -3,7 +3,7 @@ sqlalchemy_utils==0.33.0
 mdx_linkify
 apscheduler==3.5.1
 psycopg2==2.7.4
-babel
+babel==2.5.3
 sqlalchemy_jsonfield==0.7.0
 flask
 alembic==0.9.8
