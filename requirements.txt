@@ -5,7 +5,7 @@ apscheduler==3.5.1
 psycopg2==2.7.4
 babel==2.5.3
 sqlalchemy_jsonfield==0.7.0
-flask
+flask==0.12.2
 alembic==0.9.8
 flask-wtf==0.14.2
 cherrypy==14.0.0
