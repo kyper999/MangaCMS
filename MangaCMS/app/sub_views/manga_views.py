@@ -55,9 +55,9 @@ def select_from_table(table, page):
 		query = query.filter(table.source_site == params['limit-by-source'])
 	if params['distinct']:
 		query = query.distinct(table.series_name) \
-			.order_by(sql_desc(sql_max(table.posted_at)))
+			.order_by(sql_desc(sql_max(table.downloaded_at)))
 	else:
-		query = query.order_by(table.posted_at.desc())
+		query = query.order_by(table.downloaded_at.desc())
 
 	return params, paginate(query, page=page)
 
@@ -66,6 +66,7 @@ def select_from_table(table, page):
 def manga_only_view(page=1):
 	params, items = select_from_table(db.MangaReleases, page=page)
 	return render_template('manga_view.html',
+						   whole_page    = True,
 						   items         = items,
 						   params        = params,
 						   url_for_param = "manga_only_view"
@@ -75,7 +76,8 @@ def manga_only_view(page=1):
 @app.route('/manga/table/<int:page>', methods=['GET'])
 def manga_table_view(page=1):
 	params, items = select_from_table(db.MangaReleases, page=page)
-	return render_template('manga_table.html',
+	return render_template('manga_view.html',
+						   table_only    = True,
 						   items         = items,
 						   params        = params,
 						   )
@@ -86,6 +88,7 @@ def manga_table_view(page=1):
 def hentai_only_view(page=1):
 	params, items = select_from_table(db.HentaiReleases, page=page)
 	return render_template('hentai_view.html',
+						   whole_page    = True,
 						   items         = items,
 						   params        = params,
 						   url_for_param = "hentai_only_view"
@@ -95,7 +98,8 @@ def hentai_only_view(page=1):
 @app.route('/hentai/table/<int:page>', methods=['GET'])
 def hentai_table_view(page=1):
 	params, items = select_from_table(db.HentaiReleases, page=page)
-	return render_template('hentai_table.html',
+	return render_template('hentai_view.html',
+						   table_only    = True,
 						   items         = items,
 						   params        = params,
 						   )

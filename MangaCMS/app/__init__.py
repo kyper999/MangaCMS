@@ -1,5 +1,6 @@
 
 import os
+import uuid
 import datetime
 import urllib.parse
 import sys
@@ -12,6 +13,7 @@ from flask import request
 from flask_wtf.csrf import CsrfProtect
 from babel.dates import format_datetime
 
+import nameTools as nt
 
 
 print("App import!")
@@ -41,6 +43,40 @@ if not app.debug:
 
 from MangaCMS.app import all_scrapers_ever
 from MangaCMS.app import views
+
+
+colours = {
+	# Download Status
+	"failed"          : "000000",
+	"no match"        : "FF9999",
+	"moved"           : "FFFF99",
+	"Done"            : "99FF99",
+	"Uploaded"        : "90e0FF",
+	"working"         : "9999FF",
+	"queued"          : "FF77FF",
+	"new dir"         : "FFE4B2",
+	"error"           : "FF0000",
+
+	# Categories
+
+	"valid cat"  : "FFFFFF",
+	"picked"    : "999999",
+
+	# Download Status
+	"hasUnread"       : "FF9999",
+	"upToDate"        : "99FF99",
+	"notInMT"         : "9999FF",
+
+
+	"created-dir"     : "FFE4B2",
+	"not checked"     : "FFFFFF",
+
+	# Categories
+
+	"valid category"  : "FFFFFF",
+	"bad category"    : "999999"
+	}
+
 
 @app.context_processor
 def utility_processor():
@@ -158,7 +194,145 @@ def utility_processor():
 		return fStr
 
 
+	def timeAgo(inTimeStamp):
+
+		if inTimeStamp == None:
+			return "NaN"
+
+		deltatime = datetime.datetime.now() - inTimeStamp
+		delta = int(deltatime.total_seconds())
+		if delta < 0:
+			return "Past?"
+		elif delta < 60:
+			return "{delta} s".format(delta=delta)
+		delta = delta // 60
+		if delta < 60:
+			return "{delta} m".format(delta=delta)
+		delta = delta // 60
+		if delta < 24:
+			return "{delta} h".format(delta=delta)
+		delta = delta // 24
+		if delta < 999:
+			return "{delta} d".format(delta=delta)
+		delta = delta // 365
+		return "{delta} y".format(delta=delta)
+
+
+	def timeAhead(inTimeStamp):
+
+		deltatime = inTimeStamp - datetime.datetime.now()
+		delta = deltatime.total_seconds()
+		if delta < 0:
+			return "Future?"
+		elif delta < 60:
+			return "{delta} s".format(delta=delta)
+		delta = delta // 60
+		if delta < 60:
+			return "{delta} m".format(delta=delta)
+		delta = delta // 60
+		if delta < 24:
+			return "{delta} h".format(delta=delta)
+		delta = delta // 24
+		if delta < 999:
+			return "{delta} d".format(delta=delta)
+		delta = delta // 365
+		return "{delta} y".format(delta=delta)
+
+
+	def generate_row_meta(row):
+		ret = {}
+
+		filePath = ""
+		if row.file:
+			filePath = os.path.join(row.file.dirpath, row.file.filename)
+
+		if row.series_name is None:
+			sourceSeriesName = "NONE"
+			seriesName = "NOT YET DETERMINED"
+		else:
+			sourceSeriesName = row.series_name
+			seriesName = nt.getCanonicalMangaUpdatesName(row.series_name)
+
+		cleanedName = nt.prepFilenameForMatching(sourceSeriesName)
+		ret['itemInfo'] = nt.dirNameProxy[cleanedName]
+		if ret['itemInfo']["rating"]:
+			ret['rating'] = ret['itemInfo']["rating"]
+		else:
+			ret['rating'] = ""
+		ret['ratingNum'] = nt.ratingStrToFloat(ret['rating'])
+
+
+		if row.state == 'complete':
+			ret['statusColour'] = colours["Done"]
+		elif row.state == 'upload':
+			ret['statusColour'] = colours["Uploaded"]
+		elif row.state == 'fetching' or row.state == 'processing':
+			ret['statusColour'] = colours["working"]
+		elif row.state == 'new':
+			ret['statusColour'] = colours["queued"]
+		else:
+			ret['statusColour'] = colours["error"]
+
+
+		if filePath:
+			if "=0=" in row.file.dirpath:
+				if os.path.exists(filePath):
+					ret['locationColour'] = colours["no match"]
+				else:
+					ret['locationColour'] = colours["moved"]
+			elif settings.pickedDir in row.file.dirpath:
+				ret['locationColour'] = colours["picked"]
+			elif row.dirstate == 'created_dir':
+				ret['locationColour'] = colours["new dir"]
+			else:
+				ret['locationColour'] = colours["valid cat"]
+		else:
+			if row.state == 'new':
+				ret['locationColour'] = colours["queued"]
+			elif row.state == 'upload':
+				ret['locationColour'] = colours["valid cat"]
+			elif row.state == 'fetching' or row.state == 'processing':
+				ret['locationColour'] = colours["working"]
+			else:
+				ret['locationColour'] = colours["failed"]
+			filePath = "N.A."
+
+
+		toolTip  = filePath.replace('"', "") + "<br>"
+		toolTip += "Original series name: " + sourceSeriesName.replace('"', "") + "<br>"
+		toolTip += "Proper MangaUpdates name: " + seriesName.replace('"', "") + "<br>"
+		toolTip += "cleanedName: " + ret['itemInfo']["dirKey"] + "<br>"
+		toolTip += "itemInfo: " + str(ret['itemInfo']).replace('"', "") + "<br>"
+		toolTip += "rowId: " + str(row.id) + "<br>"
+		toolTip += "sourceUrl: " + row.source_id + "<br>"
+		toolTip += "dlState: " + str(row.state) + "<br>"
+		toolTip += "Flags: " + str([row.deleted, row.was_duplicate, row.phash_duplicate, row.uploaded, row.dirstate]) + "<br>"
+		toolTip += "item tags: " + str([tag for tag in row.tags]) + "<br>"
+		if row.file:
+			toolTip += "file manga tags: " + str([tag for tag in row.file.manga_tags]) + "<br>"
+			toolTip += "file hentai tags: " + str([tag for tag in row.file.hentai_tags]) + "<br>"
+		toolTip += "Source: " + str(row.source_site) + "<br>"
+
+		ret['cellId'] = None
+		if os.path.exists(filePath):
+			toolTip += "File found."
+		else:
+			toolTip += "File is missing!"
+			ret['cellId'] = uuid.uuid1(0).hex
+
+		ret['toolTip'] = toolTip
+
+		ret['shouldBold'] = False
+		if row.origin_name:
+			chap = nt.extractChapterVol(row.origin_name)[0]
+			if isinstance(chap, float):
+				if chap < 10:
+					ret['shouldBold'] = True
+		ret['terseDate'] = row.downloaded_at.strftime('%y-%m-%d %H:%M')
+		return ret
+
 	return dict(
+			generate_row_meta  = generate_row_meta,
 			compact_date_str   = compact_date_str,
 			ip_in_whitelist    = ip_in_whitelist,
 			f_size_to_str      = f_size_to_str,
@@ -170,5 +344,9 @@ def utility_processor():
 			manga_scrapers     = all_scrapers_ever.manga_scrapers,
 			hentai_scrapers    = all_scrapers_ever.hentai_scrapers,
 			other_scrapers     = all_scrapers_ever.other_scrapers,
+
+			timeAgo            = timeAgo,
+			timeAhead          = timeAhead,
+
 			)
 

@@ -20,6 +20,22 @@
 	</div>
 {%- endmacro -%}
 
+{%- macro createReaderLink(itemName, itemInfo) -%}
+	{%- if itemInfo == None or itemInfo["item"] == None -%}
+		{%- if itemName -%}
+			{{itemName}}
+		{%- else -%}
+			No series name?
+		{%- endif -%}
+	{%- else -%}
+		<a href='/reader/by-series/{{itemInfo['dirKey'] | urlencode}}'>{{itemName}}</a>
+	{%- endif -%}
+</%def>
+
+
+{%- endmacro -%}
+
+
 {%- macro mouseOverJs(key='showTT') -%}
 
 		// Yeah, apparently you can have raw js in
@@ -27,14 +43,16 @@
 
 		$(document).ready(function() {
 		// Tooltip only Text
-		$('.{{key}}').hover(function(){
+		$('.{{key}}').hover(function(e){
 			// Hover over code
 			var mouseovertext = $(this).attr('mouseovertext');
+			var mousex = e.pageX + 20; //Get X coordinates
+			var mousey = e.pageY + 10; //Get Y coordinates
 			$(this).data('tipText', mouseovertext).removeAttr('mouseovertext');
 			$('<p class="tooltip"></p>')
 			.html(mouseovertext)
-			.appendTo('body')
-			.fadeIn('slow');
+			.css({ top: mousey, left: mousex, position:'absolute', display:'block', opacity: 1  })
+			.appendTo('body');
 		}, function() {
 			// Hover out code
 			$(this).attr('mouseovertext', $(this).data('tipText'));
@@ -43,7 +61,7 @@
 			var mousex = e.pageX + 20; //Get X coordinates
 			var mousey = e.pageY + 10; //Get Y coordinates
 			$('.tooltip')
-			.css({ top: mousey, left: mousex })
+			.css({ top: mousey, left: mousex, position:'absolute'  })
 		});
 		});
 

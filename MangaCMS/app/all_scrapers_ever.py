@@ -10,6 +10,7 @@ all_scrapers = [
 		{'dbKey' : "JzLoader",         'name' : "Japanzai",    'dictKey' : "jz",      'cssClass' : "jzId",    'showOnHome' : True,  'renderSideBar' : True,  'genRow' : True,  'type' : 'Manga'         },
 		{'dbKey' : "McLoader",         'name' : "MangaCow",    'dictKey' : "mc",      'cssClass' : "mcId",    'showOnHome' : True,  'renderSideBar' : True,  'genRow' : True,  'type' : 'Manga'         },
 		{'dbKey' : "CxLoader",         'name' : "CXC Scans",   'dictKey' : "cx",      'cssClass' : "cxId",    'showOnHome' : True,  'renderSideBar' : True,  'genRow' : True,  'type' : 'Manga'         },
+		{'dbKey' : "MangaHere",        'name' : "Manga Here",  'dictKey' : "mh",      'cssClass' : "mhId",    'showOnHome' : True,  'renderSideBar' : True,  'genRow' : True,  'type' : 'Manga'         },
 		{'dbKey' : "MjLoader",         'name' : "MangaJoy",    'dictKey' : "mj",      'cssClass' : "mjId",    'showOnHome' : True,  'renderSideBar' : True,  'genRow' : True,  'type' : 'Manga'         },
 		{'dbKey' : "RhLoader",         'name' : "RedHawk",     'dictKey' : "rh",      'cssClass' : "rhId",    'showOnHome' : True,  'renderSideBar' : True,  'genRow' : True,  'type' : 'Manga'         },
 		{'dbKey' : "LmLoader",         'name' : "LoneManga",   'dictKey' : "lm",      'cssClass' : "lmId",    'showOnHome' : True,  'renderSideBar' : True,  'genRow' : True,  'type' : 'Manga'         },
@@ -90,6 +91,22 @@ for index, item in enumerate(all_scrapers):
 		hentai_scrapers.append(item)
 	else:
 		other_scrapers.append(item)
+
+
+s_base, v_base = 0.35, 0.95
+
+
+for keyset in [manga_scrapers, hentai_scrapers, other_scrapers]:
+	hues = linspace(0.0, 1.0, n=len(keyset)+1)
+	for item_dict in keyset:
+		h = hues.pop()
+		baseC  = (h,s_base,v_base)
+		light1 = (h,s_base-0.05,v_base+0.2)
+		light2 = (h,s_base-0.15,v_base+0.2)
+
+		item_dict["baseColour"] = hsvToHex(baseC)
+		item_dict["evenRow"] = hsvToHex(light1)
+		item_dict["oddRow"] = hsvToHex(light2)
 
 manga_scrapers.sort(key=lambda x: x['name'])
 hentai_scrapers.sort(key=lambda x: x['name'])

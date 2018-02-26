@@ -314,6 +314,8 @@ def upgrade():
 			fqname = os.path.join(fpath, fname)
 			if not os.path.exists(fqname):
 				return None
+			if os.path.isdir(fqname):
+				return None
 
 			have = sess.query(ReleaseFile)             \
 				.filter(ReleaseFile.dirpath == fpath)  \
@@ -429,6 +431,9 @@ def upgrade():
 			for item in tqdm.tqdm(items, desc="Process: %s" % mode, position=1 if mode == "hentai" else 0):
 				sourcesite, dlstate, sourceurl, retreivaltime, lastupdate, sourceid, seriesname, filename, originname, downloadpath, flags, tags, note = item
 
+				tags = tags if tags else ""
+				flags = flags if flags else ""
+
 				have = sess.query(HentaiReleases)             \
 					.filter(HentaiReleases.source_id == sourceurl) \
 					.options(joinedload("file"), joinedload("file.hentai_tags_rel"), joinedload("tags_rel"), )  \
@@ -521,6 +526,9 @@ def upgrade():
 			new = 0
 			for item in tqdm.tqdm(items, desc="Processing %s" % mode, position=1 if mode == "hentai" else 0):
 				sourcesite, dlstate, sourceurl, retreivaltime, lastupdate, sourceid, seriesname, filename, originname, downloadpath, flags, tags, note = item
+
+				tags = tags if tags else ""
+				flags = flags if flags else ""
 
 				have = sess.query(MangaReleases)             \
 					.filter(MangaReleases.source_id == sourceurl) \
