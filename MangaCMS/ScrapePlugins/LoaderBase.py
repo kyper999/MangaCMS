@@ -39,35 +39,69 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 	def setup(self):
 		pass
 
+	def __check_keys(self, check_dict):
+		keys = set(check_dict.keys())
+		allowed = set(
+				'state',
+				'err_str',
+				'source_site',
+				'source_id',
+				'posted_at',
+				'downloaded_at',
+				'last_checked',
+				'deleted',
+				'was_duplicate',
+				'phash_duplicate',
+				'uploaded',
+				'dirstate',
+				'origin_name',
+				'series_name',
+				'additional_metadata',
+			)
+		bad = keys - allowed
+		assert not bad, "Bad key(s) in ret: '%s'!" % bad
+
+		require = set(
+				'source_site',
+			)
+		required_missing = require - keys
+		assert not required_missing, "Key(s) missing from ret: '%s'!" % required_missing
+
+
 	def _processLinksIntoDB(self, linksDicts):
 
-		self.log.info( "Inserting...",)
+		self.log.info( "Inserting...")
 
 
 		newItems = 0
-		for link in linksDicts:
-			if link is None:
-				print("linksDicts", linksDicts)
-				print("WAT")
-				continue
+		with self.db.session_context() as sess:
+			for link in linksDicts:
+				if link is None:
+					print("linksDicts", linksDicts)
+					print("WAT")
+					continue
 
-			row = self.getRowsByValue(sourceUrl=link["sourceUrl"], limitByKey=False)
+				self.__check_keys(link)
 
-			if not row:
-				newItems += 1
+				if 'series_name' in link and self.shouldCanonize:
+					link["series_name"] = nt.getCanonicalMangaUpdatesName(link["series_name"])
 
-				if not "dlState" in link:
-					link['dlState'] = 0
+				have = sess.query(self.target_table)                            \
+					.filter(self.target_table.source_site == self.tableKey)     \
+					.filter(self.target_table.source_id == link["source_site"]) \
+					.scalar()
 
-				# Patch series name.
-				if 'seriesName' in link and self.shouldCanonize:
-					link["seriesName"] = nt.getCanonicalMangaUpdatesName(link["seriesName"])
+				if not have:
+					newItems += 1
+					new_row = self.target_table(
+							state       = 'new',            # Should be set automatically.
+							source_site = self.tableKey,
+							**link
+						)
 
+					sess.add(new_row)
 
-				self.insertIntoDb(**link)
-
-
-				self.log.info("New item: %s", link)
+					self.log.info("New item: %s", link)
 
 
 		if self.mon_con:

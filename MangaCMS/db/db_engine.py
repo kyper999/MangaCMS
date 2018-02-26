@@ -1,8 +1,8 @@
 
 import sys
-import multiprocessing
-import threading
+import logging
 import contextlib
+import traceback
 
 from settings import MAX_DB_SESSIONS
 
@@ -36,5 +36,29 @@ engine = create_engine(SQLALCHEMY_DATABASE_URI, pool_size = MAX_DB_SESSIONS, iso
 SessionFactory = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 session = scoped_session(SessionFactory)
 
+context_logger = logging.getLogger("Main.SessionContext")
 
+@contextlib.contextmanager
+def session_context(commit=True):
+	sess = session()
+
+	try:
+		yield sess
+
+	except Exception as e:
+		context_logger.error("Error in transaction!")
+		for line in traceback.format_exc().split("\n"):
+			context_logger.error(line)
+		if commit:
+			context_logger.warning("Rolling back.")
+			sess.rollback()
+		else:
+			context_logger.warning("NOT Rolling back.")
+		session.remove()
+		raise e
+
+	finally:
+		if commit:
+			sess.commit()
+		session.remove()
 

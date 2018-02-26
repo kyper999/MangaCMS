@@ -25,7 +25,7 @@ class LoggerMixin(metaclass=abc.ABCMeta):
 
 		# If we're not called in the context of a thread, just return the base log-path
 		else:
-			self.loggers[threadName] = logging.getLogger("%s" % (self.loggerPath,))
+			self.loggers[threadName] = logging.getLogger("Main.%s" % (self.loggerPath,))
 		return self.loggers[threadName]
 
 

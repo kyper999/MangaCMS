@@ -16,6 +16,7 @@ import MangaCMS.db as db
 
 def parse_table_args(**kwargs):
 	print(request.args)
+	print("Override kwargs:", kwargs)
 	ret = {
 		'distinct'        : False,
 		'include-deleted' : False,
@@ -24,8 +25,10 @@ def parse_table_args(**kwargs):
 	}
 
 	# Override the return parameters with the function
-	# params (if passed)
+	# params (if passed).
+	# Note: underscores are replaced with hyphens in the keys!
 	for key, val in kwargs.items():
+		key = key.replace("_", "-")
 		if key in ret:
 			ret[key] = val
 
@@ -42,8 +45,8 @@ def parse_table_args(**kwargs):
 		raise ValueError("Implement me!")
 	return ret
 
-def select_from_table(table, page):
-	params = parse_table_args()
+def select_from_table(table, page, site=False):
+	params = parse_table_args(limit_by_source=site)
 
 	query = g.session.query(table) \
 				.options(joinedload("file"), joinedload("file.hentai_tags_rel"), joinedload("tags_rel"), )
@@ -61,10 +64,22 @@ def select_from_table(table, page):
 
 	return params, paginate(query, page=page)
 
+
 @app.route('/manga/', methods=['GET'])
 @app.route('/manga/page/<int:page>', methods=['GET'])
 def manga_only_view(page=1):
 	params, items = select_from_table(db.MangaReleases, page=page)
+	return render_template('manga_view.html',
+						   whole_page    = True,
+						   items         = items,
+						   params        = params,
+						   url_for_param = "manga_only_view"
+						   )
+
+@app.route('/manga/by-site/<source_site>/', methods=['GET'])
+@app.route('/manga/by-site/<source_site>/<int:page>', methods=['GET'])
+def manga_by_site_view(source_site, page=1):
+	params, items = select_from_table(db.MangaReleases, page=page, site=source_site)
 	return render_template('manga_view.html',
 						   whole_page    = True,
 						   items         = items,
@@ -94,9 +109,41 @@ def hentai_only_view(page=1):
 						   url_for_param = "hentai_only_view"
 						   )
 
+
+@app.route('/hentai/by-site/<source_site>/', methods=['GET'])
+@app.route('/hentai/by-site/<source_site>/<int:page>', methods=['GET'])
+def hentai_by_site_view(source_site, page=1):
+	params, items = select_from_table(db.HentaiReleases, page=page, site=source_site)
+	return render_template('hentai_view.html',
+						   whole_page    = True,
+						   items         = items,
+						   params        = params,
+						   url_for_param = "hentai_only_view"
+						   )
+
 @app.route('/hentai/table/', methods=['GET'])
 @app.route('/hentai/table/<int:page>', methods=['GET'])
 def hentai_table_view(page=1):
+	params, items = select_from_table(db.HentaiReleases, page=page)
+	return render_template('hentai_view.html',
+						   table_only    = True,
+						   items         = items,
+						   params        = params,
+						   )
+
+@app.route('/hentai/by-tag/<tag>/', methods=['GET'])
+@app.route('/hentai/by-tag/<tag>/<int:page>', methods=['GET'])
+def hentai_tag_view(tag, page=1):
+	params, items = select_from_table(db.HentaiReleases, page=page)
+	return render_template('hentai_view.html',
+						   table_only    = True,
+						   items         = items,
+						   params        = params,
+						   )
+
+@app.route('/hentai/by-category/<category>/', methods=['GET'])
+@app.route('/hentai/by-category/<category>/<int:page>', methods=['GET'])
+def hentai_category_view(category, page=1):
 	params, items = select_from_table(db.HentaiReleases, page=page)
 	return render_template('hentai_view.html',
 						   table_only    = True,

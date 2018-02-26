@@ -3,17 +3,18 @@ import time
 import abc
 import zipfile
 import traceback
-import magic
-import mimetypes
 import os.path
+import mimetypes
 from concurrent.futures import ThreadPoolExecutor
+import magic
 
-import runStatus
-import settings
 import WebRequest
-import MangaCMS.ScrapePlugins.MangaScraperDbBase
+
+import settings
+import runStatus
 import nameTools as nt
 
+import MangaCMS.ScrapePlugins.MangaScraperDbBase
 import MangaCMS.ScrapePlugins.ScrapeExceptions as ScrapeExceptions
 
 class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
@@ -27,8 +28,8 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 	retreivalThreads = 1
 
 	def __init__(self, *args, **kwargs):
-		self.die = False
 		self.wg = WebRequest.WebGetRobust(logPath=self.loggerPath+".Web")
+		self.die = False
 
 		super().__init__(*args, **kwargs)
 
@@ -39,7 +40,7 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 		pass
 
 	# Provision for a delay. If checkDelay returns false, item is not enqueued
-	def checkDelay(self, inTime):
+	def checkDelay(self, _):
 		return True
 
 	# And for logging in (if needed)
@@ -52,22 +53,28 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 
 		self.log.info( "Fetching items from db...",)
 
-		rows = self.getRowsByValue(dlState=0)
+		with self.db.context_sess() as sess:
+
+			res = sess.query(self.target_table)                          \
+				.filter(self.target_table.source_site == self.tableKey)  \
+				.filter(self.target_table.state == 'new')                \
+				.order_by(self.target_table.id.desc())                   \
+				.all()
+
+			# Kick the relevant rows out of the session context
+			_ = [sess.expunge(tmp) for tmp in res]
 
 		self.log.info( "Done")
 
 		items = []
-		for item in rows:
-
-			if self.checkDelay(item["retreivalTime"]):
-				item["retreivalTime"] = time.gmtime(item["retreivalTime"])
+		for item in res:
+			if self.checkDelay(item.posted_at):
 				items.append(item)
 
 		self.log.info( "Have %s new items to retreive in %sDownloader", len(items), self.tableKey.title())
 
 
-
-		items = sorted(items, key=lambda k: k["retreivalTime"], reverse=True)
+		items = sorted(items, key=lambda k: k.posted_at, reverse=True)
 		if self.itemLimit:
 			items = items[:self.itemLimit]
 
@@ -183,7 +190,6 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 					# Probably means the directory was concurrently created by another thread in the background?
 					self.log.critical("Directory doesn't exist, and yet it does?")
 					self.log.critical(traceback.format_exc())
-					pass
 				except OSError:
 					self.log.critical("Directory creation failed?")
 					self.log.critical(traceback.format_exc())
@@ -211,7 +217,7 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 
 		assert len(image_list) >= 1
 		chop = len(fileN)-4
-		
+
 		while 1:
 			try:
 				arch = zipfile.ZipFile(fqfilename, "w")
@@ -220,10 +226,10 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 				for imageName, imageContent in image_list:
 					assert isinstance(imageName, str)
 					assert isinstance(imageContent, bytes)
-					
+
 					mtype = magic.from_buffer(imageContent, mime=True)
 					assert "image" in mtype.lower()
-						
+
 					_, ext = os.path.splitext(imageName)
 					if not ext:
 						self.log.warning("Missing extension in archive file: %s", imageName)

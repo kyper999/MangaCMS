@@ -310,7 +310,6 @@ def utility_processor():
 		toolTip += "item tags: " + str([tag for tag in row.tags]) + "<br>"
 		if row.file:
 			toolTip += "file manga tags: " + str([tag for tag in row.file.manga_tags]) + "<br>"
-			toolTip += "file hentai tags: " + str([tag for tag in row.file.hentai_tags]) + "<br>"
 		toolTip += "Source: " + str(row.source_site) + "<br>"
 
 		ret['cellId'] = None
@@ -331,22 +330,100 @@ def utility_processor():
 		ret['terseDate'] = row.downloaded_at.strftime('%y-%m-%d %H:%M')
 		return ret
 
-	return dict(
-			generate_row_meta  = generate_row_meta,
-			compact_date_str   = compact_date_str,
-			ip_in_whitelist    = ip_in_whitelist,
-			f_size_to_str      = f_size_to_str,
-			format_date        = format_date,
-			date_now           = date_now,
-			ago                = ago,
-			fixed_width_ago    = fixed_width_ago,
-			terse_ago          = terse_ago,
-			manga_scrapers     = all_scrapers_ever.manga_scrapers,
-			hentai_scrapers    = all_scrapers_ever.hentai_scrapers,
-			other_scrapers     = all_scrapers_ever.other_scrapers,
 
-			timeAgo            = timeAgo,
-			timeAhead          = timeAhead,
+	def generate_hentai_meta(row):
+		ret = {}
+
+		filePath = ""
+		if row.file:
+			filePath = os.path.join(row.file.dirpath, row.file.filename)
+
+
+		category_name = row.series_name if row.series_name else ""
+
+
+		if row.state == 'complete':
+			ret['statusColour'] = colours["Done"]
+		elif row.state == 'fetching' or row.state == 'processing':
+			ret['statusColour'] = colours["working"]
+		elif row.state == 'new':
+			ret['statusColour'] = colours["queued"]
+		else:
+			ret['statusColour'] = colours["error"]
+
+
+		if filePath:
+			if os.path.exists(filePath):
+				ret['locationColour'] = colours["no match"]
+			else:
+				ret['locationColour'] = colours["moved"]
+		else:
+			if row.state == 'new':
+				ret['locationColour'] = colours["queued"]
+			elif row.state == 'upload':
+				ret['locationColour'] = colours["valid cat"]
+			elif row.state == 'fetching' or row.state == 'processing':
+				ret['locationColour'] = colours["working"]
+			else:
+				ret['locationColour'] = colours["failed"]
+			filePath = "N.A."
+
+		ret['item-tags'] = [tmp for tmp in row.tags]
+		if row.file:
+			ret['file-tags'] = [tmp for tmp in row.file.hentai_tags if tmp not in ret['item-tags']]
+		else:
+			ret['file-tags'] = []
+
+		toolTip  = filePath.replace('"', "") + "<br>"
+		toolTip += "Origin Name: " + row.origin_name.replace('"', "") + "<br>"
+		toolTip += "Category Name: " + category_name.replace('"', "") + "<br>"
+		toolTip += "rowId: " + str(row.id) + "<br>"
+		toolTip += "sourceUrl: " + row.source_id + "<br>"
+		toolTip += "dlState: " + str(row.state) + "<br>"
+		toolTip += "Flags: " + str([row.deleted, row.was_duplicate, row.phash_duplicate, row.uploaded, row.dirstate]) + "<br>"
+		toolTip += "item tags: " + str(ret['item-tags']) + "<br>"
+		if row.file:
+			toolTip += "file hentai tags: " + str(ret['file-tags']) + "<br>"
+		toolTip += "Source: " + str(row.source_site) + "<br>"
+
+		ret['cellId'] = None
+		if os.path.exists(filePath):
+			toolTip += "File found."
+			ret['fsize'] = os.path.getsize(filePath)
+
+		else:
+			toolTip += "File is missing!"
+			ret['cellId'] = uuid.uuid1(0).hex
+			ret['fsize'] = -1
+
+		ret['toolTip'] = toolTip
+
+		ret['shouldBold'] = False
+		if row.origin_name:
+			chap = nt.extractChapterVol(row.origin_name)[0]
+			if isinstance(chap, float):
+				if chap < 10:
+					ret['shouldBold'] = True
+		ret['terseDate'] = row.downloaded_at.strftime('%y-%m-%d %H:%M')
+		return ret
+
+	return dict(
+			generate_row_meta     = generate_row_meta,
+			generate_hentai_meta  = generate_hentai_meta,
+			compact_date_str      = compact_date_str,
+			ip_in_whitelist       = ip_in_whitelist,
+			f_size_to_str         = f_size_to_str,
+			format_date           = format_date,
+			date_now              = date_now,
+			ago                   = ago,
+			fixed_width_ago       = fixed_width_ago,
+			terse_ago             = terse_ago,
+			manga_scrapers        = all_scrapers_ever.manga_scrapers,
+			hentai_scrapers       = all_scrapers_ever.hentai_scrapers,
+			other_scrapers        = all_scrapers_ever.other_scrapers,
+
+			timeAgo               = timeAgo,
+			timeAhead             = timeAhead,
 
 			)
 

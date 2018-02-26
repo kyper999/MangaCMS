@@ -8,12 +8,12 @@ def testSetup(load=True):
 	runStatus.preloadDicts = load
 	runStatus.run = True
 
-	import MangaCMSOld.lib.logSetup
+	import MangaCMS.lib.logSetup
 	import signal
 	import nameTools as nt
 
 
-	MangaCMSOld.lib.logSetup.initLogging(logToDb=True)
+	MangaCMS.lib.logSetup.initLogging(logToDb=False)
 
 	def signal_handler(dummy_signal, dummy_frame):
 		if runStatus.run:
