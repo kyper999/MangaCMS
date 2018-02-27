@@ -442,6 +442,27 @@ def upgrade():
 				if have:
 					migrate_hentai_tags(have, flags, tags)
 					# print("Skipping!")
+					if have.fileid:
+						continue
+					if not downloadpath:
+						continue
+					if downloadpath == "ERROR":
+						continue
+
+					file = get_add_file(sess, filename, downloadpath)
+					sess.flush()
+					if file:
+						print("Need to update file!", (downloadpath, filename))
+					elif not os.path.exists(os.path.join(downloadpath, filename)):
+						print("File missing: ", (downloadpath, filename))
+					else:
+						print("File failed: ", (downloadpath, filename))
+
+					have.fileid = file.id if file else None
+
+					sess.flush()
+					sess.commit()
+					bind.execute("""COMMIT""")
 					continue
 
 				file = get_add_file(sess, filename, downloadpath)

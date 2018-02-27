@@ -12,6 +12,7 @@ import threading
 import settings
 import os
 import traceback
+import contextlib
 
 
 from sqlalchemy import or_
@@ -24,15 +25,15 @@ class MangaScraperDbBase(MangaCMS.lib.LogBase.LoggerMixin):
 
 
 	@abc.abstractmethod
-	def pluginName(self):
+	def plugin_name(self):
 		return None
 
 	@abc.abstractmethod
-	def loggerPath(self):
+	def logger_path(self):
 		return None
 
 	@abc.abstractmethod
-	def tableKey(self):
+	def plugin_key(self):
 		return None
 
 	@abc.abstractmethod
@@ -56,12 +57,32 @@ class MangaScraperDbBase(MangaCMS.lib.LogBase.LoggerMixin):
 	# Misc Utilities
 	# ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
+	@contextlib.contextmanager
+	def row_context(self, dbid=None, url=None, limit_by_plugin=True, commit=True):
+
+		assert url or dbid
+
+		with self.db.session_context(commit=commit) as sess:
+			row_q = sess.query(self.target_table)
+
+			if limit_by_plugin:
+				row_q = row_q.filter(self.target_table.source_site == self.plugin_key)
+
+			if url:
+				row_q = row_q.filter(self.target_table.source_id == url)
+			elif dbid:
+				row_q = row_q.filter(self.target_table.id == dbid)
+			else:
+				raise RuntimeError("How did this get executed?")
+
+			yield row_q.scalar()
+
 	def _resetStuckItems(self):
 		self.log.info("Resetting stuck downloads in DB")
 
 		with self.db.session_context() as sess:
 			res = sess.query(self.target_table)                         \
-				.filter(self.target_table.source_site == self.tableKey) \
+				.filter(self.target_table.source_site == self.plugin_key) \
 				.filter(or_(
 					self.target_table.state == 'fetching',
 					self.target_table.state == 'processing',
@@ -82,9 +103,9 @@ if __name__ == "__main__":
 	class TestClass(MangaScraperDbBase):
 
 
-		pluginName = "Wat?"
-		loggerPath = "Wat?"
-		tableKey = "mk"
+		plugin_name = "Wat?"
+		logger_path = "Wat?"
+		plugin_key = "mk"
 		is_manga = True
 		def go(self):
 			print("Go?")
