@@ -61,9 +61,6 @@ class ArchCleaner(object):
 
 	loggerPath = "Main.ZipClean"
 	def __init__(self):
-
-		self.proc = [MangaCMS.cleaner.processDownload.MangaProcessor(), MangaCMS.cleaner.processDownload.HentaiProcessor()]
-
 		self.log = logging.getLogger(self.loggerPath)
 
 		badIms = os.listdir(settings.badImageDir)
@@ -170,8 +167,6 @@ class ArchCleaner(object):
 
 				if origPath != archPath:
 					os.remove(origPath)
-					for proc in self.proc:
-						proc.updatePath(origPath, archPath)
 
 			else:
 				self.log.info("No offending contents. No changes made to file.")

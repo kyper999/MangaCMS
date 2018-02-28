@@ -35,7 +35,7 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 	tableName = "MangaItems"
 
 
-	retreivalThreads = 5
+	retreivalThreads = 1
 
 
 	def getImage(self, imageUrl, referrer):

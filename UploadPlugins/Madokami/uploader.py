@@ -271,16 +271,16 @@ class MkUploader(MangaCMSOld.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 
 	def checkInitDoujinDirs(self):
 		doujinDir = "_Doujinshi"
-		fullPath = os.path.join(settings.mkSettings["uploadContainerDir"], settings.mkSettings["uploadDir"], doujinDir)
+		fullPath = os.path.join(settings.mkSettings["mainContainerDir"], doujinDir)
 		try:
-			dirs = list(self.sftp.listdir(fullPath))
-		except ftplib.error_perm:
+			dirs = list(self.sftp.listdir(settings.mkSettings["mainContainerDir"]))
+		except (ftplib.error_perm, FileNotFoundError):
 			self.log.critical("Container dir for uploads ('%s') does not exist!", settings.mkSettings["uploadContainerDir"])
 			raise
 
 
-		if os.path.join(settings.mkSettings["uploadDir"], doujinDir) not in [item[0] for item in dirs]:
-			self.log.info("Need to create base container path")
+		if doujinDir not in [item for item in dirs]:
+			self.log.info("Need to create base container path: %s", [item for item in dirs])
 			self.sftp.mkdir(fullPath)
 		else:
 			self.log.info("Base container directory exists.")
@@ -573,7 +573,8 @@ def uploadFile(seriesName, filePath):
 
 def test():
 	uploader = MkUploader()
-	# uploader.checkInitDirs()
+	uploader.checkInitDoujinDirs()
+	uploader.checkInitDirs()
 	# print(uploader.getUploadDirectory('Jitsu wa Watashi wa'))
 	# print(uploader.getUploadDirectory('Ouroboros'))
 	print(uploader.getUploadDirectory('Infection'))
@@ -581,7 +582,7 @@ def test():
 	# uploader.loadRemoteDirectory("/")
 	# uploader.loadRemoteDirectory("/Manga")
 	# uploader.getExistingDir('87 Clockers')
-	uploader.uploadFileInternal('87 Clockers', '/media/Storage/Manga/87 Clockers/87 Clockers - v4 c23 [batoto].zip')
+	# uploader.uploadFileInternal('87 Clockers', '/media/Storage/Manga/87 Clockers/87 Clockers - v4 c23 [batoto].zip')
 
 
 if __name__ == "__main__":
