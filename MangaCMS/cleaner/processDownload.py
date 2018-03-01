@@ -1,14 +1,15 @@
 
 
 # Ideally, all downloaded archives should run through this function.
-import UploadPlugins.Madokami.uploader as up
-import MangaCMS.cleaner.archCleaner as ac
-import deduplicator.archChecker
 import traceback
 import os.path
-import MangaCMS.ScrapePlugins.MangaScraperDbBase
+import hashlib
 import settings
 import runStatus
+import deduplicator.archChecker
+import MangaCMS.ScrapePlugins.MangaScraperDbBase
+import MangaCMS.cleaner.archCleaner as ac
+import UploadPlugins.Madokami.uploader as up
 
 PHASH_DISTANCE = 4
 
@@ -28,21 +29,72 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 	tableKey = 'n/a'
 	pluginType = 'Utility'
 
-	def _updatePath(self, oldPath, newPath):
+	def _create_or_update_file_entry_path(self, oldPath, newPath, setDeleted=False, setDuplicate=False, setPhash=False, reuse_sess=None):
 		oldItemRoot, oldItemFile = os.path.split(oldPath)
 		newItemRoot, newItemFile = os.path.split(newPath)
 
-		with self.db.session_context() as sess:
-			TODO: FixMe!
+		with self.db.session_context(reuse_sess=reuse_sess) as sess:
+			old_row = sess.query(self.db.ReleaseFile)                \
+				.filter(self.db.ReleaseFile.dirpath == oldItemRoot)  \
+				.filter(self.db.ReleaseFile.filename == oldItemFile) \
+				.scalar()
 
-			srcRow = self.getRowsByValue(limitByKey=False, downloadpath=oldItemRoot, filename=oldItemFile)
-			if srcRow and len(srcRow) == 1:
-				self.log.info("OldPath:	'%s', '%s'", oldItemRoot, oldItemFile)
-				self.log.info("NewPath:	'%s', '%s'", newItemRoot, newItemFile)
+			new_row = sess.query(self.db.ReleaseFile)                \
+				.filter(self.db.ReleaseFile.dirpath == newItemRoot)  \
+				.filter(self.db.ReleaseFile.filename == newItemFile) \
+				.scalar()
 
-				srcId = srcRow[0]['dbId']
-				self.log.info("Fixing DB Path!")
-				self.updateDbEntryById(srcId, filename=newItemRoot, downloadpath=newItemFile)
+			if not new_row:
+				hash_md5 = hashlib.md5()
+				with open(newPath, "rb") as f:
+					hash_md5.update(f.read())
+				fhash = hash_md5.hexdigest()
+				# print("done.")
+				new_row = self.db.ReleaseFile(
+						dirpath  = newItemRoot,
+						filename = newItemFile,
+						fhash    = fhash
+					)
+
+				sess.add(new_row)
+				sess.flush()
+
+			if not old_row:
+				self.log.warning("Trying to update file path where the file doesn't exist!")
+				self.log.warning("Dir path: '%s', fname: '%s'", oldItemRoot, oldItemFile)
+				return
+
+			# Re-point any items that point to the old file to the new file
+			for release in old_row.manga_releases + old_row.hentai_releases:
+				release.fileid = new_row.id
+
+				# And set any flag(s) on the entries that pointed to the old files.
+				if setDeleted:
+					release.deleted = setDeleted
+				if setDuplicate:
+					release.was_duplicate = setDuplicate
+				if setPhash:
+					release.phash_duplicate = setPhash
+
+			# Copy over the tags.
+			for m_tag in old_row.manga_tags:
+				new_row.manga_tags.add(m_tag)
+
+			for h_tag in old_row.hentai_tags:
+				new_row.hentai_tags.add(h_tag)
+
+			# And then delete the old row.
+			sess.delete(old_row)
+
+
+			# srcRow = self.getRowsByValue(limitByKey=False, downloadpath=oldItemRoot, filename=oldItemFile)
+			# if srcRow and len(srcRow) == 1:
+			# 	self.log.info("OldPath:	'%s', '%s'", oldItemRoot, oldItemFile)
+			# 	self.log.info("NewPath:	'%s', '%s'", newItemRoot, newItemFile)
+
+			# 	srcId = srcRow[0]['dbId']
+			# 	self.log.info("Fixing DB Path!")
+			# 	self.updateDbEntryById(srcId, filename=newItemRoot, downloadpath=newItemFile)
 
 
 
@@ -175,7 +227,7 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 			try:
 				retTags, archivePath_updated = archCleaner.processNewArchive(archivePath, **kwargs)
 				if archivePath_updated != archivePath:
-					self._updatePath(archivePath, archivePath_updated)
+					self._create_or_update_file_entry_path(archivePath, archivePath_updated)
 					archivePath = archivePath_updated
 
 			except Exception:

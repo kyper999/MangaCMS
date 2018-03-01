@@ -185,9 +185,9 @@ class MangaReleases(Base):
 	file                = relationship('ReleaseFile', backref='manga_releases')
 
 	tags_rel       = relationship('MangaTags',
-										secondary=manga_releases_tags_link,
-										backref=backref("hentai_releases", lazy='dynamic'),
-										collection_class=set)
+										secondary        = manga_releases_tags_link,
+										backref          = backref("manga_releases", lazy='dynamic'),
+										collection_class = set)
 	tags           = association_proxy('tags_rel', 'tag', creator=MangaTags.get_or_create)
 
 	__table_args__ = (
