@@ -12,6 +12,9 @@ import MangaCMS.cleaner.processDownload
 from MangaCMS import db as mdb
 from MangaCMS.db import db_models as db_models
 
+import settings
+assert "test" in settings.NEW_DATABASE_DB_NAME.lower(), "Running tests on non-test database!"
+
 class TestSequenceFunctions(unittest.TestCase):
 
 	def __init__(self, *args, **kwargs):
