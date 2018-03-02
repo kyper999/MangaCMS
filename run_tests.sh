@@ -2,18 +2,15 @@
 
 set -e
 
-alembic -n testing downgrade base
+# alembic -n testing downgrade base
 alembic -n testing upgrade head
-alembic -n testing downgrade base
 
 
 python3 $(which nosetests)                       \
-	--with-coverage                              \
 	--exe                                        \
-	--cover-package=MangaCMS                     \
-	--stop \
+	--stop                                       \
+	--nocapture                                  \
 	MangaCMS.test
-	# --nocapture \
 	# Tests.Test_db_BKTree_Compare
 	# Tests.Test_db_BKTree_Issue_2
 	# Tests.Test_db_BKTree_Issue_1
@@ -21,6 +18,7 @@ python3 $(which nosetests)                       \
 	# Tests.Test_db_BKTree
 
 coverage report --show-missing
-
-
 coverage erase
+
+
+# alembic -n testing downgrade base

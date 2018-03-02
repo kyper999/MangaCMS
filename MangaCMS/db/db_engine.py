@@ -4,7 +4,6 @@ import logging
 import contextlib
 import traceback
 
-from settings import MAX_DB_SESSIONS
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session
@@ -18,6 +17,7 @@ from sqlalchemy.ext.associationproxy import association_proxy
 
 import queue
 
+from settings import MAX_DB_SESSIONS
 from settings import NEW_DATABASE_IP            as C_DATABASE_IP
 from settings import NEW_DATABASE_DB_NAME       as C_DATABASE_DB_NAME
 from settings import NEW_DATABASE_USER          as C_DATABASE_USER

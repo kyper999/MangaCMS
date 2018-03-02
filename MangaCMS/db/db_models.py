@@ -31,7 +31,6 @@ from sqlalchemy.dialects.postgresql import ENUM
 import citext
 ischema_names['citext'] = citext.CIText
 
-import settings
 
 from .db_engine import session
 from .db_base import Base
