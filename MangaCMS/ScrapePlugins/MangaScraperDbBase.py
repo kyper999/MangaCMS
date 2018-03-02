@@ -29,10 +29,6 @@ class MangaScraperDbBase(MangaCMS.lib.LogBase.LoggerMixin):
 		return None
 
 	@abc.abstractmethod
-	def logger_path(self):
-		return None
-
-	@abc.abstractmethod
 	def plugin_key(self):
 		return None
 

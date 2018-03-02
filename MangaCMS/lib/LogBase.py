@@ -5,9 +5,10 @@ import abc
 
 class LoggerMixin(metaclass=abc.ABCMeta):
 
-	@abc.abstractproperty
-	def loggerPath(self):
-		pass
+	@abc.abstractmethod
+	def logger_path(self):
+		return None
+
 
 	def __init__(self):
 		self.loggers = {}
@@ -20,17 +21,17 @@ class LoggerMixin(metaclass=abc.ABCMeta):
 		threadName = threading.current_thread().name
 		if "Thread-" in threadName:
 			if threadName not in self.loggers:
-				self.loggers[threadName] = logging.getLogger("%s.Thread-%d" % (self.loggerPath, self.lastLoggerIndex))
+				self.loggers[threadName] = logging.getLogger("%s.Thread-%d" % (self.logger_path, self.lastLoggerIndex))
 				self.lastLoggerIndex += 1
 
 		# If we're not called in the context of a thread, just return the base log-path
 		else:
-			self.loggers[threadName] = logging.getLogger("Main.%s" % (self.loggerPath,))
+			self.loggers[threadName] = logging.getLogger("Main.%s" % (self.logger_path,))
 		return self.loggers[threadName]
 
 
 class TestClass(LoggerMixin):
-	loggerPath = 'Main.Wat'
+	logger_path = 'Main.Wat'
 
 	def test(self):
 		self.log.info("Wat?")

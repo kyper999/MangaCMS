@@ -180,15 +180,17 @@ def exceptHook(exc_type, exc_value, exc_traceback):
 
 # Global hackyness to detect and warn on double-initialization of the logging systems.
 LOGGING_INITIALIZED = False
+DISABLE_REENTRANT_WARNING = False
 
 def initLogging(logLevel=logging.INFO, logToDb=True):
 
 	global LOGGING_INITIALIZED
 	if LOGGING_INITIALIZED:
-		current_stack = traceback.format_stack()
-		print("ERROR - Logging initialized twice!")
-		for line in current_stack:
-			print(line.rstrip())
+		if not DISABLE_REENTRANT_WARNING:
+			current_stack = traceback.format_stack()
+			print("ERROR - Logging initialized twice!")
+			for line in current_stack:
+				print(line.rstrip())
 		return
 
 	LOGGING_INITIALIZED = True

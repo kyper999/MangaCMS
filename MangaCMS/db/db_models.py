@@ -72,7 +72,7 @@ class MangaTags(Base):
 			session.expunge(tmp)
 			return tmp
 
-		print("manga_tag_creator", tag)
+		# print("manga_tag_creator", tag)
 		tmp = cls(tag=tag)
 		session.add(tmp)
 		session.commit()
@@ -145,7 +145,7 @@ class HentaiTags(Base):
 			session.expunge(tmp)
 			return tmp
 
-		print("hentai_tag_creator", tag)
+		# print("hentai_tag_creator", tag)
 		tmp = cls(tag=tag)
 		session.add(tmp)
 		session.commit()

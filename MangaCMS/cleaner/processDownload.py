@@ -23,11 +23,11 @@ NEGATIVE_KEYWORDS = [
 
 class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
-	pluginName = 'Download Processor'
+	plugin_name = 'Download Processor'
 
-	loggerPath = 'Main.DlProc'
-	tableKey = 'n/a'
-	pluginType = 'Utility'
+	logger_path = 'Main.DlProc'
+	plugin_key  = None
+	pluginType  = 'Utility'
 
 	def _create_or_update_file_entry_path(self, oldPath, newPath, setDeleted=False, setDuplicate=False, setPhash=False, reuse_sess=None):
 		oldItemRoot, oldItemFile = os.path.split(oldPath)
@@ -66,6 +66,7 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 
 			# Re-point any items that point to the old file to the new file
 			for release in old_row.manga_releases + old_row.hentai_releases:
+				self.log.info("Re-pointing release %s to new file (%s->%s)", release.id, oldPath, newPath)
 				release.fileid = new_row.id
 
 				# And set any flag(s) on the entries that pointed to the old files.
@@ -314,18 +315,18 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 # Subclasses to specify the right table names
 class MangaProcessor(DownloadProcessor):
 	tableName = 'MangaItems'
-	pron = False
+	is_manga = True
 
 	def __init__(self, *args, **kwargs):
-		self.loggerPath += "-" + self.tableName
+		self.logger_path += "-" + self.tableName
 		super().__init__(*args, **kwargs)
 
 class HentaiProcessor(DownloadProcessor):
 	tableName = 'HentaiItems'
-	pron = True
+	is_manga = False
 
 	def __init__(self, *args, **kwargs):
-		self.loggerPath += "-" + self.tableName
+		self.logger_path += "-" + self.tableName
 		super().__init__(*args, **kwargs)
 
 def processDownload(*args, **kwargs):
