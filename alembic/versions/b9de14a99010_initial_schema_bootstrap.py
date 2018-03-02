@@ -1,7 +1,7 @@
 """Initial schema bootstrap
 
 Revision ID: b9de14a99010
-Revises: 
+Revises:
 Create Date: 2018-02-21 20:46:27.561309
 
 """
@@ -142,4 +142,10 @@ def downgrade():
     op.drop_table('manga_tags')
     op.drop_index(op.f('ix_hentai_tags_tag'), table_name='hentai_tags')
     op.drop_table('hentai_tags')
+
+    ENUM(name='filetype_enum').drop(op.get_bind(), checkfirst=False)
+    ENUM(name='dlstate_enum').drop(op.get_bind(), checkfirst=False)
+    ENUM(name='dirtype_enum').drop(op.get_bind(), checkfirst=False)
+
+
     # ### end Alembic commands ###
