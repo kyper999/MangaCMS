@@ -20,7 +20,7 @@ import MangaCMS.ScrapePlugins.ScrapeExceptions as ScrapeExceptions
 
 def hash_file(filepath):
 
-	with open(fqfilename, "rb") as f:
+	with open(filepath, "rb") as f:
 		hash_md5 = hashlib.md5()
 		hash_md5.update(f.read())
 		fhash = hash_md5.hexdigest()
@@ -210,6 +210,11 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 				self.log.warning("Safe canonized name: %s", safeBaseName)
 			return targetDir, False
 
+	def _get_existing_file_by_hash(self, sess, file_hash):
+		have_row = sess.query(self.db.ReleaseFile)          \
+			.filter(self.db.ReleaseFile.fhash == file_hash) \
+			.scalar()
+		return have_row
 
 	def save_archive(self, row, sess, fqfilename, file_content):
 		filepath, fileN = os.path.split(fqfilename)
@@ -234,21 +239,59 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 				with open(fqfilename, "wb") as fp:
 					fp.write(file_content)
 
-
 				# Round-trip via the filesystem because why not
 				fhash = hash_file(fqfilename)
 
+				have = self._get_existing_file_by_hash(sess, fhash)
+
 				dirpath, filename = os.path.split(fqfilename)
-				new_row = self.db.ReleaseFile(
-						dirpath  = dirpath,
-						filename = filename,
-						fhash    = fhash
-					)
+				if have:
+					have_fqp = os.path.join(have.dirpath, have.filename)
+					if have_fqp == fqfilename:
+						self.log.error("Multiple instances of a releasefile created on same on-disk file!")
+						self.log.error("File: %s. Row id: %s", have_fqp, row.id)
+						raise RuntimeError
+					if os.path.exists(have_fqp):
 
-				sess.add(new_row)
-				sess.flush()
+						with open(have_fqp, "rb") as fp1:
+							fc1 = fp1.read()
+						with open(fqfilename, "rb") as fp2:
+							fc2 = fp2.read()
 
-				row.fileid = new_row.id
+						if fc1 != fc2:
+							self.log.error("Multiple instances of a releasefile with the same md5, but different contents?")
+							self.log.error("Files: %s, %s. Row id: %s", have_fqp, fqfilename, row.id)
+							raise RuntimeError
+
+						self.log.warning("Duplicate file found by md5sum search. Re-using existing file.")
+						self.log.warning("Files: '%s', '%s'.", have_fqp, fqfilename)
+						os.unlink(fqfilename)
+
+						row.fileid = have.id
+						return have_fqp
+					else:
+						self.log.warning("Duplicate file found by md5sum search, but existing file has been deleted.")
+						self.log.warning("Files: '%s', '%s'.", have_fqp, fqfilename)
+
+						have.dirpath = dirpath
+						have.filename = filename
+
+						row.fileid = have.id
+
+						return fqfilename
+
+				else:
+
+					new_row = self.db.ReleaseFile(
+							dirpath  = dirpath,
+							filename = filename,
+							fhash    = fhash
+						)
+
+					sess.add(new_row)
+					sess.flush()
+
+					row.fileid = new_row.id
 
 				return fqfilename
 

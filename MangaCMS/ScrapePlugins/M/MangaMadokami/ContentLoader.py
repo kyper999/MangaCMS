@@ -64,10 +64,20 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		return pgctnt, hName
 
 	def get_link(self, link_row_id):
-		with self.row_context(dbid=link_row_id) as row:
+		with self.row_sess_context(dbid=link_row_id) as row_tup:
+			row, sess = row_tup
 			seriesName = row.series_name
 			originName = row.origin_name
 			source_url = row.source_id
+
+			# Delete old (now invalid) rows
+			if "manga.madokami.com" in source_url:
+				self.log.warning("Row points to old madokami! Deleting!")
+				row.tags.clear()
+				sess.delete(row)
+
+				return
+
 
 		safeBaseName = nt.makeFilenameSafe(seriesName)
 		seriesName = seriesName.replace("[", "(").replace("]", "(")

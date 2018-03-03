@@ -27,7 +27,7 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 
 	logger_path = 'Main.DlProc'
 	plugin_key  = None
-	pluginType  = 'Utility'
+	plugin_type = 'Utility'
 
 	def _create_or_update_file_entry_path(self, oldPath, newPath, setDeleted=False, setDuplicate=False, setPhash=False, reuse_sess=None):
 		oldItemRoot, oldItemFile = os.path.split(oldPath)
@@ -49,15 +49,29 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 				with open(newPath, "rb") as f:
 					hash_md5.update(f.read())
 				fhash = hash_md5.hexdigest()
-				# print("done.")
-				new_row = self.db.ReleaseFile(
-						dirpath  = newItemRoot,
-						filename = newItemFile,
-						fhash    = fhash
-					)
 
-				sess.add(new_row)
-				sess.flush()
+				# Use an existing file row (if present), via the md5sum
+				new_row = sess.query(self.db.ReleaseFile)          \
+					.filter(self.db.ReleaseFile.fhash == fhash) \
+					.scalar()
+
+				if new_row:
+					self.log.info("Have existing row for fhash!")
+
+				# But only if the existing file actually exists.
+				if not os.path.exists(os.path.join(new_row.dirpath, new_row.filename)):
+					sess.delete(new_row)
+					new_row = None
+
+				if not new_row:
+					new_row = self.db.ReleaseFile(
+							dirpath  = newItemRoot,
+							filename = newItemFile,
+							fhash    = fhash
+						)
+
+					sess.add(new_row)
+					sess.flush()
 
 			if not old_row:
 				self.log.warning("Trying to update file path where the file doesn't exist!")
