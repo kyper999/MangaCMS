@@ -33,6 +33,8 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 		oldItemRoot, oldItemFile = os.path.split(oldPath)
 		newItemRoot, newItemFile = os.path.split(newPath)
 
+		assert oldPath != newPath
+
 		with self.db.session_context(reuse_sess=reuse_sess) as sess:
 			old_row = sess.query(self.db.ReleaseFile)                \
 				.filter(self.db.ReleaseFile.dirpath == oldItemRoot)  \
@@ -59,11 +61,17 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 					self.log.info("Have existing row for fhash!")
 
 				# But only if the existing file actually exists.
-				if not os.path.exists(os.path.join(new_row.dirpath, new_row.filename)):
-					sess.delete(new_row)
-					new_row = None
+				if new_row and not os.path.exists(os.path.join(new_row.dirpath, new_row.filename)):
+					self.log.warning("Existing row for hash exists, but path is not valid (%s, %s)!",
+						newItemRoot,  newItemFile)
 
-				if not new_row:
+					assert(new_row.fhash == fhash)
+					# Since a appropriate row exists but the paths aren't valid, just point that
+					# row at the file on-disk.
+					new_row.dirpath  = newItemRoot
+					new_row.filename = newItemFile
+
+				else:
 					new_row = self.db.ReleaseFile(
 							dirpath  = newItemRoot,
 							filename = newItemFile,
@@ -87,8 +95,12 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 			for h_tag in old_row.hentai_tags:
 				new_row.hentai_tags.add(h_tag)
 
-			# And then delete the old row.
-			sess.delete(old_row)
+			# And then delete the old row (but only if it's changed,
+			# since we might have matched against it by md5sum).
+			if old_row.id != new_row.id:
+				sess.delete(old_row)
+			else:
+				self.log.warning("Old row matches new row by md5sum. Not deleting old row.")
 			# This flush seems to be required. Somehow.
 			sess.flush()
 
@@ -98,6 +110,7 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 					oldPath, newPath,
 					release.fileid, new_row.id)
 
+				self.log.info("New row: %s, new_row id: %s", new_row, new_row.id)
 				release.fileid = new_row.id
 				assert release.fileid
 
