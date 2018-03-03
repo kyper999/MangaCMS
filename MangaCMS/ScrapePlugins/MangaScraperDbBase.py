@@ -19,9 +19,10 @@ from sqlalchemy import or_
 
 import nameTools as nt
 import MangaCMS.db as mdb
-import MangaCMS.lib.LogBase
+import MangaCMS.lib.LogMixin
+import MangaCMS.lib.MonitorMixin
 
-class MangaScraperDbBase(MangaCMS.lib.LogBase.LoggerMixin):
+class MangaScraperDbBase(MangaCMS.lib.LogMixin.LoggerMixin, MangaCMS.lib.MonitorMixin.MonitorMixin):
 
 
 	@abc.abstractmethod
@@ -36,8 +37,8 @@ class MangaScraperDbBase(MangaCMS.lib.LogBase.LoggerMixin):
 	def is_manga(self):
 		return None
 
-	def __init__(self):
-		super().__init__()
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
 
 		self.db = mdb
 
@@ -54,7 +55,13 @@ class MangaScraperDbBase(MangaCMS.lib.LogBase.LoggerMixin):
 	# ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
 	@contextlib.contextmanager
-	def row_context(self, dbid=None, url=None, limit_by_plugin=True, commit=True):
+	def row_context(self, *args, **kwargs):
+		with self.row_sess_context(*args, **kwargs) as row_tup:
+			row, _ = row_tup
+			yield row
+
+	@contextlib.contextmanager
+	def row_sess_context(self, dbid=None, url=None, limit_by_plugin=True, commit=True):
 
 		assert url or dbid
 
@@ -71,7 +78,7 @@ class MangaScraperDbBase(MangaCMS.lib.LogBase.LoggerMixin):
 			else:
 				raise RuntimeError("How did this get executed?")
 
-			yield row_q.scalar()
+			yield (row_q.scalar(), sess)
 
 	def _resetStuckItems(self):
 		self.log.info("Resetting stuck downloads in DB")

@@ -56,12 +56,12 @@ HTTPS_CREDS = [
 
 class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
-	loggerPath = "Main.Manga.Mk.Fl"
-	pluginName = "Manga.Madokami Link Retreiver"
-	tableKey = "mk"
-	dbName = settings.DATABASE_DB_NAME
+	logger_path  = "Main.Manga.Mk.Fl"
+	plugin_name  = "Manga.Madokami Link Retreiver"
+	plugin_key   = "mk"
 
-	tableName = "MangaItems"
+	is_manga     = True
+
 	url_base     = "https://manga.madokami.al/"
 	tree_api     = "https://manga.madokami.al/stupidapi/lessdumbtree"
 
@@ -88,6 +88,11 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 			elif element['type'] == 'file':
 				item_path = os.path.join(cum_path, element['name'])
 
+				assert item_path.startswith(STRIP_PREFIX)
+
+				if any([item_path.startswith(prefix) for prefix in MASK_PATHS]):
+					continue
+
 				# Parse out the series name if we're in a directory we understand,
 				# otherwise just assume the dir name is the series.
 				match = re.search(r'/Manga/[^/]/[^/]{2}/[^/]{4}/([^/]+)/', item_path)
@@ -96,7 +101,12 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 				else:
 					sname = os.path.split(cum_path)[-1]
 
-				ret.append((sname, item_path))
+				item = {
+					'source_id'   : urllib.parse.urljoin(self.url_base, item_path),
+					'origin_name' : element['name'],
+					'series_name' : nt.getCanonicalMangaUpdatesName(sname),
+				}
+				ret.append(item)
 			else:
 				self.log.error("Unknown element type: '%s'", element)
 
@@ -104,77 +114,119 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
 
-	def _processLinksIntoDB(self, linksDicts, isPicked=False):
+	# def _processLinksIntoDB(self, linksDicts, isPicked=False):
 
 
-		# item["date"]     = time.time()
-		# item["dlName"]   = linkName
-		# item["dlLink"]   = itemUrl
-		# item["baseName"] = dirName
-
-		self.log.info( "Inserting...",)
-		newItems   = 0
-		oldItems   = 0
-		movedItems = 0
-		brokeItems = 0
-		for seriesName, fqFileN in linksDicts:
-
-			dlLink = urllib.parse.urljoin(self.url_base, fqFileN)
-			fileN = os.path.split(fqFileN)[-1]
+	# 	self.log.info( "Inserting...")
 
 
-			# Look up by URL, so we don't break the UNIQUE constraint.
-			rows = self.getRowsByValue(sourceUrl  = dlLink)
+	# 	newItems = 0
+	# 	with self.db.session_context() as sess:
+	# 		for link in linksDicts:
+	# 			if link is None:
+	# 				print("linksDicts", linksDicts)
+	# 				print("WAT")
+	# 				continue
 
-			# rows = [row for row in rows if row['dlState'] < 3]
+	# 			self._check_keys(link)
 
+	# 			if 'series_name' in link and self.shouldCanonize:
+	# 				link["series_name"] = nt.getCanonicalMangaUpdatesName(link["series_name"])
 
-			if len(rows) == 0:
-				newItems += 1
+	# 			have = sess.query(self.target_table)                            \
+	# 				.filter(self.target_table.source_site == self.plugin_key)     \
+	# 				.filter(self.target_table.source_id == link["source_site"]) \
+	# 				.scalar()
 
-				# Flags has to be an empty string, because the DB is annoying.
-				# TL;DR, comparing with LIKE in a column that has NULLs in it is somewhat broken.
-				self.insertIntoDb(retreivalTime = time.time(),
-									sourceUrl   = dlLink,
-									originName  = fileN,
-									dlState     = 0,
-									seriesName  = seriesName,
-									flags       = '',
-									commit      = False)  # Defer commiting changes to speed things up
+	# 			if not have:
+	# 				newItems += 1
+	# 				new_row = self.target_table(
+	# 						state       = 'new',            # Should be set automatically.
+	# 						source_site = self.plugin_key,
+	# 						**link
+	# 					)
 
+	# 				sess.add(new_row)
 
-
-				self.log.info("New item: %s", (nt.haveCanonicalMangaUpdatesName(seriesName), dlLink, seriesName, fileN))
-
-			elif len(rows) > 1:
-				brokeItems += 1
-				self.log.warning("Have more then one item for filename! Wat?")
-				self.log.warning("Info dict for file:")
-				self.log.warning("'%s'", (dlLink, seriesName, fileN))
-				self.log.warning("Found rows:")
-				for row in rows:
-
-					self.log.warning("'%s'", row)
-					self.log.warning("'%s'", row['dlState'] < 3)
-			elif len(rows) == 1:
-				row = rows.pop()
-				if row["sourceUrl"] != dlLink:
-					self.log.info("File has been moved: %s!", (seriesName, fileN))
-					self.log.info("Old: %s", row["sourceUrl"])
-					self.log.info("New: %s", dlLink)
-
-					self.updateDbEntryById(row["dbId"], sourceUrl = dlLink)
-					movedItems += 1
-				else:
-					oldItems += 1
-
-			else:
-				row = row.pop()
-
-		self.log.info( "Done")
+	# 				self.log.info("New item: %s", link)
 
 
-		self.log.info("%s new items, %s old items, %s moved items,  %s items with broken rows.", newItems, oldItems, movedItems, brokeItems)
+	# 	if self.mon_con:
+	# 		self.mon_con.incr('new_links', newItems)
+
+	# 	self.log.info( "Done (%s new items)", newItems)
+
+	# 	return newItems
+
+
+		# # item["date"]     = time.time()
+		# # item["dlName"]   = linkName
+		# # item["dlLink"]   = itemUrl
+		# # item["baseName"] = dirName
+
+		# self.log.info( "Inserting...",)
+		# newItems   = 0
+		# oldItems   = 0
+		# movedItems = 0
+		# brokeItems = 0
+		# for seriesName, fqFileN in linksDicts:
+
+		# 	dlLink = urllib.parse.urljoin(self.url_base, fqFileN)
+		# 	fileN = os.path.split(fqFileN)[-1]
+
+
+		# 	# Look up by URL, so we don't break the UNIQUE constraint.
+		# 	rows = self.getRowsByValue(sourceUrl  = dlLink)
+
+		# 	# rows = [row for row in rows if row['dlState'] < 3]
+
+
+		# 	if len(rows) == 0:
+		# 		newItems += 1
+
+		# 		# Flags has to be an empty string, because the DB is annoying.
+		# 		# TL;DR, comparing with LIKE in a column that has NULLs in it is somewhat broken.
+		# 		self.insertIntoDb(retreivalTime = time.time(),
+		# 							sourceUrl   = dlLink,
+		# 							originName  = fileN,
+		# 							dlState     = 0,
+		# 							seriesName  = seriesName,
+		# 							flags       = '',
+		# 							commit      = False)  # Defer commiting changes to speed things up
+
+
+
+		# 		self.log.info("New item: %s", (nt.haveCanonicalMangaUpdatesName(seriesName), dlLink, seriesName, fileN))
+
+		# 	elif len(rows) > 1:
+		# 		brokeItems += 1
+		# 		self.log.warning("Have more then one item for filename! Wat?")
+		# 		self.log.warning("Info dict for file:")
+		# 		self.log.warning("'%s'", (dlLink, seriesName, fileN))
+		# 		self.log.warning("Found rows:")
+		# 		for row in rows:
+
+		# 			self.log.warning("'%s'", row)
+		# 			self.log.warning("'%s'", row['dlState'] < 3)
+		# 	elif len(rows) == 1:
+		# 		row = rows.pop()
+		# 		if row["sourceUrl"] != dlLink:
+		# 			self.log.info("File has been moved: %s!", (seriesName, fileN))
+		# 			self.log.info("Old: %s", row["sourceUrl"])
+		# 			self.log.info("New: %s", dlLink)
+
+		# 			self.updateDbEntryById(row["dbId"], sourceUrl = dlLink)
+		# 			movedItems += 1
+		# 		else:
+		# 			oldItems += 1
+
+		# 	else:
+		# 		row = row.pop()
+
+		# self.log.info( "Done")
+
+
+		# self.log.info("%s new items, %s old items, %s moved items,  %s items with broken rows.", newItems, oldItems, movedItems, brokeItems)
 
 
 		# return newItems
@@ -186,12 +238,13 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 		self.wg.retryDelay    = 5
 
 
-	def getFeed(self):
+	def get_feed(self):
 		treedata = self.wg.getJson(self.tree_api)
 		assert 'contents' in treedata
 		assert treedata['name'] == 'mango'
 		assert treedata['type'] == 'directory'
 		data_unfiltered = self.process_tree_elements(treedata['contents'])
+		return data_unfiltered
 
 		data = []
 		for sName, filen in data_unfiltered:
@@ -204,28 +257,12 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 		return data
 
 
-
-
-
-
-class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
-	loggerPath = "Main.Manga.MkL.Run"
-
-	pluginName = "MkFLoader"
-
-
-	def _go(self):
-
-		self.log.info("Checking Mk feeds for updates")
-		fl = MkFeedLoader()
-		fl.go()
-
 if __name__ == "__main__":
 	import utilities.testBase as tb
 
-	with tb.testSetup():
+	with tb.testSetup(load=False):
 
-		run = MkFeedLoader()
+		run = FeedLoader()
 		# run.go()
-		run.getMainItems()
+		run.do_fetch_feeds()
 

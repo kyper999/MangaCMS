@@ -10,7 +10,8 @@ class LoggerMixin(metaclass=abc.ABCMeta):
 		return None
 
 
-	def __init__(self):
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
 		self.loggers = {}
 		self.lastLoggerIndex = 1
 

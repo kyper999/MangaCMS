@@ -64,18 +64,7 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 				self.log.warning("Dir path: '%s', fname: '%s'", oldItemRoot, oldItemFile)
 				return
 
-			# Re-point any items that point to the old file to the new file
-			for release in old_row.manga_releases + old_row.hentai_releases:
-				self.log.info("Re-pointing release %s to new file (%s->%s)", release.id, oldPath, newPath)
-				release.fileid = new_row.id
-
-				# And set any flag(s) on the entries that pointed to the old files.
-				if setDeleted:
-					release.deleted = setDeleted
-				if setDuplicate:
-					release.was_duplicate = setDuplicate
-				if setPhash:
-					release.phash_duplicate = setPhash
+			releases = old_row.manga_releases + old_row.hentai_releases
 
 			# Copy over the tags.
 			for m_tag in old_row.manga_tags:
@@ -86,106 +75,30 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 
 			# And then delete the old row.
 			sess.delete(old_row)
+			# This flush seems to be required. Somehow.
+			sess.flush()
+
+			# Re-point any items that point to the old file to the new file
+			for release in releases:
+				self.log.info("Re-pointing release %s to new file (%s->%s), (%s->%s)", release.id,
+					oldPath, newPath,
+					release.fileid, new_row.id)
+
+				release.fileid = new_row.id
+				assert release.fileid
+
+				# And set any flag(s) on the entries that pointed to the old files.
+				if setDeleted:
+					release.deleted = setDeleted
+				if setDuplicate:
+					release.was_duplicate = setDuplicate
+				if setPhash:
+					release.phash_duplicate = setPhash
 
 
-			# srcRow = self.getRowsByValue(limitByKey=False, downloadpath=oldItemRoot, filename=oldItemFile)
-			# if srcRow and len(srcRow) == 1:
-			# 	self.log.info("OldPath:	'%s', '%s'", oldItemRoot, oldItemFile)
-			# 	self.log.info("NewPath:	'%s', '%s'", newItemRoot, newItemFile)
-
-			# 	srcId = srcRow[0]['dbId']
-			# 	self.log.info("Fixing DB Path!")
-			# 	self.updateDbEntryById(srcId, filename=newItemRoot, downloadpath=newItemFile)
-
-
-
-	def _crossLink(self, delItem, dupItem, isPhash=False, rowId=None):
+	def _crossLink(self, delItem, dupItem, isPhash=False):
 		self.log.warning("Duplicate found! Cross-referencing file")
-
-		delItemRoot, delItemFile = os.path.split(delItem)
-		dupItemRoot, dupItemFile = os.path.split(dupItem)
-		self.log.info("Remove:	'%s', '%s'", delItemRoot, delItemFile)
-		self.log.info("Match: 	'%s', '%s'", dupItemRoot, dupItemFile)
-
-		srcRow = self.getRowsByValue(limitByKey=False, downloadpath=delItemRoot, filename=delItemFile)
-		dstRow = self.getRowsByValue(limitByKey=False, downloadpath=dupItemRoot, filename=dupItemFile)
-
-		# print("HaveItem", srcRow)
-		if srcRow or rowId:
-			if rowId:
-				if srcRow:
-					if not any([rowId == row['dbId'] for row in srcRow]):
-						self.log.warning("Cross linking found multiple candidate SOURCE matches")
-						self.log.warning("Wat?")
-						self.log.warning("Row IDs: %s", [row['dbId'] for row in srcRow])
-				srcId = rowId
-
-			else:
-				srcId = srcRow[0]['dbId']
-
-			self.log.info("Relinking!")
-			self.updateDbEntryById(srcId, filename=dupItemFile, downloadpath=dupItemRoot)
-
-			if isPhash:
-				tags = 'deleted was-duplicate phash-duplicate'
-			else:
-				tags = 'deleted was-duplicate'
-
-			self.addTags(dbId=srcId, tags=tags, limitByKey=False)
-
-			# Allow for situations where we're linking to something that already has other links
-			if dstRow:
-
-				dstId = dstRow[0]['dbId']
-				self.addTags(dbId=srcId, tags='crosslink-{dbId}'.format(dbId=dstId), limitByKey=False)
-				self.addTags(dbId=dstId, tags='crosslink-{dbId}'.format(dbId=dstId), limitByKey=False)
-				self.log.info("Found destination row. Cross-linking!")
-				return
-
-		self.log.warn("Cross-referencing file failed!")
-		self.log.warn("Remove:	'%s', '%s'", delItemRoot, delItemFile)
-		self.log.warn("Match: 	'%s', '%s'", dupItemRoot, dupItemFile)
-		self.log.warn("SrcRow:	'%s'", srcRow)
-		self.log.warn("DstRow:	'%s'", dstRow)
-
-	# def scanIntersectingArchives(self, containerPath, intersections, phashThresh, moveToPath):
-
-	# 	pathPositiveFilter = [item['dir'] for item in settings.mangaFolders.values()]
-	# 	self.log.info("File intersections:")
-	# 	keys = list(intersections)
-	# 	keys.sort()
-	# 	# Only look at the 3 largest keys
-	# 	for key in keys[-2:]:
-	# 		if not runStatus.run:
-	# 			self.log.warning("Exiting early from scanIntersectingArchives() due to halt flag.")
-	# 			return
-
-	# 		self.log.info("	%s common files:", key)
-
-	# 		# And limit the key checks to two files
-	# 		for archivePath in intersections[key][:2]:
-
-	# 			# Limit the checked files to just the context of the new file
-	# 			if not archivePath.startswith(containerPath):
-	# 				continue
-	# 			self.log.info("		Scanning %s", archivePath)
-
-	# 			# I need some sort of deletion lock for file removal. Outside deletion is disabled until that's done.
-	# 			# EDIT: Wrapped the deduper end in a lock.
-
-	# 			dc = deduplicator.archChecker.ArchChecker(archivePath, phashDistance=phashThresh, pathPositiveFilter=pathPositiveFilter, negativeKeywords=NEGATIVE_KEYWORDS)
-	# 			retTags, bestMatch, dummy_intersections = dc.process(moveToPath=moveToPath)
-	# 			retTags = retTags.strip()
-
-	# 			if bestMatch:
-	# 				self.log.info("			Scan return: '%s', best-match: '%s'", retTags, bestMatch)
-	# 				isPhash = False
-	# 				if "phash-duplicate" in retTags:
-	# 					isPhash = True
-	# 				self._crossLink(archivePath, bestMatch, isPhash=isPhash)
-	# 			else:
-	# 				self.log.info("			Scan return: '%s'. No best match.", retTags)
-
+		self._create_or_update_file_entry_path(delItem, dupItem, setDeleted=True, setPhash=isPhash)
 
 
 	def processDownload(self,
@@ -282,13 +195,13 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 				if "phash-duplicate" in retTags:
 					isPhash = True
 
-				self._crossLink(archivePath, bestMatch, isPhash=isPhash, rowId=rowId)
+				self._crossLink(archivePath, bestMatch, isPhash=isPhash)
 
 
 			# processNewArchive returns "damaged" or "duplicate" for the corresponding archive states.
 			# Since we don't want to upload archives that are either, we skip if retTags is anything other then ""
 			# Also, don't upload porn
-			if (not self.pron) and (not retTags or retTags=="fewfiles") and seriesName and doUpload:
+			if self.is_manga and (not retTags or retTags=="fewfiles") and seriesName and doUpload:
 				try:
 					self.log.info("Trying to upload file '%s'.", archivePath)
 					up.uploadFile(seriesName, archivePath)

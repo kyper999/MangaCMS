@@ -53,8 +53,8 @@ import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.TripleSevenRun
 import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.TwistedHelRun
 import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.VortexRun
 
-import MangaCMSOld.ScrapePlugins.M.MangaMadokami.Run
-import MangaCMSOld.ScrapePlugins.M.BooksMadokami.Run
+# import MangaCMSOld.ScrapePlugins.M.MangaMadokami.Run
+# import MangaCMSOld.ScrapePlugins.M.BooksMadokami.Run
 
 # Convenience functions to make intervals clearer.
 def days(num):
@@ -120,8 +120,8 @@ scrapePlugins = {
 	73 : (MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.TwistedHelRun,      hours(12)),
 	74 : (MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.VortexRun,          hours(12)),
 
-	80 : (MangaCMSOld.ScrapePlugins.M.MangaMadokami.Run,                    hours(4)),
-	81 : (MangaCMSOld.ScrapePlugins.M.BooksMadokami.Run,                    hours(4)),
+	# 80 : (MangaCMSOld.ScrapePlugins.M.MangaMadokami.Run,                    hours(4)),
+	# 81 : (MangaCMSOld.ScrapePlugins.M.BooksMadokami.Run,                    hours(4)),
 
 }
 

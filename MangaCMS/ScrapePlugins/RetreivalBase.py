@@ -4,6 +4,7 @@ import abc
 import zipfile
 import traceback
 import os.path
+import hashlib
 import mimetypes
 from concurrent.futures import ThreadPoolExecutor
 import magic
@@ -17,26 +18,31 @@ import nameTools as nt
 import MangaCMS.ScrapePlugins.MangaScraperDbBase
 import MangaCMS.ScrapePlugins.ScrapeExceptions as ScrapeExceptions
 
+def hash_file(filepath):
+
+	with open(fqfilename, "rb") as f:
+		hash_md5 = hashlib.md5()
+		hash_md5.update(f.read())
+		fhash = hash_md5.hexdigest()
+	return fhash
+
 class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 	# Abstract class (must be subclassed)
 	__metaclass__ = abc.ABCMeta
 
-	pluginType = "ContentRetreiver"
+	plugin_type = "ContentRetreiver"
 
 	itemLimit = 250
-	retreivalThreads = 1
+	retreival_threads = 1
 
 	def __init__(self, *args, **kwargs):
-		self.wg = WebRequest.WebGetRobust(logPath=self.loggerPath+".Web")
+		super().__init__(*args, **kwargs)
+		self.wg = WebRequest.WebGetRobust(logPath=self.logger_path+".Web")
 		self.die = False
 
-		super().__init__(*args, **kwargs)
-
-
-
 	@abc.abstractmethod
-	def getLink(self, link):
+	def get_link(self, link_row_id):
 		pass
 
 	# Provision for a delay. If checkDelay returns false, item is not enqueued
@@ -53,37 +59,38 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 
 		self.log.info( "Fetching items from db...",)
 
-		with self.db.context_sess() as sess:
+		with self.db.session_context() as sess:
 
-			res = sess.query(self.target_table)                          \
-				.filter(self.target_table.source_site == self.tableKey)  \
-				.filter(self.target_table.state == 'new')                \
-				.order_by(self.target_table.id.desc())                   \
+			res = sess.query(self.target_table)                            \
+				.filter(self.target_table.source_site == self.plugin_key)  \
+				.filter(self.target_table.state == 'new')                  \
+				.order_by(self.target_table.id.desc())                     \
 				.all()
 
-			# Kick the relevant rows out of the session context
-			_ = [sess.expunge(tmp) for tmp in res]
+			res = [(tmp.id, tmp.posted_at) for tmp in res]
 
 		self.log.info( "Done")
 
 		items = []
-		for item in res:
-			if self.checkDelay(item.posted_at):
-				items.append(item)
+		for item_row_id, posted_at in res:
+			if self.checkDelay(posted_at):
+				items.append((item_row_id, posted_at))
 
-		self.log.info( "Have %s new items to retreive in %sDownloader", len(items), self.tableKey.title())
+		self.log.info( "Have %s new items to retreive in %s Downloader", len(items), self.plugin_key.title())
 
 
-		items = sorted(items, key=lambda k: k.posted_at, reverse=True)
+		items = sorted(items, key=lambda k: k[1], reverse=True)
 		if self.itemLimit:
 			items = items[:self.itemLimit]
+
+		items = [tmp[0] for tmp in items]
 
 		return items
 
 
-	def _fetchLink(self, link):
+	def _fetch_link(self, link_row_id):
 		try:
-			if link is None:
+			if link_row_id is None:
 				self.log.error("Worker received null task! Wat?")
 				return
 			if self.die:
@@ -93,7 +100,7 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 				self.log.info( "Breaking due to exit flag being set")
 				return
 
-			status = self.getLink(link)
+			status = self.get_link(link_row_id=link_row_id)
 
 			ret1 = None
 			if status == 'phash-duplicate':
@@ -123,7 +130,8 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 			self.log.critical(traceback.format_exc())
 
 			# Reset the download, since failing because a keyboard interrupt is not a remote issue.
-			self.updateDbEntry(link["sourceUrl"], dlState=0)
+			with self.row_context(dbid=link_row_id) as row:
+				row.state = 'new'
 			raise
 
 		except Exception:
@@ -139,9 +147,9 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 	def processTodoLinks(self, links):
 		if links:
 
-			with ThreadPoolExecutor(max_workers=self.retreivalThreads) as executor:
+			with ThreadPoolExecutor(max_workers=self.retreival_threads) as executor:
 
-				futures = [executor.submit(self._fetchLink, link) for link in links]
+				futures = [executor.submit(self._fetch_link, link) for link in links]
 
 				while futures:
 					futures = [tmp for tmp in futures if not (tmp.done() or tmp.cancelled())]
@@ -202,7 +210,63 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 				self.log.warning("Safe canonized name: %s", safeBaseName)
 			return targetDir, False
 
-	def save_image_set(self, fqfilename, image_list):
+
+	def save_archive(self, row, sess, fqfilename, file_content):
+		filepath, fileN = os.path.split(fqfilename)
+		fileN = fileN.replace('.zip .zip', '.zip')
+		fileN = fileN.replace('.zip.zip', '.zip')
+		fileN = fileN.replace(' .zip', '.zip')
+		fileN = fileN.replace('..zip', '.zip')
+		fileN = fileN.replace('.rar .rar', '.rar')
+		fileN = fileN.replace('.rar.rar', '.rar')
+		fileN = fileN.replace(' .rar', '.rar')
+		fileN = fileN.replace('..rar', '.rar')
+		fileN = nt.makeFilenameSafe(fileN)
+
+		fqfilename = os.path.join(filepath, fileN)
+		fqfilename = self.insertCountIfFilenameExists(fqfilename)
+		self.log.info("Complete filepath: %s", fqfilename)
+
+		chop = len(fileN)-4
+
+		while 1:
+			try:
+				with open(fqfilename, "wb") as fp:
+					fp.write(file_content)
+
+
+				# Round-trip via the filesystem because why not
+				fhash = hash_file(fqfilename)
+
+				dirpath, filename = os.path.split(fqfilename)
+				new_row = self.db.ReleaseFile(
+						dirpath  = dirpath,
+						filename = filename,
+						fhash    = fhash
+					)
+
+				sess.add(new_row)
+				sess.flush()
+
+				row.fileid = new_row.id
+
+				return fqfilename
+
+			except (IOError, OSError):
+				chop = chop - 1
+				filepath, fileN = os.path.split(fqfilename)
+
+				fileN = fileN[:chop]+fileN[-4:]
+				self.log.warn("Truncating file length to %s characters and re-encoding.", chop)
+				fileN = fileN.encode('utf-8','ignore').decode('utf-8')
+				fileN = nt.makeFilenameSafe(fileN)
+				fqfilename = os.path.join(filepath, fileN)
+				fqfilename = self.insertCountIfFilenameExists(fqfilename)
+
+
+
+
+	def save_image_set(self, row, sess, fqfilename, image_list):
 
 		filepath, fileN = os.path.split(fqfilename)
 		fileN = fileN.replace('.zip .zip', '.zip')
@@ -239,6 +303,22 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 
 					arch.writestr(imageName, imageContent)
 				arch.close()
+
+
+				fhash = hash_file(fqfilename)
+
+				dirpath, filename = os.path.split(fqfilename)
+				new_row = self.db.ReleaseFile(
+						dirpath  = dirpath,
+						filename = filename,
+						fhash    = fhash
+					)
+
+				sess.add(new_row)
+				sess.flush()
+
+				row.fileid = new_row.id
+
 				return fqfilename
 
 			except (IOError, OSError):

@@ -21,7 +21,7 @@ class TestSequenceFunctions(unittest.TestCase):
 		super().__init__(*args, **kwargs)
 
 	def setUp(self):
-		print("Doing Setup!")
+		# print("Doing Setup!")
 		MangaCMS.lib.logSetup.DISABLE_REENTRANT_WARNING=True
 		MangaCMS.lib.logSetup.initLogging(logToDb=False)
 		self.addCleanup(self.dropDatabase)
@@ -42,8 +42,8 @@ class TestSequenceFunctions(unittest.TestCase):
 			sess.add(f1)
 			sess.add(f2)
 			sess.flush()
-			print(f1.id)
-			print(f2.id)
+			# print(f1.id)
+			# print(f2.id)
 
 			f1.hentai_tags.add("t1")
 			f1.hentai_tags.add("t2")
@@ -252,7 +252,7 @@ class TestSequenceFunctions(unittest.TestCase):
 
 
 	def dropDatabase(self):
-		print("Cleanup!")
+		# print("Cleanup!")
 		with mdb.session_context() as sess:
 			# First, delete the link table entries
 			sess.query(db_models.manga_files_tags_link).delete(synchronize_session=False)
@@ -270,11 +270,6 @@ class TestSequenceFunctions(unittest.TestCase):
 			# Finally, the files
 			sess.query(db_models.ReleaseFile).delete()
 
-		# self.db.tearDown()
-
-	def test_wat(self):
-		print("Database:", mdb)
-		print("Wat?")
 
 	def test_basic_1(self):
 		self.base_setup()
@@ -302,14 +297,76 @@ class TestSequenceFunctions(unittest.TestCase):
 		self.assertEqual(m_tag_c_1, m_tag_c_2)
 		self.assertEqual(h_tag_c_1, h_tag_c_2)
 
-	def test_file_relink(self):
+	def test_file_relink_fid(self):
 		self.base_setup()
 
 		m_dlproc = MangaCMS.cleaner.processDownload.MangaProcessor()
 		h_dlproc = MangaCMS.cleaner.processDownload.HentaiProcessor()
+		with mdb.session_context() as sess:
 
-		ret = m_dlproc._create_or_update_file_entry_path("wat1/wat2", "lol1/lol2")
-		print(ret)
+			f2 = sess.query(db_models.ReleaseFile).filter(db_models.ReleaseFile.fhash=='wat3').one()
 
-		print(m_dlproc)
-		print(h_dlproc)
+			a_r3 = sess.query(db_models.MangaReleases) \
+				.filter(db_models.MangaReleases.source_site=='test') \
+				.filter(db_models.MangaReleases.source_id=='r3') \
+				.one()
+			a_r4 = sess.query(db_models.MangaReleases) \
+				.filter(db_models.MangaReleases.source_site=='test') \
+				.filter(db_models.MangaReleases.source_id=='r4') \
+				.one()
+
+			self.assertEqual(f2.id, a_r3.fileid)
+			self.assertEqual(f2.id, a_r4.fileid)
+
+		m_dlproc._create_or_update_file_entry_path("wat1/wat2", "lol1/lol2")
+
+		with mdb.session_context() as sess:
+
+			f1 = sess.query(db_models.ReleaseFile).filter(db_models.ReleaseFile.fhash=='lol3').one()
+
+			b_r3 = sess.query(db_models.MangaReleases) \
+				.filter(db_models.MangaReleases.source_site=='test') \
+				.filter(db_models.MangaReleases.source_id=='r3') \
+				.one()
+			b_r4 = sess.query(db_models.MangaReleases) \
+				.filter(db_models.MangaReleases.source_site=='test') \
+				.filter(db_models.MangaReleases.source_id=='r4') \
+				.one()
+
+			self.assertEqual(f1.id, b_r3.fileid)
+			self.assertEqual(f1.id, b_r4.fileid)
+
+
+	def test_file_relink_tags(self):
+		self.base_setup()
+
+		m_dlproc = MangaCMS.cleaner.processDownload.MangaProcessor()
+		h_dlproc = MangaCMS.cleaner.processDownload.HentaiProcessor()
+		with mdb.session_context() as sess:
+
+			f2 = sess.query(db_models.ReleaseFile).filter(db_models.ReleaseFile.fhash=='wat3').one()
+			f3 = sess.query(db_models.ReleaseFile).filter(db_models.ReleaseFile.fhash=='lol3').one()
+
+			f2_m_tags = set(f2.manga_tags)
+			f2_h_tags = set(f2.hentai_tags)
+			f3_m_tags = set(f3.manga_tags)
+			f3_h_tags = set(f3.hentai_tags)
+
+			self.assertEqual(f2_m_tags, {'t11', 't12', 't10'} )
+			self.assertEqual(f2_h_tags, {'t9', 't8', 't7'} )
+			self.assertEqual(f3_m_tags, {'t5', 't6', 't4'} )
+			self.assertEqual(f3_h_tags, {'t1', 't2', 't3'})
+
+
+		m_dlproc._create_or_update_file_entry_path("wat1/wat2", "lol1/lol2")
+
+		with mdb.session_context() as sess:
+
+			f1 = sess.query(db_models.ReleaseFile).filter(db_models.ReleaseFile.fhash=='lol3').one()
+
+			f1_m_tags = set(f1.manga_tags)
+			f1_h_tags = set(f1.hentai_tags)
+
+
+			self.assertEqual(f1_m_tags, f2_m_tags | f3_m_tags)
+			self.assertEqual(f1_h_tags, f2_h_tags | f3_h_tags)
