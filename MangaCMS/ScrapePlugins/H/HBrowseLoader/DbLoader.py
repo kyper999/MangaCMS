@@ -5,6 +5,7 @@ runStatus.preloadDicts = False
 
 import calendar
 import traceback
+import datetime
 
 import bs4
 import settings
@@ -13,19 +14,20 @@ import urllib.parse
 import time
 import calendar
 
-import MangaCMSOld.ScrapePlugins.LoaderBase
-class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
+import MangaCMS.ScrapePlugins.LoaderBase
+import MangaCMS.ScrapePlugins.RunBase
+
+class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
-	dbName = settings.DATABASE_DB_NAME
-	loggerPath = "Main.Manga.HBrowse.Fl"
-	pluginName = "H-Browse Link Retreiver"
-	tableKey    = "hb"
+	logger_path = "Main.Manga.HBrowse.Fl"
+	plugin_name = "H-Browse Link Retreiver"
+	plugin_key  = "hb"
+	is_manga     = False
+
 	urlBase = "http://www.hbrowse.com/"
 	urlFeed = "http://www.hbrowse.com/list"
 
-
-	tableName = "HentaiItems"
 
 	def loadFeed(self, pageOverride=None):
 		self.log.info("Retrieving feed content...",)
@@ -48,22 +50,24 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 
 	def parseItem(self, row, timestamp):
 		ret = {}
-		ret['retreivalTime'] = timestamp
-		ret['sourceUrl'] = urllib.parse.urljoin(self.urlBase, row.a["href"])
+		ret['posted_at'] = timestamp
+		ret['source_id'] = urllib.parse.urljoin(self.urlBase, row.a["href"])
 		titleTd = row.find("td", class_='recentTitle')
-		ret['originName'] = titleTd.get_text()
-
+		ret['origin_name'] = titleTd.get_text()
 
 
 		return ret
 
 	def extractDate(self, row):
-		text = row.get_text()
-		date = parser.parse(text)
-		timestamp = calendar.timegm(date.timetuple())
-		return timestamp
+		text = row.get_text(strip=True)
+		try:
+			date = parser.parse(text)
+		except ValueError:
+			self.log.warning("Failed to parse date string: %s", text)
+			date = datetime.datetime.now()
+		return date
 
-	def getFeed(self, pageOverride=None):
+	def get_feed(self, pageOverride=None):
 		# for item in items:
 		# 	self.log.info(item)
 		#
@@ -87,15 +91,15 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 				# to parse a link row before seeing a valid date
 				item = self.parseItem(row, curTimestamp)
 
-				if 'originName' in item:
+				if 'origin_name' in item:
 					# If cloudflare is fucking shit up, just try to get the title from the title tag.
-					if r"[email\xa0protected]" in item['originName'] or r'[email protected]' in item['originName']:
-						item['originName'] = soup.title.get_text().split(" by ")[0]
+					if r"[email\xa0protected]" in item['origin_name'] or r'[email protected]' in item['origin_name']:
+						item['origin_name'] = soup.title.get_text().split(" by ")[0]
 				else:
-					item['originName'] = soup.title.get_text().split(" by ")[0]
+					item['origin_name'] = soup.title.get_text().split(" by ")[0]
+
 
 				ret.append(item)
-
 
 
 
@@ -107,8 +111,8 @@ def getHistory():
 
 	run = DbLoader()
 	for x in range(400):
-		dat = run.getFeed(pageOverride=x)
-		run._processLinksIntoDB(dat)
+		dat = run.get_feed(pageOverride=x)
+		run._process_links_into_db(dat)
 
 
 if __name__ == "__main__":

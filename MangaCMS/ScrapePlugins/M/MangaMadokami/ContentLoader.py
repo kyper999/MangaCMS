@@ -38,11 +38,11 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	plugin_key  = "mk"
 	is_manga    = True
 
-	retreival_threads = 1
+	retreival_threads = 2
 
 	urlBase = "https://manga.madokami.al/"
 
-	itemLimit = 500
+	itemLimit = 5000
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -125,10 +125,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			return
 
 		hName = urllib.parse.unquote(hName)
-
 		fName = "%s - %s" % (originFileName, hName)
-		fName = nt.makeFilenameSafe(fName)
-
 		fqFName = os.path.join(target_dir, fName)
 
 		# This call also inserts the file parameters into the row

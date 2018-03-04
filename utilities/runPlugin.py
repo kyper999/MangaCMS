@@ -37,8 +37,13 @@ def get_plugins():
 			print("No contentLoader: ", plugin)
 			continue
 
-		if not hasattr(plugin.feedLoader, 'tableKey'):
-			print("No tableKey in feedLoader: ", plugin.feedLoader)
+		if hasattr(plugin.feedLoader, 'tableKey'):
+			pass
+		elif hasattr(plugin.feedLoader, 'plugin_key'):
+			print("Has plugin_key")
+			plugin.feedLoader.tableKey = plugin.feedLoader.plugin_key
+		else:
+			print("No tableKey in feedLoader: ", plugin.feedLoader, hasattr(plugin.feedLoader, 'plugin_key'))
 			continue
 
 		if plugin.feedLoader.tableKey != "mk":

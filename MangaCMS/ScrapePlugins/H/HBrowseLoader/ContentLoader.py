@@ -17,23 +17,20 @@ import traceback
 import settings
 import bs4
 
-import MangaCMSOld.cleaner.processDownload
+import MangaCMS.ScrapePlugins.RetreivalBase
+import MangaCMS.cleaner.processDownload
 
-import MangaCMSOld.ScrapePlugins.RetreivalBase
-
-class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
-
+class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 
-	dbName = settings.DATABASE_DB_NAME
-	loggerPath = "Main.Manga.HBrowse.Cl"
-	pluginName = "H-Browse Content Retreiver"
-	tableKey   = "hb"
+
+	logger_path = "Main.Manga.HBrowse.Cl"
+	plugin_name = "H-Browse Content Retreiver"
+	plugin_key  = "hb"
+	is_manga    = False
+
 	urlBase = "http://www.hbrowse.com/"
-
-
-	tableName = "HentaiItems"
 
 	retreivalThreads = 2
 
@@ -124,61 +121,42 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		return ret
 
-	def getDownloadInfo(self, linkDict, retag=False):
-		sourcePage = linkDict["sourceUrl"]
+	def get_dl_meta(self, link_row_id):
 
-		self.log.info("Retrieving item: %s", sourcePage)
-
-		if not retag:
-			self.updateDbEntry(linkDict["sourceUrl"], dlState=1)
-
+		with self.row_context(dbid=link_row_id) as row:
+			source_url = row.source_id
+			row.state = 'fetching'
 
 		try:
-			soup = self.wg.getSoup(sourcePage, addlHeaders={'Referer': 'http://hbrowse.com/'})
+			soup = self.wg.getSoup(source_url, addlHeaders={'Referer': 'http://hbrowse.com/'})
 		except:
-			self.log.critical("No download at url %s! SourceUrl = %s", sourcePage, linkDict["sourceUrl"])
+			self.log.critical("No download at url %s! link_row_id = %s", source_url, link_row_id)
 			raise IOError("Invalid webpage")
 
 		title, category, tags = self.getCategoryTags(soup)
-		tags = ' '.join(tags)
-
-		self.updateDbEntry(linkDict["sourceUrl"], seriesName=category, originName=title, lastUpdate=time.time())
-
-		# Push the fixed title back into the linkdict so it's changes will be used later
-		# when saving the file.
-		linkDict['originName'] = title
-		if tags:
-			self.log.info("Adding tag info %s", tags)
-			self.addTags(sourceUrl=linkDict["sourceUrl"], tags=tags)
-
-		if retag:
-			return
-
-		linkDict['dirPath'] = os.path.join(settings.hbSettings["dlDir"], nt.makeFilenameSafe(category))
-
-		if not os.path.exists(linkDict["dirPath"]):
-			os.makedirs(linkDict["dirPath"])
-		else:
-			self.log.info("Folder Path already exists?: %s", linkDict["dirPath"])
 
 
-		self.log.info("Folderpath: %s", linkDict["dirPath"])
-		#self.log.info(os.path.join())
+		with self.row_context(dbid=link_row_id) as row:
+			for tag in tags:
+				if not tag in row.tags:
+					row.tags.add(tag)
+
+			row.series_name = category
+			row.origin_name = title
 
 
 		startPages = self.getGalleryStartPages(soup)
 
-
-		linkDict["dlLink"] = startPages
-
-
-
-		self.log.debug("Linkdict = ")
-		for key, value in list(linkDict.items()):
-			self.log.debug("		%s - %s", key, value)
+		ret = {
+			"dlLink" : startPages,
+			"sourceUrl" : source_url,
+		}
 
 
-		return linkDict
+
+
+
+		return ret
 
 
 	def fetchImages(self, linkDict):
@@ -242,71 +220,46 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 		return images
 
 
-	def doDownload(self, linkDict, link, retag=False):
+	def doDownload(self, linkDict, link_row_id):
 
 		images = self.fetchImages(linkDict)
 
-
-		# self.log.info(len(content))
-
-		if images:
-			fileN = linkDict['originName']+".zip"
-			fileN = nt.makeFilenameSafe(fileN)
-
-
-			# self.log.info("geturl with processing", fileN)
-			wholePath = os.path.join(linkDict["dirPath"], fileN)
-			wholePath = self.insertCountIfFilenameExists(wholePath)
-			self.log.info("Complete filepath: %s", wholePath)
-
-					#Write all downloaded files to the archive.
-			arch = zipfile.ZipFile(wholePath, "w")
-			for imageName, imageContent in images:
-				arch.writestr(imageName, imageContent)
-			arch.close()
-
-
-			self.log.info("Successfully Saved to path: %s", wholePath)
-
-			if not linkDict["tags"]:
-				linkDict["tags"] = ""
-
-
-
-			self.updateDbEntry(linkDict["sourceUrl"], downloadPath=linkDict["dirPath"], fileName=fileN)
-
-
-			# Deduper uses the path info for relinking, so we have to dedup the item after updating the downloadPath and fileN
-			dedupState = MangaCMSOld.cleaner.processDownload.processDownload(None, wholePath, pron=True, deleteDups=True, includePHash=True, rowId=link['dbId'])
-			self.log.info( "Done")
-
-			if dedupState:
-				self.addTags(sourceUrl=linkDict["sourceUrl"], tags=dedupState)
-
-
-			self.updateDbEntry(linkDict["sourceUrl"], dlState=2)
-
-
-
-
-			return wholePath
-
-		else:
-
-			self.updateDbEntry(linkDict["sourceUrl"], dlState=-1, downloadPath="ERROR", fileName="ERROR: FAILED")
-
+		if not images:
+			with self.row_context(dbid=link_row_id) as row:
+				row.state = 'error'
 			return False
 
+		with self.row_sess_context(dbid=link_row_id) as row_tup:
+			row, sess = row_tup
 
-	def getLink(self, link):
+			container_dir = os.path.join(settings.hbSettings["dlDir"], nt.makeFilenameSafe(row.series_name))
+			wholePath = os.path.join(container_dir, row.origin_name)
+			fqFName = self.save_image_set(row, sess, wholePath, images)
+
+		with self.row_context(dbid=link_row_id) as row:
+			row.state = 'processing'
+
+		# We don't want to upload the file we just downloaded, so specify doUpload as false.
+		# As a result of this, the seriesName paramerer also no longer matters
+		MangaCMS.cleaner.processDownload.processDownload(seriesName=False, archivePath=fqFName, deleteDups=True, doUpload=False)
+
+
+		self.log.info( "Done")
+		with self.row_context(dbid=link_row_id) as row:
+			row.state = 'complete'
+
+
+
+	def get_link(self, link_row_id):
 		try:
-			url = self.getDownloadInfo(link)
-			self.doDownload(url, link)
+			row_meta = self.get_dl_meta(link_row_id)
+			self.doDownload(row_meta, link_row_id)
 		except urllib.error.URLError:
-			self.log.error("Failure retrieving content for link %s", link)
+			self.log.error("Failure retrieving content for link_row_id %s", link_row_id)
 			self.log.error("Traceback: %s", traceback.format_exc())
-			self.updateDbEntry(link["sourceUrl"], dlState=-1, downloadPath="ERROR", fileName="ERROR: FAILED")
 
+			with self.row_context(dbid=link_row_id) as row:
+				row.state = 'error'
 
 
 class HBrowseRetagger(ContentLoader):
@@ -315,18 +268,18 @@ class HBrowseRetagger(ContentLoader):
 	pluginName = "H-Browse Content Re-Tagger"
 
 
-	def getLink(self, link):
+	def getLink(self, link_row_id):
 		try:
-			url = self.getDownloadInfo(link)
+			url = self.getDownloadInfo(link_row_id)
 		except urllib.error.URLError:
-			self.log.error("Failure retrieving content for link %s", link)
+			self.log.error("Failure retrieving content for link_row_id %s", link_row_id)
 			self.log.error("Traceback: %s", traceback.format_exc())
 
 
 if __name__ == "__main__":
 	import utilities.testBase as tb
 
-	with tb.testSetup():
+	with tb.testSetup(load=False):
 
 		# run = HBrowseRetagger()
 		run = ContentLoader()

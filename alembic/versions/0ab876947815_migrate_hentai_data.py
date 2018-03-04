@@ -360,6 +360,7 @@ def upgrade():
 			tags = [tmp for tmp in tags if not tmp.startswith("crosslink-")]
 
 			tags = [tmp.replace("-(female)", "-female").replace("-(male)", "-male") for tmp in tags]
+			tags = [tmp for tmp in tags if len(tmp) >= 2]
 
 			tags = set(tags)
 			tags = tags - set(["phash-duplicate", "was-duplicate", "uploaded", 'dup-checked', 'deleted'])
@@ -368,7 +369,8 @@ def upgrade():
 				return
 
 			if row.file:
-				row.file.hentai_tags.update(tags)
+				file_tmp = row.file
+				file_tmp.hentai_tags.update(tags)
 			row.tags.update(tags)
 
 		def migrate_manga_tags(row, flags, tags):
@@ -377,6 +379,7 @@ def upgrade():
 			tags = [tmp for tmp in tags if not tmp.startswith("crosslink-")]
 
 			tags = [tmp.replace("-(female)", "-female").replace("-(male)", "-male") for tmp in tags]
+			tags = [tmp for tmp in tags if len(tmp) >= 2]
 
 			tags = set(tags)
 			tags = tags - set(["phash-duplicate", "was-duplicate", "uploaded", 'dup-checked', 'deleted'])

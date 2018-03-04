@@ -17,6 +17,7 @@ from sqlalchemy import Boolean
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import PrimaryKeyConstraint
+from sqlalchemy import CheckConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import UniqueConstraint
 import sqlalchemy_jsonfield
@@ -61,6 +62,7 @@ class MangaTags(Base):
 
 	__table_args__ = (
 			UniqueConstraint('tag'),
+			CheckConstraint('length(tag) >= 2'),
 		)
 
 	@classmethod
@@ -79,39 +81,6 @@ class MangaTags(Base):
 		session.expunge(tmp)
 		return tmp
 
-	# @classmethod
-	# @cachetools.cached(cache=cachetools.TTLCache(tag_cache_size, tag_cache_ttl))
-	# def get_or_create(cls, tag):
-	# 	tmp = sess.query(cls)    \
-	# 		.filter(cls.tag == tag) \
-	# 		.scalar()
-	# 	if tmp:
-	# 		sess.expunge(tmp)
-	# 		return tmp
-
-	# 	# print("manga_tag_creator", tag)
-	# 	tmp = cls(tag=tag)
-	# 	sess.add(tmp)
-	# 	sess.commit()
-	# 	sess.expunge(tmp)
-	# 	return tmp
-
-	# @classmethod
-	# @cachetools.cached(cache=cachetools.TTLCache(tag_cache_size, tag_cache_ttl))
-	# def get_or_create(cls, tag):
-	# 	tmp = sess.query(cls)    \
-	# 		.filter(cls.tag == tag) \
-	# 		.scalar()
-	# 	if tmp:
-	# 		sess.expunge(tmp)
-	# 		return tmp
-
-	# 	# print("hentai_tag_creator", tag)
-	# 	tmp = cls(tag=tag)
-	# 	sess.add(tmp)
-	# 	sess.commit()
-	# 	sess.expunge(tmp)
-	# 	return tmp
 ########################################################################################
 
 hentai_files_tags_link = Table(
@@ -134,6 +103,7 @@ class HentaiTags(Base):
 
 	__table_args__ = (
 			UniqueConstraint('tag'),
+			CheckConstraint('length(tag) >= 2'),
 		)
 
 	@classmethod

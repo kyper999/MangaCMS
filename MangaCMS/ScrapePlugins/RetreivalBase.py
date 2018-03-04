@@ -3,6 +3,7 @@ import time
 import abc
 import zipfile
 import traceback
+import os
 import os.path
 import hashlib
 import mimetypes
@@ -25,6 +26,65 @@ def hash_file(filepath):
 		hash_md5.update(f.read())
 		fhash = hash_md5.hexdigest()
 	return fhash
+
+def clean_filename(in_filename):
+	in_filename = in_filename.replace('.zip .zip', '.zip')
+	in_filename = in_filename.replace('.zip.zip', '.zip')
+	in_filename = in_filename.replace(' .zip', '.zip')
+	in_filename = in_filename.replace('..zip', '.zip')
+	in_filename = in_filename.replace('.rar .rar', '.rar')
+	in_filename = in_filename.replace('.rar.rar', '.rar')
+	in_filename = in_filename.replace(' .rar', '.rar')
+	in_filename = in_filename.replace('..rar', '.rar')
+	return in_filename
+
+
+def insertCountIfFilenameExists(fqFName):
+
+	base, ext = os.path.splitext(fqFName)
+	loop = 1
+	while os.path.exists(fqFName):
+		fqFName = "%s - (%d)%s" % (base, loop, ext)
+		loop += 1
+
+	return fqFName
+
+def is_in_directory(filepath, directory):
+	return os.path.realpath(filepath).startswith(
+		os.path.realpath(directory) + os.sep)
+
+
+def prep_check_fq_filename(fqfilename):
+	fqfilename = os.path.abspath(fqfilename)
+
+	# Add a zip extension (if needed). If this is wrong,
+	# magic should handle it fine anyways (and the arch processor
+	# will probably regnerate the file along the way)
+	if not os.path.splitext(fqfilename)[1]:
+		fqfilename = fqfilename + ".zip"
+
+	filepath, fileN = os.path.split(fqfilename)
+	filepath = clean_filename(filepath)
+	fileN = nt.makeFilenameSafe(fileN)
+
+	valid_containers = [settings.pickedDir, settings.baseDir, settings.unlinkedDir, settings.bookDir, settings.h_dir, settings.c_dir, settings.mangaCmsHContext]
+	assert any([is_in_directory(filepath, dirc) for dirc in valid_containers
+			]), "Saved files must be placed in one of the download paths! File path: %s, valid containers: %s (%s)" % (
+				filepath, valid_containers, [is_in_directory(filepath, dirc) for dirc in valid_containers]
+				)
+
+	# Create the target container directory (if needed)
+	if not os.path.exists(filepath):
+		os.makedirs(filepath)
+
+	assert os.path.isdir(filepath)
+
+
+	fqfilename = os.path.join(filepath, fileN)
+	fqfilename = insertCountIfFilenameExists(fqfilename)
+
+	return fqfilename
+
 
 class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
@@ -216,20 +276,78 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 			.scalar()
 		return have_row
 
-	def save_archive(self, row, sess, fqfilename, file_content):
-		filepath, fileN = os.path.split(fqfilename)
-		fileN = fileN.replace('.zip .zip', '.zip')
-		fileN = fileN.replace('.zip.zip', '.zip')
-		fileN = fileN.replace(' .zip', '.zip')
-		fileN = fileN.replace('..zip', '.zip')
-		fileN = fileN.replace('.rar .rar', '.rar')
-		fileN = fileN.replace('.rar.rar', '.rar')
-		fileN = fileN.replace(' .rar', '.rar')
-		fileN = fileN.replace('..rar', '.rar')
-		fileN = nt.makeFilenameSafe(fileN)
+	def get_create_file_row(self, sess, row, fqfilename):
+		'''
+		Given a path to a file, return a row for that file's contents.
+		If no row exits, it is created. If a row for another file
+		that has exactly matching contents, but a different name
+		is found, it is used preferentially.
 
-		fqfilename = os.path.join(filepath, fileN)
-		fqfilename = self.insertCountIfFilenameExists(fqfilename)
+		Return is a 2-tuple of (file_row, file_path).
+		File-path should be guaranteed to point to a valid file.
+
+		Note that the file pointed to by the input parameter fqfilename
+		may actually be deleted, if it is found to be a binary duplicate
+		of another existing file.
+		'''
+
+		# Round-trip via the filesystem because why not
+		fhash = hash_file(fqfilename)
+
+		have = self._get_existing_file_by_hash(sess, fhash)
+
+		dirpath, filename = os.path.split(fqfilename)
+		if have:
+			have_fqp = os.path.join(have.dirpath, have.filename)
+			if have_fqp == fqfilename:
+				self.log.error("Multiple instances of a releasefile created on same on-disk file!")
+				self.log.error("File: %s. Row id: %s", have_fqp, row.id)
+				raise RuntimeError
+			if os.path.exists(have_fqp):
+
+				with open(have_fqp, "rb") as fp1:
+					fc1 = fp1.read()
+				with open(fqfilename, "rb") as fp2:
+					fc2 = fp2.read()
+
+				if fc1 != fc2:
+					self.log.error("Multiple instances of a releasefile with the same md5, but different contents?")
+					self.log.error("Files: %s, %s. Row id: %s", have_fqp, fqfilename, row.id)
+					raise RuntimeError
+
+				self.log.warning("Duplicate file found by md5sum search. Re-using existing file.")
+				self.log.warning("Files: '%s', '%s'.", have_fqp, fqfilename)
+				os.unlink(fqfilename)
+
+				row.fileid = have.id
+				return have, have_fqp
+			else:
+				self.log.warning("Duplicate file found by md5sum search, but existing file has been deleted.")
+				self.log.warning("Files: '%s', '%s'.", have_fqp, fqfilename)
+
+				have.dirpath = dirpath
+				have.filename = filename
+
+
+				return have, fqfilename
+
+		else:
+
+			new_row = self.db.ReleaseFile(
+					dirpath  = dirpath,
+					filename = filename,
+					fhash    = fhash
+				)
+
+			sess.add(new_row)
+			sess.flush()
+
+			return new_row, fqfilename
+
+	def save_archive(self, row, sess, fqfilename, file_content):
+
+		fqfilename = prep_check_fq_filename(fqfilename)
+		filepath, fileN = os.path.split(fqfilename)
 		self.log.info("Complete filepath: %s", fqfilename)
 
 		chop = len(fileN)-4
@@ -239,61 +357,10 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 				with open(fqfilename, "wb") as fp:
 					fp.write(file_content)
 
-				# Round-trip via the filesystem because why not
-				fhash = hash_file(fqfilename)
+				file_row, have_fqp = self.get_create_file_row(sess, row, fqfilename)
+				row.fileid = file_row.id
 
-				have = self._get_existing_file_by_hash(sess, fhash)
-
-				dirpath, filename = os.path.split(fqfilename)
-				if have:
-					have_fqp = os.path.join(have.dirpath, have.filename)
-					if have_fqp == fqfilename:
-						self.log.error("Multiple instances of a releasefile created on same on-disk file!")
-						self.log.error("File: %s. Row id: %s", have_fqp, row.id)
-						raise RuntimeError
-					if os.path.exists(have_fqp):
-
-						with open(have_fqp, "rb") as fp1:
-							fc1 = fp1.read()
-						with open(fqfilename, "rb") as fp2:
-							fc2 = fp2.read()
-
-						if fc1 != fc2:
-							self.log.error("Multiple instances of a releasefile with the same md5, but different contents?")
-							self.log.error("Files: %s, %s. Row id: %s", have_fqp, fqfilename, row.id)
-							raise RuntimeError
-
-						self.log.warning("Duplicate file found by md5sum search. Re-using existing file.")
-						self.log.warning("Files: '%s', '%s'.", have_fqp, fqfilename)
-						os.unlink(fqfilename)
-
-						row.fileid = have.id
-						return have_fqp
-					else:
-						self.log.warning("Duplicate file found by md5sum search, but existing file has been deleted.")
-						self.log.warning("Files: '%s', '%s'.", have_fqp, fqfilename)
-
-						have.dirpath = dirpath
-						have.filename = filename
-
-						row.fileid = have.id
-
-						return fqfilename
-
-				else:
-
-					new_row = self.db.ReleaseFile(
-							dirpath  = dirpath,
-							filename = filename,
-							fhash    = fhash
-						)
-
-					sess.add(new_row)
-					sess.flush()
-
-					row.fileid = new_row.id
-
-				return fqfilename
+				return have_fqp
 
 			except (IOError, OSError):
 				chop = chop - 1
@@ -304,24 +371,18 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 				fileN = fileN.encode('utf-8','ignore').decode('utf-8')
 				fileN = nt.makeFilenameSafe(fileN)
 				fqfilename = os.path.join(filepath, fileN)
-				fqfilename = self.insertCountIfFilenameExists(fqfilename)
+				fqfilename = insertCountIfFilenameExists(fqfilename)
 
 
 
 
 	def save_image_set(self, row, sess, fqfilename, image_list):
 
-		filepath, fileN = os.path.split(fqfilename)
-		fileN = fileN.replace('.zip .zip', '.zip')
-		fileN = fileN.replace('.zip.zip', '.zip')
-		fileN = fileN.replace(' .zip', '.zip')
-		fileN = fileN.replace('..zip', '.zip')
-		fileN = nt.makeFilenameSafe(fileN)
+		fqfilename = prep_check_fq_filename(fqfilename)
 
-		fqfilename = os.path.join(filepath, fileN)
-		fqfilename = self.insertCountIfFilenameExists(fqfilename)
 		self.log.info("Complete filepath: %s", fqfilename)
 
+		filepath, fileN = os.path.split(fqfilename)
 		assert len(image_list) >= 1
 		chop = len(fileN)-4
 
@@ -347,24 +408,17 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 					arch.writestr(imageName, imageContent)
 				arch.close()
 
+				file_row, have_fqp = self.get_create_file_row(sess, row, fqfilename)
+				row.fileid = file_row.id
 
-				fhash = hash_file(fqfilename)
-
-				dirpath, filename = os.path.split(fqfilename)
-				new_row = self.db.ReleaseFile(
-						dirpath  = dirpath,
-						filename = filename,
-						fhash    = fhash
-					)
-
-				sess.add(new_row)
-				sess.flush()
-
-				row.fileid = new_row.id
-
-				return fqfilename
+				return have_fqp
 
 			except (IOError, OSError):
+				traceback.print_exc()
+
+				import pdb
+				pdb.set_trace()
+
 				chop = chop - 1
 				filepath, fileN = os.path.split(fqfilename)
 
@@ -373,20 +427,10 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 				fileN = fileN.encode('utf-8','ignore').decode('utf-8')
 				fileN = nt.makeFilenameSafe(fileN)
 				fqfilename = os.path.join(filepath, fileN)
-				fqfilename = self.insertCountIfFilenameExists(fqfilename)
+				fqfilename = insertCountIfFilenameExists(fqfilename)
 
 
 
-
-	def insertCountIfFilenameExists(self, fqFName):
-
-		base, ext = os.path.splitext(fqFName)
-		loop = 1
-		while os.path.exists(fqFName):
-			fqFName = "%s - (%d).%s" % (base, loop, ext)
-			loop += 1
-
-		return fqFName
 
 	def do_fetch_content(self):
 		if hasattr(self, 'setup'):
@@ -397,13 +441,12 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 			return
 
 		if not todo:
-
 			ret = self.mon_con.incr('fetched_items.count', 0)
 			self.log.info("No links to fetch. Sending null result: %s", ret)
 
 		if todo:
 			self.processTodoLinks(todo)
-		self.log.info("ContentRetreiver for %s has finished.", self.pluginName)
+		self.log.info("ContentRetreiver for %s has finished.", self.plugin_name)
 
 	def go(self):
 		raise ValueError("use do_fetch_content() instead!")
