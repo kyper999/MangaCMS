@@ -16,6 +16,7 @@ import settings
 import runStatus
 import nameTools as nt
 
+import MangaCMS.cleaner.processDownload
 import MangaCMS.ScrapePlugins.MangaScraperDbBase
 import MangaCMS.ScrapePlugins.ScrapeExceptions as ScrapeExceptions
 
@@ -396,7 +397,12 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 					assert isinstance(imageContent, bytes)
 
 					mtype = magic.from_buffer(imageContent, mime=True)
-					assert "image" in mtype.lower()
+					if imageName.lower().endswith(".png") and mtype == 'application/octet-stream':
+						# So libmagic is somehow misidentifiying pngs as being of type
+						# 'application/octet-stream'. Anyways, short circut that specific case.
+						pass
+					else:
+						assert "image" in mtype.lower(), "Image not in mimetype ('%s') of file '%s'?" % (mtype, imageName)
 
 					_, ext = os.path.splitext(imageName)
 					if not ext:
@@ -430,7 +436,27 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 				fqfilename = insertCountIfFilenameExists(fqfilename)
 
 
+	def save_manga_image_set(self, row_id, series_name, chapter_name, image_list):
+			dlPath, newDir = self.locateOrCreateDirectoryForSeries(series_name)
 
+			with self.row_context(dbid=row_id) as row:
+				row.state = 'processing'
+				row.dirstate = 'created_dir' if newDir else "had_dir"
+
+			fqFName = os.path.join(dlPath, chapter_name+".zip")
+
+			with self.row_sess_context(dbid=row_id) as row_tup:
+				row, sess = row_tup
+				fqFName = self.save_image_set(row, sess, fqFName, image_list)
+
+			MangaCMS.cleaner.processDownload.processDownload(
+					seriesName   = series_name,
+					archivePath  = fqFName,
+					doUpload     = self.is_manga
+				)
+
+			with self.row_context(dbid=row_id) as row:
+				row.state = 'complete'
 
 	def do_fetch_content(self):
 		if hasattr(self, 'setup'):

@@ -78,32 +78,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 				return
 
-
-		safeBaseName = nt.makeFilenameSafe(seriesName)
-		seriesName = seriesName.replace("[", "(").replace("]", "(")
-
-		if seriesName in nt.dirNameProxy:
-			self.log.info( "Have target dir for '%s' Dir = '%s'", seriesName, nt.dirNameProxy[seriesName]['fqPath'])
-			target_dir = nt.dirNameProxy[seriesName]["fqPath"]
-		else:
-			self.log.info( "Don't have target dir for: %s Using default for: %s, full name = %s", seriesName, seriesName, originName)
-			target_dir = os.path.join(settings.mkSettings["dirs"]['mDlDir'], safeBaseName)
-			if not os.path.exists(target_dir):
-				try:
-					os.makedirs(target_dir)
-					target_dir = target_dir
-					with self.row_context(dbid=link_row_id) as row:
-						row.dirstate = 'created_dir'
-
-				except OSError:
-					self.log.critical("Directory creation failed?")
-					self.log.critical(traceback.format_exc())
-			else:
-				self.log.warning("Directory not found in dir-dict, but it exists!")
-				self.log.warning("Directory-Path: %s", target_dir)
-
-				with self.row_context(dbid=link_row_id) as row:
-					row.dirstate = 'had_dir'
+		target_dir, new_dir = self.locateOrCreateDirectoryForSeries(seriesName)
+		with self.row_context(dbid=link_row_id) as row:
+			row.dirstate = 'new_dir' if new_dir else 'had_dir'
 
 		sourceUrl, originFileName = source_url, originName
 

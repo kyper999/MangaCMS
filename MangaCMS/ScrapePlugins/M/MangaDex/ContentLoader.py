@@ -3,32 +3,24 @@
 
 import os
 import os.path
-import sys
+import ast
+import urllib.parse
+import traceback
+import re
 
 import nameTools as nt
 
-import ast
-import time
+import MangaCMS.ScrapePlugins.RetreivalBase
+import MangaCMS.ScrapePlugins.RunBase
 
-import urllib.parse
-import pprint
-import traceback
-import bs4
-import re
-import json
-import MangaCMSOld.ScrapePlugins.RetreivalBase
+import MangaCMS.cleaner.processDownload
 
-from concurrent.futures import ThreadPoolExecutor
+class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
-import MangaCMSOld.lib.logSetup
-import MangaCMSOld.cleaner.processDownload
-
-class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
-
-	loggerPath = "Main.Manga.MDx.Cl"
-	pluginName = "MangaDex Content Retreiver"
-	tableKey = "mdx"
-	tableName = "MangaItems"
+	logger_path = "Main.Manga.MDx.Cl"
+	plugin_name = "MangaDex Content Retreiver"
+	plugin_key  = "mdx"
+	is_manga    = True
 
 
 	retreivalThreads = 4
@@ -77,9 +69,9 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 
-	def getImages(self, link):
+	def getImages(self, source_url):
 
-		imageUrls = self.getImageUrls(link)
+		imageUrls = self.getImageUrls(source_url)
 
 		images = []
 
@@ -94,58 +86,36 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 		return images
 
 
-	def getLink(self, link):
+	def get_link(self, link_row_id):
 
-		sourceUrl  = link["sourceUrl"]
-		seriesName = link['seriesName']
+		with self.row_context(dbid=link_row_id) as row:
+			series_name = row.series_name
+			chapter_name = row.origin_name
+			source_url = row.source_id
+			row.state = 'fetching'
+
 
 		try:
-			self.log.info( "Should retreive url - %s", sourceUrl)
-			self.updateDbEntry(sourceUrl, dlState=1)
+			self.log.info( "Should retreive url - %s", source_url)
 
-			seriesName = nt.getCanonicalMangaUpdatesName(seriesName)
-
-			self.log.info("Downloading = '%s', '%s'", seriesName, link["originName"])
-			dlPath, newDir = self.locateOrCreateDirectoryForSeries(seriesName)
-
-			if link["flags"] == None:
-				link["flags"] = ""
-
-			if newDir:
-				self.updateDbEntry(sourceUrl, flags=" ".join([link["flags"], "haddir"]))
-
-			chapterName = nt.makeFilenameSafe(link["originName"])
-
-			fqFName = os.path.join(dlPath, chapterName+".zip")
-
-			loop = 1
-			prefix, ext = os.path.splitext(fqFName)
-			while os.path.exists(fqFName):
-				fqFName = "%s (%d)%s" % (prefix, loop,  ext)
-				loop += 1
-			self.log.info("Saving to archive = %s", fqFName)
-
-			images = self.getImages(sourceUrl)
-
-			self.log.info("Creating archive with %s images", len(images))
+			images = self.getImages(source_url)
 
 			if not images:
-				self.updateDbEntry(sourceUrl, dlState=-1, tags="error-404")
-				return
+				with self.row_context(dbid=link_row_id) as row:
+					row.state = 'error'
+					row.err_str = "error-404"
+					return
 
-			fqFName = self.save_image_set(fqFName, images)
 
-			dedupState = MangaCMSOld.cleaner.processDownload.processDownload(seriesName, fqFName, deleteDups=True, includePHash=True, rowId=link['dbId'])
-			self.log.info( "Done")
+			self.save_manga_image_set(link_row_id, series_name, chapter_name, images)
 
-			filePath, fileName = os.path.split(fqFName)
-			self.updateDbEntry(sourceUrl, dlState=2, downloadPath=filePath, fileName=fileName, tags=dedupState)
-			return
 
 		except Exception:
-			self.log.critical("Failure on retrieving content at %s", sourceUrl)
+			self.log.critical("Failure on retrieving content at %s", source_url)
 			self.log.critical("Traceback = %s", traceback.format_exc())
-			self.updateDbEntry(sourceUrl, dlState=-1)
+			with self.row_context(dbid=link_row_id) as row:
+				row.state = 'error'
+				row.err_str = traceback.format_exc()
 			raise
 
 if __name__ == '__main__':

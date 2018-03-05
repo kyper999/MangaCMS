@@ -131,12 +131,9 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDb
 	def processDownload(self,
 				seriesName,
 				archivePath,
-				deleteDups=False,
-				includePHash=False,
-				pathPositiveFilter=None,
-				crossReference=True,
-				doUpload=True,
-				rowId=None,
+				pathPositiveFilter = None,
+				crossReference     = True,
+				doUpload           = True,
 				**kwargs
 			):
 

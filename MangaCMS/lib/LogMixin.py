@@ -2,6 +2,7 @@
 import logging
 import threading
 import abc
+import traceback
 
 class LoggerMixin(metaclass=abc.ABCMeta):
 
@@ -14,6 +15,12 @@ class LoggerMixin(metaclass=abc.ABCMeta):
 		super().__init__(*args, **kwargs)
 		self.loggers = {}
 		self.lastLoggerIndex = 1
+
+
+	def log_exception(self):
+		self.log.error("Encountered error!")
+		for line in traceback.format_exc().split("\n"):
+			self.log.error(line)
 
 
 	@property

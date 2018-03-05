@@ -8,21 +8,22 @@ import urllib.parse
 import time
 import calendar
 import parsedatetime
+import datetime
 import settings
 
-import MangaCMSOld.ScrapePlugins.LoaderBase
+import MangaCMS.ScrapePlugins.LoaderBase
 
 # Only downlad items in language specified.
 # Set to None to disable filtering (e.g. fetch ALL THE FILES).
 DOWNLOAD_ONLY_LANGUAGE = "English"
 
-class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
+class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
-	loggerPath = "Main.Manga.MDx.Fl"
-	pluginName = "MangaDex Link Retreiver"
-	tableKey = "mdx"
+	logger_path  = "Main.Manga.MDx.Fl"
+	plugin_name  = "MangaDex Link Retreiver"
+	plugin_key   = "mdx"
+	is_manga     = True
 
-	tableName = "MangaItems"
 
 	urlBase    = "https://mangadex.com/"
 	seriesBase = "https://mangadex.com/1"
@@ -55,7 +56,7 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 	def getUpdatedSeriesPages(self):
 		# Historical stuff goes here, if wanted.
 
-		self.log.info( "Loading MangaDex Items")
+		self.log.info("Loading MangaDex Items")
 
 		pages = self.getUpdatedSeries(self.seriesBase)
 
@@ -70,7 +71,7 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 		# Should probably extract tagging info here. Laaaaazy
 		# MangaUpdates interface does a better job anyways.
 		titleA = soup.find("h3", class_='panel-title')
-		return {"seriesName": titleA.get_text(strip=True)}
+		return {"series_name": titleA.get_text(strip=True)}
 
 	def getChaptersFromSeriesPage(self, soup):
 		sname = soup.find("h3", class_='panel-title').get_text(strip=True)
@@ -108,14 +109,14 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 
 			name = "{} - {} [{}, {}]".format(sname, name, "MangaDex", group.get_text(strip=True))
 
-			item["originName"] = name
-			item["sourceUrl"]  = urllib.parse.urljoin(self.urlBase, chapter_name.a['href'])
+			item["origin_name"] = name
+			item["source_id"]  = urllib.parse.urljoin(self.urlBase, chapter_name.a['href'])
 			dateStr = ultime['title'].strip()
 			itemDate, status = parsedatetime.Calendar().parse(dateStr)
 			if status < 1:
 				continue
 
-			item['retreivalTime'] = calendar.timegm(itemDate)
+			item['posted_at'] = datetime.datetime(*itemDate[:6])
 			items.append(item)
 
 
@@ -135,23 +136,25 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 
 			ret.append(chapter)
 
-		self.log.info("Found %s items on page for series '%s'", len(ret), seriesInfo['seriesName'])
+		self.log.info("Found %s items on page for series '%s'", len(ret), seriesInfo['series_name'])
 
 		return ret
 
-	def getFeed(self):
+	def get_feed(self):
 		toScan = self.getUpdatedSeriesPages()
 
-		ret = []
 
 		for url in toScan:
+			ret = []
 			items = self.getChapterLinkFromSeriesPage(url)
 			for item in items:
 				if item in ret:
 					raise ValueError("Duplicate items in ret?")
 				ret.append(item)
 
-		return ret
+			self._process_links_into_db(ret)
+
+		return []
 
 	def get_history(self):
 		idx = 0
@@ -176,7 +179,7 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 								raise ValueError("Duplicate items in ret?")
 							ret.append(item)
 							found += 1
-						self._processLinksIntoDB(ret)
+						self._process_links_into_db(ret)
 						self.log.info("Found %s items so far", found)
 
 
@@ -192,10 +195,11 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 if __name__ == '__main__':
 	import utilities.testBase as tb
 
-	with tb.testSetup():
+	with tb.testSetup(load=False):
 		fl = FeedLoader()
 		fl.setup()
 		fl.get_history()
+		# fl.get_feed()
 		# fl.do_fetch_feeds()
 		# print(fl.getUpdatedSeriesPages())
 		# print(fl.getAllItems())

@@ -26,14 +26,12 @@ import MangaCMSOld.ScrapePlugins.M.IrcGrabber.IrcEnqueueRun
 import MangaCMSOld.ScrapePlugins.M.Kawaii.Run
 import MangaCMSOld.ScrapePlugins.M.KissLoader.Run
 import MangaCMSOld.ScrapePlugins.M.MangaBox.Run
-import MangaCMSOld.ScrapePlugins.M.MangaDex.Run
 import MangaCMSOld.ScrapePlugins.M.MangaHere.Run
-import MangaCMSOld.ScrapePlugins.M.MangaStreamLoader.Run
+import MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run
 import MangaCMSOld.ScrapePlugins.M.McLoader.Run
 import MangaCMSOld.ScrapePlugins.M.MerakiScans.Run
 import MangaCMSOld.ScrapePlugins.M.MangaZuki.Run
 import MangaCMSOld.ScrapePlugins.M.WebtoonLoader.Run            # Yeah. There is webtoon.com. and WebtoonsReader.com. Confusing much?
-import MangaCMSOld.ScrapePlugins.M.YoMangaLoader.Run
 import MangaCMSOld.ScrapePlugins.M.ZenonLoader.Run
 
 import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.CanisMajorRun
@@ -52,6 +50,9 @@ import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.TwistedHelRun
 import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.VortexRun
 
 
+import MangaCMS.ScrapePlugins.M.MangaDex.Run
+
+import MangaCMS.ScrapePlugins.M.YoMangaLoader.Run
 import MangaCMS.ScrapePlugins.H.HBrowseLoader.Run
 import MangaCMS.ScrapePlugins.H.NHentaiLoader.Run
 import MangaCMS.ScrapePlugins.M.MangaMadokami.Run
@@ -70,8 +71,8 @@ def minutes(num):
 # All they do is specify the order in which plugins
 # are run, initially, starting after 1-minue*{key} intervals
 scrapePlugins = {
-	0   : (MangaCMSOld.ScrapePlugins.M.MangaDex.Run,                        hours( 1)),
-	1   : (MangaCMSOld.ScrapePlugins.M.MangaStreamLoader.Run,               hours( 6)),
+	0   : (MangaCMS.ScrapePlugins.M.MangaDex.Run,                        hours( 1)),
+	1   : (MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run,               hours( 6)),
 	2   : (MangaCMSOld.ScrapePlugins.M.BuMonitor.Run,                       hours( 1)),
 	3   : (MangaCMSOld.ScrapePlugins.M.BuMonitor.Rescan,                    days(  7)),
 
@@ -87,7 +88,7 @@ scrapePlugins = {
 	22  : (MangaCMSOld.ScrapePlugins.M.Kawaii.Run,                          hours(12)),
 	23  : (MangaCMSOld.ScrapePlugins.M.ZenonLoader.Run,                     hours(24)),
 	24  : (MangaCMSOld.ScrapePlugins.M.MangaBox.Run,                        hours(12)),
-	25  : (MangaCMSOld.ScrapePlugins.M.YoMangaLoader.Run,                   hours(12)),
+	25  : (MangaCMS.ScrapePlugins.M.YoMangaLoader.Run,                   hours(12)),
 	26  : (MangaCMSOld.ScrapePlugins.M.GameOfScanlationLoader.Run,          hours(12)),
 	27  : (MangaCMSOld.ScrapePlugins.M.MerakiScans.Run,                     hours(12)),
 	28  : (MangaCMSOld.ScrapePlugins.M.MangaZuki.Run,                       hours(12)),
@@ -154,15 +155,15 @@ if __name__ == "__main__":
 				MangaCMSOld.ScrapePlugins.M.GameOfScanlationLoader.Run,
 				MangaCMSOld.ScrapePlugins.M.Kawaii.Run,
 				MangaCMSOld.ScrapePlugins.M.MangaBox.Run,
-				MangaCMSOld.ScrapePlugins.M.MangaDex.Run,
+				MangaCMS.ScrapePlugins.M.MangaDex.Run,
 				MangaCMSOld.ScrapePlugins.M.MangaHere.Run,
 				# MangaCMS.ScrapePlugins.M.MangaMadokami.Run,
-				MangaCMSOld.ScrapePlugins.M.MangaStreamLoader.Run,
+				MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run,
 				MangaCMSOld.ScrapePlugins.M.MangaZuki.Run,
 				MangaCMSOld.ScrapePlugins.M.McLoader.Run,
 				MangaCMSOld.ScrapePlugins.M.MerakiScans.Run,
 				MangaCMSOld.ScrapePlugins.M.WebtoonLoader.Run,
-				MangaCMSOld.ScrapePlugins.M.YoMangaLoader.Run,
+				MangaCMS.ScrapePlugins.M.YoMangaLoader.Run,
 				MangaCMSOld.ScrapePlugins.M.ZenonLoader.Run,
 				MangaCMSOld.ScrapePlugins.M.BuMonitor.Rescan,
 				MangaCMSOld.ScrapePlugins.M.BuMonitor.Run,

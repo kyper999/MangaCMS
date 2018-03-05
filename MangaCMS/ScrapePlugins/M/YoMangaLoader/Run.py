@@ -1,13 +1,10 @@
 
-import runStatus
+
+import MangaCMS.ScrapePlugins.RunBase
+
 from .Loader import Loader
 
-import MangaCMSOld.ScrapePlugins.RunBase
-
-import time
-
-
-class Runner(MangaCMSOld.ScrapePlugins.RunBase.ScraperBase):
+class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
 	loggerPath = "Main.Manga.Yo.Run"
 
 	pluginName = "YoLoader"

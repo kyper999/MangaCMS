@@ -1,21 +1,17 @@
 
 
+import MangaCMS.ScrapePlugins.RunBase
+
 from .FeedLoader import FeedLoader
 from .ContentLoader import ContentLoader
 
-import MangaCMSOld.ScrapePlugins.RunBase
 
-import time
+class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
+	loggerPath = "Main.Manga.MDx.Run"
 
-import runStatus
+	pluginName = "MangaDexLoader"
 
-
-class Runner(MangaCMSOld.ScrapePlugins.RunBase.ScraperBase):
-	loggerPath = "Main.Manga.Mk.Run"
-
-	pluginName = "MkLoader"
-
-	sourceName = "MangaMadokami"
+	sourceName = "MangaDex"
 	feedLoader = FeedLoader
 	contentLoader = ContentLoader
 
@@ -26,3 +22,4 @@ if __name__ == "__main__":
 
 		run = Runner()
 		run.go()
+

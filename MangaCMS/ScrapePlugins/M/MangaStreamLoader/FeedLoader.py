@@ -1,9 +1,9 @@
 
 
-import MangaCMSOld.lib.logSetup
+import MangaCMS.lib.logSetup
 import runStatus
 if __name__ == "__main__":
-	MangaCMSOld.lib.logSetup.initLogging()
+	MangaCMS.lib.logSetup.initLogging()
 	runStatus.preloadDicts = False
 
 
@@ -17,23 +17,20 @@ import runStatus
 import settings
 import datetime
 
-import MangaCMSOld.ScrapePlugins.LoaderBase
+import MangaCMS.ScrapePlugins.LoaderBase
 import nameTools as nt
 
-class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
+class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
 
-	loggerPath = "Main.Manga.Ms.Fl"
-	pluginName = "Mangastream.com Scans Link Retreiver"
-	tableKey = "ms"
-	dbName = settings.DATABASE_DB_NAME
-	tableName = "MangaItems"
+	logger_path = "Main.Manga.Ms.Fl"
+	plugin_name = "Mangastream.com Scans Link Retreiver"
+	plugin_key  = "ms"
+	is_manga     = True
 
 	urlBase    = "http://mangastream.com/"
 	seriesBase = "http://mangastream.com/manga"
-
-
 
 
 	def extractItemInfo(self, soup):
@@ -70,20 +67,19 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 
 			reldate_str = ulDate.get_text().strip()
 			if reldate_str == "Today":
-				reldate_ts = time.time()
+				date = datetime.datetime.now()
 			else:
 				date = dateutil.parser.parse(reldate_str, fuzzy=True)
-				reldate_ts = calendar.timegm(date.timetuple())
 
 			item = {}
 
 			url = row.a["href"]
 			url = urllib.parse.urljoin(self.urlBase, url)
 
-			item["originName"]    = "{series} - {file}".format(series=baseInfo["title"], file=chapTitle)
-			item["sourceUrl"]     = url
-			item["seriesName"]    = baseInfo["title"]
-			item["retreivalTime"] = reldate_ts
+			item["origin_name"]    = "{series} - {file}".format(series=baseInfo["title"], file=chapTitle)
+			item["source_id"]      = url
+			item["series_name"]    = baseInfo["title"]
+			item["posted_at"]      = date
 
 			if not item in ret:
 				ret.append(item)
@@ -117,29 +113,34 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 		return ret
 
 
-	def getFeed(self, historical=False):
+	def get_feed(self, historical=False):
 		# for item in items:
 		# 	self.log.info( item)
 		#
 
 		self.log.info( "Loading Red Hawk Items")
 
-		ret = []
 
 		seriesPages = self.getSeriesUrls()
 
+		tot = 0
 
 		for item in seriesPages:
+			ret = []
 
 			itemList = self.getItemPages(item)
 			for item in itemList:
 				ret.append(item)
+				tot += 1
 
 			if not runStatus.run:
 				self.log.info( "Breaking due to exit flag being set")
 				break
-		self.log.info("Found %s total items", len(ret))
-		return ret
+
+			self._process_links_into_db(ret)
+
+		self.log.info("Found %s total items", tot)
+		return []
 
 
 if __name__ == '__main__':

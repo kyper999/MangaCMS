@@ -15,7 +15,6 @@ import time
 import calendar
 
 import MangaCMS.ScrapePlugins.LoaderBase
-import MangaCMS.ScrapePlugins.RunBase
 
 class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 

@@ -4,6 +4,8 @@
 
 
 
+import traceback
+import datetime
 import urllib.parse
 import time
 import calendar
@@ -11,20 +13,22 @@ import dateutil.parser
 import runStatus
 import settings
 import os.path
-import MangaCMSOld.cleaner.processDownload
 
-import MangaCMSOld.ScrapePlugins.RetreivalBase
+import MangaCMS.cleaner.processDownload
+import MangaCMS.ScrapePlugins.RetreivalBase
+import MangaCMS.ScrapePlugins.LoaderBase
+
 import nameTools as nt
 
-class Loader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
+class Loader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase,
+		MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 
-	loggerPath = "Main.Manga.Yo.Fl"
-	pluginName = "YoManga Scans Link Retreiver"
-	tableKey = "ym"
-	dbName = settings.DATABASE_DB_NAME
-	tableName = "MangaItems"
+	logger_path = "Main.Manga.Yo.Fl"
+	plugin_name = "YoManga Scans Link Retreiver"
+	plugin_key  = "ym"
+	is_manga    = True
 
 	urlBase    = "http://yomanga.co/"
 	seriesBase = "http://yomanga.co/reader/directory/%s/"
@@ -33,50 +37,67 @@ class Loader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 	def doDownload(self, seriesName, dlurl, chapter_name):
 
+		with self.row_context(url=dlurl) as row:
+			if row and row.state != 'new':
+				return
 
-		row = self.getRowsByValue(sourceUrl=dlurl, limitByKey=False)
-		if row and row[0]['dlState'] != 0:
+		link = {
+			"series_name" : seriesName,
+			"source_id"   : dlurl,
+			'posted_at'   : datetime.datetime.now(),
+			'state'       : 'fetching'
+		}
+
+		self._process_links_into_db([link])
+
+		try:
+
+			fctnt, fname = self.wg.getFileAndName(dlurl)
+
+		except:
+			self.log.error("Unrecoverable error retrieving content %s", (seriesName, dlurl))
+			self.log.error("Traceback: %s", traceback.format_exc())
+
+			with self.row_context(url=dlurl) as row:
+				row.state = 'error'
 			return
 
-		if not row:
-			self.insertIntoDb(retreivalTime = time.time(),
-								sourceUrl   = dlurl,
-								originName  = seriesName,
-								dlState     = 1,
-								seriesName  = seriesName)
 
 
-		fctnt, fname = self.wg.getFileAndName(dlurl)
+		target_dir, new_dir = self.locateOrCreateDirectoryForSeries(seriesName)
+		with self.row_context(url=dlurl) as row:
+			row.dirstate = 'new_dir' if new_dir else 'had_dir'
+			row.origin_name = fname
 
 
 		fileN = '{series} - {chap} [YoManga].zip'.format(series=seriesName, chap=chapter_name)
 		fileN = nt.makeFilenameSafe(fileN)
 
-		dlPath, newDir = self.locateOrCreateDirectoryForSeries(seriesName)
-		wholePath = os.path.join(dlPath, fileN)
+		fqFName = os.path.join(target_dir, fileN)
 
-		self.log.info("Source name: %s", fname)
-		self.log.info("Generated name: %s", fileN)
+		# This call also inserts the file parameters into the row
+		with self.row_sess_context(url=dlurl) as row_tup:
+			row, sess = row_tup
+			fqFName = self.save_archive(row, sess, fqFName, fctnt)
 
-		if newDir:
-			self.updateDbEntry(dlurl, flags="haddir")
+		#self.log.info( filePath)
 
-		with open(wholePath, "wb") as fp:
-			fp.write(fctnt)
+		with self.row_context(url=dlurl) as row:
+			row.state = 'processing'
 
-		self.log.info("Successfully Saved to path: %s", wholePath)
-
-
-		dedupState = MangaCMSOld.cleaner.processDownload.processDownload(seriesName, wholePath, deleteDups=True)
-		if dedupState:
-			self.addTags(sourceUrl=dlurl, tags=dedupState)
-
-		self.updateDbEntry(dlurl, dlState=2, downloadPath=dlPath, fileName=fileN, originName=fileN)
+		# We don't want to upload the file we just downloaded, so specify doUpload as false.
+		# As a result of this, the seriesName paramerer also no longer matters
+		MangaCMS.cleaner.processDownload.processDownload(seriesName=False, archivePath=fqFName, deleteDups=True, doUpload=False)
 
 
+		self.log.info( "Done")
+		with self.row_context(url=dlurl) as row:
+			row.state = 'complete'
+
+		return
 
 
-	def getLink(self, url):
+	def get_link(self, url):
 		new = 0
 		total = 0
 
@@ -125,6 +146,10 @@ class Loader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 		return ret
 
 
+	def get_feed(self):
+		# Stubbed to shut up the base-class
+		pass
+
 	def go(self):
 		self.log.info( "Loading YoManga Items")
 
@@ -135,7 +160,7 @@ class Loader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		for item in seriesPages:
 
-			new, total     = self.getLink(item)
+			new, total     = self.get_link(item)
 			tot_new       += new
 			total_overall += total
 

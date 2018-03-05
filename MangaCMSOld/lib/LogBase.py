@@ -2,6 +2,7 @@
 import logging
 import threading
 import abc
+import traceback
 
 class LoggerMixin(metaclass=abc.ABCMeta):
 
@@ -12,7 +13,6 @@ class LoggerMixin(metaclass=abc.ABCMeta):
 	def __init__(self):
 		self.loggers = {}
 		self.lastLoggerIndex = 1
-
 
 	@property
 	def log(self):
