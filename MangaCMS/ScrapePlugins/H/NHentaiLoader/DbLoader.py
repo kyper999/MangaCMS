@@ -2,41 +2,26 @@
 
 import traceback
 
-import settings
-import parsedatetime
+import datetime
 import urllib.parse
-import time
-import calendar
 import dateutil.parser
 
 import concurrent.futures
-import MangaCMSOld.ScrapePlugins.LoaderBase
-class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
+
+import MangaCMS.ScrapePlugins.LoaderBase
+class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
-	dbName = settings.DATABASE_DB_NAME
-	loggerPath = "Main.Manga.NHentai.Fl"
-	pluginName = "NHentai Link Retreiver"
-	tableKey    = "nh"
+	logger_path = "Main.Manga.NHentai.Fl"
+	plugin_name = "NHentai Link Retreiver"
+	plugin_key  = "nh"
+	is_manga    = False
+
 	urlBase = "http://nhentai.net/"
 	urlFeed = "http://nhentai.net/language/english/?page={num}"
 
 
 	tableName = "HentaiItems"
-
-	def loadFeed(self, pageOverride=None):
-		self.log.info("Retrieving feed content...",)
-		if not pageOverride:
-			pageOverride = 1
-		try:
-			pageUrl = self.urlFeed.format(num=pageOverride)
-			soup = self.wg.getSoup(pageUrl)
-		except urllib.error.URLError:
-			self.log.critical("Could not get page from NHentai!")
-			self.log.critical(traceback.format_exc())
-			return None
-
-		return soup
 
 
 	def getCategoryTags(self, soup):
@@ -58,7 +43,6 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 				tag = tag.replace(" ", "-")
 				tags.append(tag)
 
-		tags = " ".join(tags)
 		return category, tags
 
 	def getUploadTime(self, soup):
@@ -66,36 +50,38 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 		if not timeTag:
 			raise ValueError("No time tag found!")
 
-		ulDate = dateutil.parser.parse(timeTag['datetime'])
-		ultime = ulDate.timestamp()
+		ulDate = dateutil.parser.parse(timeTag['datetime']).replace(tzinfo=None)
 
 		# No future times!
-		if ultime > time.time():
+		if ulDate > datetime.datetime.now():
 			self.log.warning("Clamping timestamp to now!")
-			ultime = time.time()
-		return ultime
+			ulDate = datetime.datetime.now()
+		return ulDate
 
 
 	def getInfo(self, itemUrl):
 		ret = {}
 		soup = self.wg.getSoup(itemUrl)
 
-		ret["seriesName"], ret['tags'] = self.getCategoryTags(soup)
-		ret['retreivalTime'] = self.getUploadTime(soup)
+		ret["series_name"], ret['tags'] = self.getCategoryTags(soup)
+		ret['posted_at'] = self.getUploadTime(soup)
 
 		return ret
 
 
 	def parseItem(self, containerDiv, retag=False):
-		ret = {}
-		ret['sourceUrl'] = urllib.parse.urljoin(self.urlBase, containerDiv.a["href"])
+		item_url = urllib.parse.urljoin(self.urlBase, containerDiv.a["href"])
 
 		# Do not decend into items where we've already added the item to the DB
-		row = self.getRowsByValue(sourceUrl=ret['sourceUrl'])
-		if len(row) and not retag:
-			return None
+		with self.row_context(url=item_url) as row:
+			if row and not retag:
+				return
 
-		ret.update(self.getInfo(ret['sourceUrl']))
+
+		ret = {
+			'source_id' : item_url
+		}
+		ret.update(self.getInfo(item_url))
 
 		# Yaoi isn't something I'm that in to.
 		if "guys-only" in ret["tags"] or "males-only" in ret['tags']:
@@ -103,25 +89,41 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 			return None
 
 		titleTd = containerDiv.find("div", class_='caption')
-		ret['originName'] = titleTd.get_text().strip()
+		ret['origin_name'] = titleTd.get_text().strip()
 
 		return ret
 
 
-	def update_tags(self, items):
+	def update_tags(self, item):
 		self.log.info("Doing tag update")
-		for item in items:
-			rowd = self.getRowsByValue(sourceUrl=item['sourceUrl'])
-			if rowd:
-				self.log.info("Updating tags for %s", item['sourceUrl'])
-				self.addTags(sourceUrl=item['sourceUrl'], tags=item['tags'])
 
-	def getFeed(self, pageOverride=None, retag=False):
+		# Do not decend into items where we've already added the item to the DB
+		with self.row_context(url=item['source_id']) as row:
+			if row:
+				for tag in item['tags']:
+					row.tags.add(tag)
+
+
+	def loadFeedContent(self, pageOverride=None):
+		self.log.info("Retrieving feed content...",)
+		if not pageOverride:
+			pageOverride = 1
+		try:
+			pageUrl = self.urlFeed.format(num=pageOverride)
+			soup = self.wg.getSoup(pageUrl)
+		except urllib.error.URLError:
+			self.log.critical("Could not get page from NHentai!")
+			self.log.critical(traceback.format_exc())
+			return None
+
+		return soup
+
+	def get_feed(self, pageOverride=None, retag=False):
 		# for item in items:
 		# 	self.log.info(item)
 		#
 
-		soup = self.loadFeed(pageOverride)
+		soup = self.loadFeedContent(pageOverride)
 
 		mainDiv = soup.find("div", class_="index-container")
 
@@ -134,10 +136,11 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 			if item:
 				ret.append(item)
 
-		if retag:
-			self.update_tags(ret)
+			if retag and item:
+				self.update_tags(item)
 
 		return ret
+
 
 
 def process(runner, pageOverride, retag=False):
@@ -153,24 +156,24 @@ def getHistory(retag=False):
 
 	print("Getting history")
 	run = DbLoader()
-	with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-		futures = [executor.submit(process, runner=run, pageOverride=x, retag=retag) for x in range(0, 1500)]
-		print("Waiting for executor to finish.")
-		executor.shutdown()
+	# with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+	# 	futures = [executor.submit(process, runner=run, pageOverride=x, retag=retag) for x in range(0, 1500)]
+	# 	print("Waiting for executor to finish.")
+	# 	executor.shutdown()
 
 
 
 	for x in range(0, 1500):
-		dat = run.getFeed(pageOverride=x, retag=True)
-		run._processLinksIntoDB(dat)
+		dat = run.get_feed(pageOverride=x, retag=True)
+		run._process_links_into_db(dat)
 
 
 if __name__ == "__main__":
 	import utilities.testBase as tb
 
-	with tb.testSetup():
-		getHistory(retag=True)
+	with tb.testSetup(load=False):
+		getHistory()
 		# run = DbLoader()
-		# run.go()
+		# run.do_fetch_feeds()
 
 

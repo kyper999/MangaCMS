@@ -381,7 +381,7 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 
 		fqfilename = prep_check_fq_filename(fqfilename)
 
-		self.log.info("Complete filepath: %s", fqfilename)
+		self.log.info("Saving to complete filepath: %s", fqfilename)
 
 		filepath, fileN = os.path.split(fqfilename)
 		assert len(image_list) >= 1

@@ -53,9 +53,10 @@ import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.VortexRun
 import MangaCMS.ScrapePlugins.M.MangaDex.Run
 
 import MangaCMS.ScrapePlugins.M.YoMangaLoader.Run
-import MangaCMS.ScrapePlugins.H.HBrowseLoader.Run
-import MangaCMS.ScrapePlugins.H.NHentaiLoader.Run
 import MangaCMS.ScrapePlugins.M.MangaMadokami.Run
+
+import MangaCMS.ScrapePlugins.H.NHentaiLoader.Run
+import MangaCMS.ScrapePlugins.H.HBrowseLoader.Run
 # import MangaCMSOld.ScrapePlugins.M.BooksMadokami.Run
 
 # Convenience functions to make intervals clearer.

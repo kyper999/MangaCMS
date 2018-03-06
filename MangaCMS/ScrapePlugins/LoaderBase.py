@@ -43,6 +43,7 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 				'origin_name',
 				'series_name',
 				'additional_metadata',
+				'tags',
 			])
 		bad = keys - allowed
 		assert not bad, "Bad key(s) in ret: '%s'!" % bad
@@ -52,6 +53,8 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 			])
 		required_missing = require - keys
 		assert not required_missing, "Key(s) missing from ret: '%s'!" % required_missing
+
+		assert isinstance(check_dict.get("tags", []), list), "Tags item must be a list!"
 
 
 	def _process_links_into_db(self, linksDicts):
@@ -65,6 +68,8 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 				self._check_keys(link)
 
+				tags = link.pop("tags", [])
+
 				if 'series_name' in link and self.shouldCanonize:
 					link["series_name"] = nt.getCanonicalMangaUpdatesName(link["series_name"])
 
@@ -75,18 +80,22 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 				if not have:
 					newItems += 1
-					new_row = self.target_table(
+					have = self.target_table(
 							state       = 'new',            # Should be set automatically.
 							source_site = self.plugin_key,
 							**link
 						)
 
-					sess.add(new_row)
+					sess.add(have)
 
 					if newItems % 10000 == 0:
 						self.log.info("Added %s rows, doing incremental commit!", newItems)
 						sess.commit()
 
+
+				for tag in tags:
+					if tag not in have.tags:
+						have.tags.add(tag)
 
 		if self.mon_con:
 			self.mon_con.incr('new_links', newItems)
