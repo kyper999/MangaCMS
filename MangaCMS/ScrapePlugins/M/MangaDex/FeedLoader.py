@@ -86,12 +86,12 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 				continue  # Skip the table header row
 
 			tds = row.find_all("td")
-			if len(tds) != 6:
+			if len(tds) != 7:
 				self.log.warning("Invalid number of table entries: %s", len(tds))
 				self.log.warning("Row: %s", row)
 				continue
 
-			chapter_name, lang, group, dummy_uploader, dummy_views, ultime = tds
+			dummy_something, chapter_name, lang, group, dummy_uploader, dummy_views, ultime = tds
 
 			lang = lang.img['title']
 			if lang != DOWNLOAD_ONLY_LANGUAGE:
