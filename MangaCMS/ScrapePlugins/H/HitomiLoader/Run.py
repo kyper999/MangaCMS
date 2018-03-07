@@ -3,25 +3,31 @@
 from .DbLoader import DbLoader
 from .ContentLoader import ContentLoader
 
+import settings
+
 import runStatus
 
-import MangaCMSOld.ScrapePlugins.RunBase
+import MangaCMS.ScrapePlugins.RunBase
 
-class Runner(MangaCMSOld.ScrapePlugins.RunBase.ScraperBase):
-
-
-	loggerPath = "Main.Manga.ASMHentai.Run"
-	pluginName = "ASMHentai"
+class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
 
 
-	sourceName = "ASMHentai"
+	loggerPath = "Main.Manga.Hitomi.Run"
+	pluginName = "Hitomi"
+
+
+	sourceName = "Hitomi"
 	feedLoader = DbLoader
 	contentLoader = ContentLoader
+
+
+
 
 
 if __name__ == "__main__":
 	import utilities.testBase as tb
 
 	with tb.testSetup():
-		run = Runner()
-		run.go()
+		mon = Runner()
+		mon.go()
+

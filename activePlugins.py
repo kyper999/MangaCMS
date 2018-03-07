@@ -8,11 +8,9 @@ import MangaCMSOld.ScrapePlugins.M.BuMonitor.Run
 import MangaCMSOld.ScrapePlugins.M.BuMonitor.Rescan
 
 
-import MangaCMSOld.ScrapePlugins.H.ASMHentaiLoader.Run
 import MangaCMSOld.ScrapePlugins.H.DjMoeLoader.Run
 import MangaCMSOld.ScrapePlugins.H.DoujinOnlineLoader.Run
 import MangaCMSOld.ScrapePlugins.H.Hentai2Read.Run
-import MangaCMSOld.ScrapePlugins.H.HitomiLoader.Run
 import MangaCMSOld.ScrapePlugins.H.PururinLoader.Run
 import MangaCMSOld.ScrapePlugins.H.SadPandaLoader.Run
 import MangaCMSOld.ScrapePlugins.H.TsuminoLoader.Run
@@ -27,7 +25,6 @@ import MangaCMSOld.ScrapePlugins.M.Kawaii.Run
 import MangaCMSOld.ScrapePlugins.M.KissLoader.Run
 import MangaCMSOld.ScrapePlugins.M.MangaBox.Run
 import MangaCMSOld.ScrapePlugins.M.MangaHere.Run
-import MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run
 import MangaCMSOld.ScrapePlugins.M.McLoader.Run
 import MangaCMSOld.ScrapePlugins.M.MerakiScans.Run
 import MangaCMSOld.ScrapePlugins.M.MangaZuki.Run
@@ -50,11 +47,14 @@ import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.TwistedHelRun
 import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.VortexRun
 
 
+import MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run
 import MangaCMS.ScrapePlugins.M.MangaDex.Run
 
 import MangaCMS.ScrapePlugins.M.YoMangaLoader.Run
 import MangaCMS.ScrapePlugins.M.MangaMadokami.Run
 
+import MangaCMS.ScrapePlugins.H.ASMHentaiLoader.Run
+import MangaCMS.ScrapePlugins.H.HitomiLoader.Run
 import MangaCMS.ScrapePlugins.H.NHentaiLoader.Run
 import MangaCMS.ScrapePlugins.H.HBrowseLoader.Run
 # import MangaCMSOld.ScrapePlugins.M.BooksMadokami.Run
@@ -100,8 +100,8 @@ scrapePlugins = {
 	44  : (MangaCMS.ScrapePlugins.H.NHentaiLoader.Run,                   hours( 2)),
 	45  : (MangaCMSOld.ScrapePlugins.H.SadPandaLoader.Run,                  hours(12)),
 	46  : (MangaCMSOld.ScrapePlugins.H.DjMoeLoader.Run,                     hours( 2)),
-	47  : (MangaCMSOld.ScrapePlugins.H.HitomiLoader.Run,                    hours( 2)),
-	48  : (MangaCMSOld.ScrapePlugins.H.ASMHentaiLoader.Run,                 hours( 2)),
+	47  : (MangaCMS.ScrapePlugins.H.HitomiLoader.Run,                    hours( 2)),
+	48  : (MangaCMS.ScrapePlugins.H.ASMHentaiLoader.Run,                 hours( 2)),
 	49  : (MangaCMSOld.ScrapePlugins.H.Hentai2Read.Run,                     hours( 2)),
 	50  : (MangaCMSOld.ScrapePlugins.H.DoujinOnlineLoader.Run,              hours( 2)),
 	51  : (MangaCMSOld.ScrapePlugins.H.TsuminoLoader.Run,                   hours( 2)),
@@ -168,16 +168,16 @@ if __name__ == "__main__":
 				MangaCMSOld.ScrapePlugins.M.ZenonLoader.Run,
 				MangaCMSOld.ScrapePlugins.M.BuMonitor.Rescan,
 				MangaCMSOld.ScrapePlugins.M.BuMonitor.Run,
-				MangaCMSOld.ScrapePlugins.H.ASMHentaiLoader.Run,
+				MangaCMS.ScrapePlugins.H.ASMHentaiLoader.Run,
 				MangaCMSOld.ScrapePlugins.H.DjMoeLoader.Run,
 				MangaCMSOld.ScrapePlugins.H.DoujinOnlineLoader.Run,
 				MangaCMS.ScrapePlugins.H.HBrowseLoader.Run,
 				MangaCMSOld.ScrapePlugins.H.Hentai2Read.Run,
-				MangaCMSOld.ScrapePlugins.H.HitomiLoader.Run,
+				MangaCMS.ScrapePlugins.H.HitomiLoader.Run,
 				MangaCMS.ScrapePlugins.H.NHentaiLoader.Run,
 				MangaCMSOld.ScrapePlugins.H.PururinLoader.Run,
 				MangaCMSOld.ScrapePlugins.H.TsuminoLoader.Run,
-				MangaCMSOld.ScrapePlugins.M.BooksMadokami.Run,
+				# MangaCMSOld.ScrapePlugins.M.BooksMadokami.Run,
 				MangaCMSOld.ScrapePlugins.H.SadPandaLoader.Run,
 		]
 

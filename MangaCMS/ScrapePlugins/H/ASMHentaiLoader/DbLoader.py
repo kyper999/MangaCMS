@@ -1,30 +1,25 @@
 
 
-import pprint
-import calendar
-import traceback
 
-from dateutil import parser
-import settings
-import parsedatetime
 import urllib.parse
-import time
+import datetime
+from dateutil import parser
 import calendar
-
-import MangaCMSOld.ScrapePlugins.LoaderBase
 import concurrent.futures
 
-class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
+import settings
+import MangaCMS.ScrapePlugins.LoaderBase
+
+class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
-	dbName = settings.DATABASE_DB_NAME
-	loggerPath = "Main.Manga.ASMHentai.Fl"
-	pluginName = "ASMHentai Link Retreiver"
-	tableKey   = "asmh"
+	logger_path = "Main.Manga.ASMHentai.Fl"
+	plugin_name = "ASMHentai Link Retreiver"
+	plugin_key  = "asmh"
+	is_manga    = False
+
 	urlBase    = "https://asmhentai.com/"
 
-
-	tableName = "HentaiItems"
 
 	def loadFeed(self, pageOverride=None):
 		self.log.info("Retrieving feed content...")
@@ -53,7 +48,7 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 
 		info_section = soup.find("div", class_='info')
 
-		ret['originName'] = info_section.h1.get_text().strip()
+		ret['origin_name'] = info_section.h1.get_text().strip()
 
 		for metarow in soup.find_all("div", class_='tags'):
 			sectionname = metarow.h3
@@ -62,19 +57,18 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 			cat = sectionname.get_text().strip()
 			if cat == "Uploaded:":
 				rowtxt = rowdat.get_text().strip()
-				ulDate = parser.parse(rowtxt).utctimetuple()
+				ultime = parser.parse(rowtxt)
 
-				ultime = calendar.timegm(ulDate)
-				if ultime > time.time():
+				if ultime > datetime.datetime.now():
 					self.log.warning("Clamping timestamp to now!")
-					ultime = time.time()
-				ret['retreivalTime'] = ultime
+					ultime = datetime.datetime.now()
+				ret['posted_at'] = ultime
 			elif cat == "Category:":
 				tags = self.rowToTags(rowdat)
 				if tags:
-					ret["seriesName"] = tags[0].title()
+					ret["series_name"] = tags[0].title()
 				else:
-					ret["seriesName"] = "Unknown"
+					ret["series_name"] = "Unknown"
 			elif cat == "Artists:":
 				tags = self.rowToTags(rowdat)
 				tags = ["artist "+tag for tag in tags]
@@ -130,7 +124,6 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 		# Colons break the tsvector
 		ret['tags'] = [tag.replace(":", "-") for tag in ret['tags']]
 
-		ret['tags'] = " ".join(ret['tags'])
 
 		# print("Series metadata: ", ret)
 		return ret
@@ -138,16 +131,14 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 
 	def parseItem(self, containerDiv, retag):
 		ret = {}
-		ret['sourceUrl'] = urllib.parse.urljoin(self.urlBase, containerDiv.a["href"])
+		ret['source_id'] = urllib.parse.urljoin(self.urlBase, containerDiv.a["href"])
 
 		# Do not decend into items where we've already added the item to the DB
-		rowd = self.getRowsByValue(sourceUrl=ret['sourceUrl'])
-		if len(rowd) and not retag:
-			return None
-		if not len(rowd) and retag:
-			return None
+		with self.row_context(url=ret['source_id']) as row:
+			if row and not retag:
+				return
 
-		ret.update(self.getInfo(ret['sourceUrl']))
+		ret.update(self.getInfo(ret['source_id']))
 
 		# Yaoi isn't something I'm that in to.
 		if "yaoi" in ret["tags"]:
@@ -156,24 +147,24 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 
 		return ret
 
-	def update_tags(self, items):
-		for item in items:
-			rowd = self.getRowsByValue(sourceUrl=item["sourceUrl"], limitByKey=False)
-			if rowd:
-				self.log.info("Updating tags for %s", item['sourceUrl'])
-				self.addTags(sourceUrl=item['sourceUrl'], tags=item['tags'])
 
-	def getFeed(self, pageOverride=None, filter_eng=True, time_offset=0, retag=False):
-		# for item in items:
-		# 	self.log.info(item)
-		#
+	def update_tags(self, item):
+		self.log.info("Doing tag update")
+
+		# Do not decend into items where we've already added the item to the DB
+		with self.row_context(url=item['source_id']) as row:
+			if row:
+				for tag in item['tags']:
+					row.tags.add(tag)
+
+	def get_feed(self, pageOverride=None, filter_eng=True, time_offset=0, retag=False):
 
 		soup = self.loadFeed(pageOverride)
-
-
 		divs = soup.find_all("div", class_='preview_item')
 
 		ret = []
+
+		total_items = 0
 
 		for itemDiv in divs:
 			# cap = itemDiv.find("div", class_='caption')
@@ -182,12 +173,15 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 				item = self.parseItem(itemDiv, retag)
 				if item:
 
-					item['retreivalTime'] = time.time() - time_offset
+					item.setdefault('posted_at', datetime.datetime.now())
 					ret.append(item)
+				total_items += 1
 
-		if retag:
-			self.update_tags(ret)
-			ret = []
+				if retag:
+					self.update_tags(item)
+					ret = []
+
+		self.log.info("Found %s item divs in total", total_items)
 		return ret
 
 def process(runner, pageOverride, time_offset, retag=False):
@@ -209,8 +203,9 @@ def test():
 	print("Test!")
 	run = DbLoader()
 
-	dat = run.getFeed(retag=True)
-	print(dat)
+	for x in range(25):
+		run.do_fetch_feeds(pageOverride=x)
+
 	# print(run.go())
 	# print(run)
 	# pprint.pprint(run.getFeed())
@@ -221,8 +216,8 @@ if __name__ == "__main__":
 	import utilities.testBase as tb
 
 	with tb.testSetup(load=False):
-		getHistory(retag=True)
-		# test()
+		# getHistory(retag=True)
+		test()
 		# run = DbLoader()
 		# run.do_fetch_feeds()
 

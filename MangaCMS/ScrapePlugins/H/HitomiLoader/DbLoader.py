@@ -11,18 +11,16 @@ from dateutil import parser
 import urllib.parse
 import time
 
-import MangaCMSOld.ScrapePlugins.LoaderBase
-class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
+import MangaCMS.ScrapePlugins.LoaderBase
+class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
-	dbName = settings.DATABASE_DB_NAME
-	loggerPath = "Main.Manga.Hitomi.Fl"
-	pluginName = "Hitomi Link Retreiver"
-	tableKey    = "hit"
+	logger_path = "Main.Manga.Hitomi.Fl"
+	plugin_name = "Hitomi Link Retreiver"
+	plugin_key    = "hit"
+	is_manga    = False
+
 	urlBase = "https://hitomi.la/"
-
-
-	tableName = "HentaiItems"
 
 	def loadFeed(self, pageOverride=None):
 		self.log.info("Retrieving feed content...",)
@@ -72,7 +70,7 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 					return None
 
 			if param.lower() == "type":
-				ret['seriesName']  = val.title()
+				ret['series_name']  = val.title()
 
 			# Judge me
 			if param.lower() == "tags":
@@ -80,16 +78,16 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 					self.log.info("Skipping item due to tag 'males only' (%s).", val.replace("\n", " "))
 					return None
 
-		ret["originName"] = linkdiv.h1.get_text().strip()
-		ret["sourceUrl"] = urllib.parse.urljoin(self.urlBase, linkdiv.h1.a["href"])
+		ret["origin_name"] = linkdiv.h1.get_text().strip()
+		ret["source_id"] = urllib.parse.urljoin(self.urlBase, linkdiv.h1.a["href"])
 
 
 		pdate = parser.parse(date.get_text())
-		ret["retreivalTime"] = calendar.timegm(pdate.utctimetuple())
+		ret["posted_at"] = pdate
 
 		return ret
 
-	def getFeed(self, pageOverride=[None]):
+	def get_feed(self, pageOverride=[None]):
 		# for item in items:
 		# 	self.log.info(item)
 		#
@@ -123,8 +121,8 @@ if __name__ == "__main__":
 
 		run = DbLoader()
 		# dat = run.getFeed(pageOverride=[1])
-		# run.go()
+		# run.do_fetch_feeds()
 		for x in range(13500):
-			dat = run.getFeed(pageOverride=[x])
-			run.processLinksIntoDB(dat)
+			dat = run.get_feed(pageOverride=[x])
+			run._process_links_into_db(dat)
 
