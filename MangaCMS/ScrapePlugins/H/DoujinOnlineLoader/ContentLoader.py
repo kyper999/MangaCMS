@@ -12,7 +12,7 @@ import json
 import sys
 import zipfile
 
-import time
+import datetime
 import pprint
 import urllib.parse
 import traceback
@@ -26,26 +26,21 @@ import nameTools as nt
 import settings
 
 import WebRequest
-import MangaCMSOld.cleaner.processDownload
+import MangaCMS.cleaner.processDownload
 
-import MangaCMSOld.ScrapePlugins.RetreivalBase
+import MangaCMS.ScrapePlugins.RetreivalBase
 
-class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
+class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
+
+	logger_path = "Main.Manga.DoujinOnline.Cl"
+	plugin_name = "DoujinOnline Content Retreiver"
+	plugin_key  = "dol"
+	is_manga    = False
 
 
-
-
-	dbName = settings.DATABASE_DB_NAME
-	loggerPath = "Main.Manga.DoujinOnline.Cl"
-	pluginName = "DoujinOnline Content Retreiver"
-	tableKey   = "dol"
 	urlBase = "https://doujinshi.online/"
 
-
-	tableName = "HentaiItems"
-
-
-	retreivalThreads = 2
+	retreivalThreads = 1
 
 	itemLimit = 220
 
@@ -106,6 +101,7 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 						"group"      : "group",
 						"characters" : "character",
 						"language"   : "language",
+						"series"     : "series",
 						"type"       : "type",
 					}
 
@@ -135,36 +131,27 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		return category, tags, artist_str
 
-	def getDownloadInfo(self, linkDict, soup):
+	def getDownloadInfo(self, soup):
+		ret = {}
 
 		infoSection = soup.find("div", id='infobox')
-
-
 		category, tags, artist = self.getCategoryTags(infoSection)
-		tags = ' '.join(tags)
-		linkDict['artist'] = artist
-		linkDict['title'] = self.getFileName(infoSection)
-		linkDict['dirPath'] = os.path.join(settings.djOnSettings["dlDir"], nt.makeFilenameSafe(category))
 
-		if not os.path.exists(linkDict["dirPath"]):
-			os.makedirs(linkDict["dirPath"])
-		else:
-			self.log.info("Folder Path already exists?: %s", linkDict["dirPath"])
-
-		self.log.info("Folderpath: %s", linkDict["dirPath"])
-
-		self.log.debug("Linkdict = ")
-		for key, value in list(linkDict.items()):
-			self.log.debug("		%s - %s", key, value)
+		ret['category'] = category
+		ret['tags']     = tags
+		ret['artist']   = artist
+		ret['title']    = self.getFileName(infoSection)
+		ret['tags']     = []
 
 
 		if tags:
 			self.log.info("Adding tag info %s", tags)
-			self.addTags(sourceUrl=linkDict["sourceUrl"], tags=tags)
+			ret['tags'] = tags
 
-		self.updateDbEntry(linkDict["sourceUrl"], seriesName=category, lastUpdate=time.time())
 
-		return linkDict
+
+
+		return ret
 
 	def getImage(self, imageUrl, referrer):
 
@@ -177,9 +164,7 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 		self.log.info("retreived image '%s' with a size of %0.3f K", fileN, len(content)/1000.0)
 		return fileN, content
 
-	def getImages(self, linkDict, soup):
-
-		print("getImage", linkDict)
+	def getImages(self, referrer, soup):
 
 		postdiv = soup.find('div', id="post")
 		if not postdiv.script:
@@ -197,93 +182,84 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 		imageurls = json.loads(data_array)
 
 
-
 		if not imageurls:
 			return []
-		referrer = linkDict['sourceUrl']
 
 		images = []
 		count = 1
 		for imageurl in imageurls:
-			garbagen, imgf = self.getImage(imageurl, referrer)
-			intn = "%04d.jpeg" % count
+			dummy_garbage_name, imgf = self.getImage(imageurl, referrer)
+			intn = "%04d.jpeg" % (count, )
 			images.append((intn, imgf))
 			count += 1
 
 		return images
 
 
-	def getLink(self, linkDict):
+	def get_link(self, link_row_id):
+
 		images = None
 
-		try:
-			self.updateDbEntry(linkDict["sourceUrl"], dlState=1)
+		with self.row_context(dbid=link_row_id) as row:
+			source_url = row.source_id
+			row.state = 'fetching'
 
-			sourcePage = linkDict["sourceUrl"]
-			self.log.info("Retrieving item: %s", sourcePage)
-			soup = self.wg.getSoup(sourcePage, addlHeaders={'Referer': 'https://doujinshi.online/'})
+		try:
+
+			self.log.info("Retrieving item: %s", source_url)
+			soup = self.wg.getSoup(source_url, addlHeaders={'Referer': 'https://doujinshi.online/'})
 			if not soup:
-				self.log.critical("No download at url %s! SourceUrl = %s", sourcePage, linkDict["sourceUrl"])
+				self.log.critical("No download at url %s!", source_url)
 				raise IOError("Invalid webpage")
 
-			linkDict = self.getDownloadInfo(linkDict, soup)
-			images = self.getImages(linkDict, soup)
+			dl_info = self.getDownloadInfo(soup)
 
-			title  = linkDict['title']
-			artist = linkDict['artist']
+
+			with self.row_context(dbid=link_row_id) as row:
+				self.update_tags(dl_info['tags'], row=row)
+
+				row.series_name = dl_info['category']
+				row.origin_name = dl_info['title']
+				row.lastUpdate  = datetime.datetime.now()
+
+			images = self.getImages(referrer=source_url, soup=soup)
 
 
 		except WebRequest.WebGetException:
-			self.updateDbEntry(linkDict["sourceUrl"], dlState=-2, downloadPath="ERROR", fileName="ERROR: FAILED")
-
-		if images and title:
-			fileN = title+" - "+artist+".zip"
-			fileN = nt.makeFilenameSafe(fileN)
-
-
-			# self.log.info("geturl with processing", fileN)
-			wholePath = os.path.join(linkDict["dirPath"], fileN)
-			wholePath = self.insertCountIfFilenameExists(wholePath)
-			self.log.info("Complete filepath: %s", wholePath)
-
-
-			#Write all downloaded files to the archive.
-			try:
-				arch = zipfile.ZipFile(wholePath, "w")
-			except OSError:
-				title = title.encode('ascii','ignore').decode('ascii')
-				fileN = title+".zip"
-				fileN = nt.makeFilenameSafe(fileN)
-				wholePath = os.path.join(linkDict["dirPath"], fileN)
-				arch = zipfile.ZipFile(wholePath, "w")
-
-			for imageName, imageContent in images:
-				arch.writestr(imageName, imageContent)
-			arch.close()
-
-
-			self.log.info("Successfully Saved to path: %s", wholePath)
-
-
-			self.updateDbEntry(linkDict["sourceUrl"], downloadPath=linkDict["dirPath"], fileName=fileN)
-
-			# Deduper uses the path info for relinking, so we have to dedup the item after updating the downloadPath and fileN
-			dedupState = MangaCMSOld.cleaner.processDownload.processDownload(None, wholePath, pron=True, deleteDups=True, includePHash=True, rowId=linkDict['dbId'])
-			self.log.info( "Done")
-
-			if dedupState:
-				self.addTags(sourceUrl=linkDict["sourceUrl"], tags=dedupState)
-
-
-			self.updateDbEntry(linkDict["sourceUrl"], dlState=2)
-
-			return wholePath
-
-		else:
-
-			self.updateDbEntry(linkDict["sourceUrl"], dlState=-1, downloadPath="ERROR", fileName="ERROR: FAILED")
+			with self.row_context(dbid=link_row_id) as row:
+				row.state = 'error'
 			return False
 
+		if not (images and dl_info['title']):
+			with self.row_context(dbid=link_row_id) as row:
+				row.state = 'error'
+			return False
+
+
+		fileN = dl_info['title']+" - "+dl_info['artist']+".zip"
+		fileN = nt.makeFilenameSafe(fileN)
+
+		container_dir = os.path.join(settings.djOnSettings["dlDir"], nt.makeFilenameSafe(dl_info['category']))
+
+		with self.row_sess_context(dbid=link_row_id) as row_tup:
+			row, sess = row_tup
+
+			wholePath = os.path.join(container_dir, fileN)
+			fqFName = self.save_image_set(row, sess, wholePath, images)
+
+		with self.row_context(dbid=link_row_id) as row:
+			row.state = 'processing'
+
+		# We don't want to upload the file we just downloaded, so specify doUpload as false.
+		# As a result of this, the seriesName paramerer also no longer matters
+		MangaCMS.cleaner.processDownload.processDownload(seriesName=False, archivePath=fqFName, doUpload=False)
+
+
+		self.log.info( "Done")
+		with self.row_context(dbid=link_row_id) as row:
+			row.state = 'complete'
+
+		return True
 
 
 if __name__ == "__main__":
@@ -295,5 +271,5 @@ if __name__ == "__main__":
 		# run.getLink({'sourceUrl':'https://doujinshi.online/graffiti/'})
 		# run.getLink({'sourceUrl':'https://doujinshi.online/hishoku-yuusha-plus/'})
 		# run.getDownloadInfo({'sourceUrl':'https://doujinshi.online/cherry-pink-na-kougai-souguu/'})
-		run.go()
+		run.do_fetch_content()
 

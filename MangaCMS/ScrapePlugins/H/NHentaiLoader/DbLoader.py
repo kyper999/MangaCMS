@@ -99,10 +99,7 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 		# Do not decend into items where we've already added the item to the DB
 		with self.row_context(url=item['source_id']) as row:
-			if row:
-				for tag in item['tags']:
-					row.tags.add(tag)
-
+			self.update_tags(item['tags'], row=row)
 
 	def loadFeedContent(self, pageOverride=None):
 		self.log.info("Retrieving feed content...",)

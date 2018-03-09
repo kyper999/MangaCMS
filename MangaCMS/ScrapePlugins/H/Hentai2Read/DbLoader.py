@@ -1,32 +1,32 @@
 
 
 import pprint
-import calendar
-import traceback
+import datetime
 
-from dateutil import parser
-import settings
-import parsedatetime
 import urllib.parse
 import time
-import calendar
 
-import MangaCMSOld.ScrapePlugins.LoaderBase
-import concurrent.futures
+import calendar
+import parsedatetime
+
+import settings
+import MangaCMS.ScrapePlugins.LoaderBase
 
 class NotEnglishException(RuntimeError): pass
 
-class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
+class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
-	dbName = settings.DATABASE_DB_NAME
-	loggerPath = "Main.Manga.Hentai2Read.Fl"
-	pluginName = "Hentai2Read Link Retreiver"
-	tableKey   = "h2r"
+	logger_path = "Main.Manga.Hentai2Read.Fl"
+	plugin_name = "Hentai2Read Link Retreiver"
+	plugin_key  = "h2r"
+	is_manga    = False
+
+
+
 	urlBase    = "https://hentai2read.com/"
 
 
-	tableName = "HentaiItems"
 
 	def loadFeed(self, pageOverride=None):
 		self.log.info("Retrieving feed content...")
@@ -100,14 +100,14 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 
 		meta_dict = {
 				'tags'       : [],
-				"seriesName" : None,
+				"series_name" : None,
 			}
 		for list_entry in meta_list.find_all("li"):
 			if list_entry.get('class', None) == ['text-muted']:
 				sname = list_entry.get_text(strip=True)
 				if sname == "-":
 					sname = None
-				meta_dict["seriesName"] = sname
+				meta_dict["series_name"] = sname
 
 			elif list_entry.b:
 				item_name = list_entry.b.get_text(strip=True)
@@ -122,13 +122,13 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 					self.log.error("%s", list_entry)
 
 
-		if meta_dict['seriesName'] is None:
+		if meta_dict['series_name'] is None:
 			header_div = soup.find("section", class_='content')
 			titletag = header_div.find('h3', class_='block-title')
 			if titletag.small:
 				titletag.small.decompose()
 
-			meta_dict['seriesName'] = titletag.get_text(strip=True)
+			meta_dict['series_name'] = titletag.get_text(strip=True)
 
 		while any(["  " in tag for tag in meta_dict['tags']]):
 			meta_dict['tags'] = [tag.replace("  ", " ") for tag in meta_dict['tags']]
@@ -142,10 +142,7 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 		# Colons break the tsvector
 		meta_dict['tags'] = [tag.replace(":", "-") for tag in meta_dict['tags']]
 
-		meta_dict['tags'] = " ".join(meta_dict['tags'])
 
-
-		# print("Series metadata: ", ret)
 		return meta_dict
 
 
@@ -162,9 +159,14 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 			return ret
 
 		for chap in chap_list.find_all('li', recursive=False):
+
+			bad = chap.find('a', class_='btn-circle')
+			if bad:
+				bad.decompose()
+
 			chap_d = {key : val for key, val in series_meta.items()}
 
-			chap_d['sourceUrl'] = chap.a['href']
+			chap_d['source_id'] = chap.a['href']
 
 			dateinfo = chap.a.small.get_text()
 			chap.a.small.decompose()
@@ -174,28 +176,28 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 			itemDate, status = parsedatetime.Calendar().parse(timestr)
 
 			if status >= 1:
-				chap_d['retreivalTime'] = calendar.timegm(itemDate)
+				chap_d['posted_at'] = datetime.datetime(*itemDate[:6])
 			else:
 				self.log.warning("Parsing relative date '%s' failed (%s). Using current timestamp.", timestr, status)
-				chap_d['retreivalTime'] = time.time()
+				chap_d['posted_at'] = datetime.datetime.now()
 
 
 
-			if chap_d['seriesName'] is None:
-				chap_d['originName'] = chap.a.get_text(strip=True)
-				chap_d["seriesName"] = chap.a.get_text(strip=True)
+			if chap_d['series_name'] is None:
+				chap_d['origin_name'] = chap.a.get_text(strip=True)
+				chap_d["series_name"] = chap.a.get_text(strip=True)
 			else:
-				chap_d["originName"] = chap_d['seriesName'] + " – " + chap.a.get_text(strip=True)
+				chap_d["origin_name"] = chap_d['series_name'] + " – " + chap.a.get_text(strip=True)
 
-			# assert not chap_d["seriesName"].startswith("1")
-			# assert not chap_d["seriesName"].startswith("2")
-			# assert not chap_d["seriesName"].startswith("3")
-			# assert not chap_d["seriesName"].startswith("4")
-			# assert not chap_d["seriesName"].startswith("5")
-			# assert not chap_d["seriesName"].startswith("6")
-			# assert not chap_d["seriesName"].startswith("7")
-			# assert not chap_d["seriesName"].startswith("8")
-			# assert not chap_d["seriesName"].startswith("9")
+			# assert not chap_d["series_name"].startswith("1"), "Bad series name: '%s'" % chap_d["series_name"]
+			# assert not chap_d["series_name"].startswith("2"), "Bad series name: '%s'" % chap_d["series_name"]
+			# assert not chap_d["series_name"].startswith("3"), "Bad series name: '%s'" % chap_d["series_name"]
+			# assert not chap_d["series_name"].startswith("4"), "Bad series name: '%s'" % chap_d["series_name"]
+			# assert not chap_d["series_name"].startswith("5"), "Bad series name: '%s'" % chap_d["series_name"]
+			# assert not chap_d["series_name"].startswith("6"), "Bad series name: '%s'" % chap_d["series_name"]
+			# assert not chap_d["series_name"].startswith("7"), "Bad series name: '%s'" % chap_d["series_name"]
+			# assert not chap_d["series_name"].startswith("8"), "Bad series name: '%s'" % chap_d["series_name"]
+			# assert not chap_d["series_name"].startswith("9"), "Bad series name: '%s'" % chap_d["series_name"]
 
 			ret.append(chap_d)
 
@@ -206,7 +208,7 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 		return ret
 
 
-	def getFeed(self, pageOverride=None):
+	def get_feed(self, pageOverride=None):
 
 		refurl, soup = self.loadFeed(pageOverride)
 
@@ -221,10 +223,6 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 			if chapters:
 				ret.extend(chapters)
 
-		# if retag:
-		# 	self.update_tags(ret)
-		# 	ret = []
-
 		return ret
 
 def process(runner, pageOverride):
@@ -233,6 +231,7 @@ def process(runner, pageOverride):
 
 
 def getHistory():
+	import concurrent.futures
 	print("Getting history")
 	run = DbLoader()
 	with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
@@ -244,7 +243,7 @@ def test():
 	print("Test!")
 	run = DbLoader()
 
-	dat = run.getFeed()
+	dat = run.get_feed()
 	print(dat)
 	# print(run.go())
 	# print(run)

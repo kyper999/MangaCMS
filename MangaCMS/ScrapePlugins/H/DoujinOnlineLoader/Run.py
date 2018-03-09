@@ -1,15 +1,11 @@
 
 
+import MangaCMS.ScrapePlugins.RunBase
+
 from .DbLoader import DbLoader
 from .ContentLoader import ContentLoader
 
-import settings
-
-import runStatus
-
-import MangaCMSOld.ScrapePlugins.RunBase
-
-class Runner(MangaCMSOld.ScrapePlugins.RunBase.ScraperBase):
+class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
 
 
 	loggerPath = "Main.Manga.DoujinOnline.Run"

@@ -11,18 +11,18 @@ from dateutil import parser
 import urllib.parse
 import time
 
-import MangaCMSOld.ScrapePlugins.LoaderBase
-class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
+import MangaCMS.ScrapePlugins.LoaderBase
+
+class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
-	dbName = settings.DATABASE_DB_NAME
-	loggerPath = "Main.Manga.DoujinOnline.Fl"
-	pluginName = "DoujinOnline Link Retreiver"
-	tableKey    = "dol"
+	logger_path = "Main.Manga.DoujinOnline.Fl"
+	plugin_name = "DoujinOnline Link Retreiver"
+	plugin_key  = "dol"
+	is_manga    = False
+
 	urlBase = "https://doujinshi.online/"
 
-
-	tableName = "HentaiItems"
 
 	def loadFeed(self, pageOverride=None):
 		self.log.info("Retrieving feed content...",)
@@ -54,24 +54,17 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 		if not langd.img['src'].endswith("en.png"):
 			return
 
+		pdate = parser.parse(dated.get_text())
 
 		ret = {}
 
-
-		ret["originName"] = titled.get_text().strip()
-		ret["sourceUrl"] = urllib.parse.urljoin(self.urlBase, titled.a["href"])
-
-
-		pdate = parser.parse(dated.get_text())
-		ret["retreivalTime"] = calendar.timegm(pdate.utctimetuple())
-
-		# print("ret = ", ret)
-		# print(pdate, dated.get_text())
-		# return
+		ret["origin_name"] = titled.get_text().strip()
+		ret["source_id"] = urllib.parse.urljoin(self.urlBase, titled.a["href"])
+		ret["posted_at"] = pdate
 
 		return ret
 
-	def getFeed(self, pageOverride=[None]):
+	def get_feed(self, pageOverride=[None]):
 		# for item in items:
 		# 	self.log.info(item)
 		#
@@ -102,15 +95,17 @@ if __name__ == "__main__":
 		run = DbLoader()
 		# dat = run.getFeed(pageOverride=[1])
 		# print(dat)
-		# run.go()
+		# run.do_fetch_feeds()
 
 		from concurrent.futures import ThreadPoolExecutor
 
 
 		def callable_f(baseclass, page):
 
-			dat = baseclass.getFeed(pageOverride=[page])
-			baseclass.processLinksIntoDB(dat)
+			dat = baseclass.get_feed(pageOverride=[page])
+			baseclass._process_links_into_db(dat)
+
+		print("Doing batch req")
 		with ThreadPoolExecutor(max_workers=5) as ex:
 			for x in range(1160):
 				ex.submit(callable_f, run, x)

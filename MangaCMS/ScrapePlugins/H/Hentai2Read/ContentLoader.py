@@ -11,25 +11,29 @@ import nameTools as nt
 import urllib.request, urllib.parse, urllib.error
 import traceback
 
+import urllib
+import json
+import ast
 import settings
 import bs4
 import MangaCMS.cleaner.processDownload
-
-
 import MangaCMS.ScrapePlugins.RetreivalBase
+
+import MangaCMS.ScrapePlugins.ScrapeExceptions as ScrapeExceptions
 
 class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
-
-
-	logger_path = "Main.Manga.NHentai.Cl"
-	plugin_name = "NHentai Content Retreiver"
-	plugin_key   = "nh"
+	logger_path = "Main.Manga.Hentai2Read.Cl"
+	plugin_name = "Hentai2Read Content Retreiver"
+	plugin_key   = "h2r"
 	is_manga     = False
 
-	urlBase = "http://nhentai.net/"
+	urlBase    = "https://hentai2read.com/"
 
 	retreivalThreads = 1
+
+	itemLimit = 1000
+	# itemLimit = 1
 
 	shouldCanonize = False
 
@@ -40,41 +44,24 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		return title.get_text()
 
 
-	def imageUrls(self, soup):
-		thumbnailDiv = soup.find("div", id="thumbnail-container")
-
+	def build_links(self, pageurl, root_url, item_meta):
 		ret = []
 
-		for link in thumbnailDiv.find_all("a", class_='gallerythumb'):
+		for imgurl in item_meta['images']:
+			imgurl = imgurl.replace("\\", "")
+			imgurl = urllib.parse.urljoin(root_url, "/hentai" + imgurl)
 
-			referrer = urllib.parse.urljoin(self.urlBase, link['href'])
-			if hasattr(link, "data-src"):
-				thumbUrl = link.img['data-src']
-			else:
-				thumbUrl = link.img['src']
-
-			if not "t." in thumbUrl[-6:]:
-				raise ValueError("Url is not a thumb? = '%s'" % thumbUrl)
-			else:
-				imgUrl = thumbUrl[:-6] + thumbUrl[-6:].replace("t.", '.')
-
-			imgUrl   = urllib.parse.urljoin(self.urlBase, imgUrl)
-			imgUrl = imgUrl.replace("//t.", "//i.")
-
-			ret.append((imgUrl, referrer))
+			ret.append((imgurl, pageurl))
 
 		return ret
 
 	def getDownloadInfo(self, link_row_id):
 
 		with self.row_context(dbid=link_row_id) as row:
-			source_url = row.source_id
-			row.state = 'fetching'
-
+			source_url  = row.source_id
+			row.state   = 'fetching'
 
 		self.log.info("Retrieving item: %s", source_url)
-
-
 
 		try:
 			soup = self.wg.getSoup(source_url, addlHeaders={'Referer': self.urlBase})
@@ -82,28 +69,35 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			self.log.critical("No download at url %s!", source_url)
 			raise IOError("Invalid webpage")
 
-		cat_containers = soup.find_all(text=re.compile("Categories:"))
-		series_name = "Unknown"
-		for container in cat_containers:
-			container = container.parent
-			if "tag-container" in container.get("class", []):
-				_ = [tmp.decompose() for tmp in container.find_all("span", class_="count")]
-				series_name = container.span.get_text(strip=True).title()
 
-		imageUrls = self.imageUrls(soup)
+		scripts = soup.find_all("script")
 
-		# print("Image URLS: ", imageUrls)
+		iteminfo = None
+		for script in scripts:
+			scriptt = script.get_text(strip=True)
+			if 'var gData' in scriptt:
+				scriptt = scriptt.replace("var gData = ", "").strip(";")
+				iteminfo = ast.literal_eval(scriptt)
+
+		if not iteminfo:
+			raise IOError("Failed to extract item information")
+
+		first_img_url = soup.find("img", id='arf-reader')
+
+		imageUrls = self.build_links(source_url, first_img_url["src"], iteminfo)
+
+		self.log.info("Found %s image urls!", len(imageUrls))
+
 		ret = {
-				"dlLinks"     : imageUrls,
-				'series_name' : series_name,
+				"dl_links"    : imageUrls,
+				"source_url"  : source_url,
 			}
-
 
 		return ret
 
 	def getImage(self, imageUrl, referrer):
 
-		content, handle = self.wg.getpage(imageUrl, returnMultiple=True, addlHeaders={'Referer': referrer})
+		content, handle = self.wg.getpage(imageUrl, returnMultiple=True)
 		if not content or not handle:
 			raise ValueError("Failed to retreive image from page '%s'!" % referrer)
 
@@ -117,66 +111,83 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	def fetchImages(self, image_list):
 
 		images = []
-		for imgUrl, referrerUrl in image_list:
-			images.append(self.getImage(imgUrl, referrerUrl))
+		for imgurl, referrerurl in image_list:
+			images.append(self.getImage(imgurl, referrerurl))
 
 		return images
 
 
 
-	def doDownload(self, linkDict, link_row_id):
+	def doDownload(self, link_info, link_row_id):
 
-		images = self.fetchImages(linkDict["dlLinks"])
+		images = self.fetchImages(link_info['dl_links'])
 
 		if not images:
 			with self.row_context(dbid=link_row_id) as row:
 				row.state = 'error'
-			return
+			return False
+
 
 		with self.row_sess_context(dbid=link_row_id) as row_tup:
 			row, sess = row_tup
-			row.series_name = linkDict['series_name']
+			series_name = row.series_name
 
 			fileN = row.origin_name + ".zip"
 			fileN = nt.makeFilenameSafe(fileN)
 
-			fqFName = os.path.join(settings.nhSettings["dlDir"], nt.makeFilenameSafe(row.series_name), fileN)
+			fqFName = os.path.join(settings.asmhSettings["dlDir"], nt.makeFilenameSafe(series_name), fileN)
 
 			fqFName = self.save_image_set(row, sess, fqFName, images)
 
 		MangaCMS.cleaner.processDownload.processDownload(
-				seriesName   = linkDict['series_name'],
+				seriesName   = None,
 				archivePath  = fqFName,
-				doUpload     = self.is_manga
+				doUpload     = False
 			)
 
 		with self.row_context(dbid=link_row_id) as row:
 			row.state = 'complete'
 
 
+		return True
+
+
 	def get_link(self, link_row_id):
 		try:
-			linkInfo = self.getDownloadInfo(link_row_id)
-			self.doDownload(linkInfo, link_row_id)
+			link_info = self.getDownloadInfo(link_row_id=link_row_id)
+			self.doDownload(link_info=link_info, link_row_id=link_row_id)
 		except urllib.error.URLError:
 			self.log.error("Failure retrieving content for link %s", link_row_id)
 			self.log.error("Traceback: %s", traceback.format_exc())
 
 			with self.row_context(dbid=link_row_id) as row:
 				row.state = 'error'
+				row.err_str = traceback.format_exc()
+
 		except IOError:
 			self.log.error("Failure retrieving content for link %s", link_row_id)
 			self.log.error("Traceback: %s", traceback.format_exc())
+
 			with self.row_context(dbid=link_row_id) as row:
 				row.state = 'error'
-
+				row.err_str = traceback.format_exc()
 
 if __name__ == "__main__":
 	import utilities.testBase as tb
 
+	# with tb.testSetup():
 	with tb.testSetup(load=False):
 
 		run = ContentLoader()
+
 		# run.retreivalThreads = 1
-		# run.resetStuckItems()
+		# run._resetStuckItems()
 		run.do_fetch_content()
+		# test = {
+		# 	'sourceUrl'  : 'https://asmhentai.com/g/178575/',
+		# 	'seriesName' : 'Doujins',
+		# }
+		# run.getDownloadInfo(test)
+
+
+

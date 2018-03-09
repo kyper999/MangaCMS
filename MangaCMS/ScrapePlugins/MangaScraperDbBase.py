@@ -71,7 +71,10 @@ class MangaScraperDbBase(MangaCMS.lib.LogMixin.LoggerMixin, MangaCMS.lib.Monitor
 			if limit_by_plugin:
 				row_q = row_q.filter(self.target_table.source_site == self.plugin_key)
 
-			if url:
+
+			if url and dbid:
+				raise RuntimeError("Multiple filter parameters (dbid, url) passed to row context manager!")
+			elif url:
 				row_q = row_q.filter(self.target_table.source_id == url)
 			elif dbid:
 				row_q = row_q.filter(self.target_table.id == dbid)
@@ -79,6 +82,21 @@ class MangaScraperDbBase(MangaCMS.lib.LogMixin.LoggerMixin, MangaCMS.lib.Monitor
 				raise RuntimeError("How did this get executed?")
 
 			yield (row_q.scalar(), sess)
+
+	def update_tags(self, tags, row=None, dbid=None, url=None):
+		assert isinstance(tags, (list, tuple)), "Tags must be a list or tuple"
+
+		if row:
+			for tag in tags:
+				row.tags.add(tag)
+		elif dbid or url:
+			with self.row_context(dbid=dbid, url=url) as row_c:
+				for tag in tags:
+					if not tag in row.tags:
+						row_c.tags.add(tag)
+		else:
+			raise RuntimeError("You need to pass a filter parameter (row, dbid, url) to update_tags()")
+
 
 	def _resetStuckItems(self):
 		self.log.info("Resetting stuck downloads in DB")

@@ -1,5 +1,7 @@
 
-
+# pylint: disable=C0413
+# Disable the import ordering crap, because we need to do the log setup
+# first, as some of the plugins may have side effects (also, fix that)
 if __name__ == "__main__":
 	import MangaCMSOld.lib.logSetup
 	MangaCMSOld.lib.logSetup.initLogging()
@@ -9,8 +11,6 @@ import MangaCMSOld.ScrapePlugins.M.BuMonitor.Rescan
 
 
 import MangaCMSOld.ScrapePlugins.H.DjMoeLoader.Run
-import MangaCMSOld.ScrapePlugins.H.DoujinOnlineLoader.Run
-import MangaCMSOld.ScrapePlugins.H.Hentai2Read.Run
 import MangaCMSOld.ScrapePlugins.H.PururinLoader.Run
 import MangaCMSOld.ScrapePlugins.H.SadPandaLoader.Run
 import MangaCMSOld.ScrapePlugins.H.TsuminoLoader.Run
@@ -53,6 +53,8 @@ import MangaCMS.ScrapePlugins.M.MangaDex.Run
 import MangaCMS.ScrapePlugins.M.YoMangaLoader.Run
 import MangaCMS.ScrapePlugins.M.MangaMadokami.Run
 
+import MangaCMS.ScrapePlugins.H.Hentai2Read.Run
+import MangaCMS.ScrapePlugins.H.DoujinOnlineLoader.Run
 import MangaCMS.ScrapePlugins.H.ASMHentaiLoader.Run
 import MangaCMS.ScrapePlugins.H.HitomiLoader.Run
 import MangaCMS.ScrapePlugins.H.NHentaiLoader.Run
@@ -102,8 +104,8 @@ scrapePlugins = {
 	46  : (MangaCMSOld.ScrapePlugins.H.DjMoeLoader.Run,                     hours( 2)),
 	47  : (MangaCMS.ScrapePlugins.H.HitomiLoader.Run,                    hours( 2)),
 	48  : (MangaCMS.ScrapePlugins.H.ASMHentaiLoader.Run,                 hours( 2)),
-	49  : (MangaCMSOld.ScrapePlugins.H.Hentai2Read.Run,                     hours( 2)),
-	50  : (MangaCMSOld.ScrapePlugins.H.DoujinOnlineLoader.Run,              hours( 2)),
+	49  : (MangaCMS.ScrapePlugins.H.Hentai2Read.Run,                     hours( 2)),
+	50  : (MangaCMS.ScrapePlugins.H.DoujinOnlineLoader.Run,              hours( 2)),
 	51  : (MangaCMSOld.ScrapePlugins.H.TsuminoLoader.Run,                   hours( 2)),
 
 	# FoolSlide modules
@@ -170,9 +172,9 @@ if __name__ == "__main__":
 				MangaCMSOld.ScrapePlugins.M.BuMonitor.Run,
 				MangaCMS.ScrapePlugins.H.ASMHentaiLoader.Run,
 				MangaCMSOld.ScrapePlugins.H.DjMoeLoader.Run,
-				MangaCMSOld.ScrapePlugins.H.DoujinOnlineLoader.Run,
+				MangaCMS.ScrapePlugins.H.DoujinOnlineLoader.Run,
 				MangaCMS.ScrapePlugins.H.HBrowseLoader.Run,
-				MangaCMSOld.ScrapePlugins.H.Hentai2Read.Run,
+				MangaCMS.ScrapePlugins.H.Hentai2Read.Run,
 				MangaCMS.ScrapePlugins.H.HitomiLoader.Run,
 				MangaCMS.ScrapePlugins.H.NHentaiLoader.Run,
 				MangaCMSOld.ScrapePlugins.H.PururinLoader.Run,

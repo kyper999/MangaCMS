@@ -163,14 +163,12 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		ret['title']        = self.getFileName(gal_section)
 		ret['gallery_base'] = source_url
 
-		if tags:
-			with self.row_context(dbid=link_row_id) as row:
-				if row:
-					for tag in tags:
-						row.tags.add(tag)
-
-					row.series_name = category
-					row.posted_at = datetime.datetime.now()
+		with self.row_context(dbid=link_row_id) as row:
+			if row:
+				if tags:
+					self.update_tags(tags, row=row)
+				row.series_name = category
+				row.posted_at = datetime.datetime.now()
 
 
 		read_url = soup.find("a", text=re.compile("Read Online", re.IGNORECASE))

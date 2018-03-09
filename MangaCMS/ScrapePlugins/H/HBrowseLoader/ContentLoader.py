@@ -137,9 +137,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 		with self.row_context(dbid=link_row_id) as row:
-			for tag in tags:
-				if not tag in row.tags:
-					row.tags.add(tag)
+			self.update_tags(tags, row=row)
 
 			row.series_name = category
 			row.origin_name = title
@@ -241,7 +239,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		# We don't want to upload the file we just downloaded, so specify doUpload as false.
 		# As a result of this, the seriesName paramerer also no longer matters
-		MangaCMS.cleaner.processDownload.processDownload(seriesName=False, archivePath=fqFName, deleteDups=True, doUpload=False)
+		MangaCMS.cleaner.processDownload.processDownload(seriesName=False, archivePath=fqFName, doUpload=False)
 
 
 		self.log.info( "Done")

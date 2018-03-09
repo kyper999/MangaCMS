@@ -54,7 +54,7 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 		required_missing = require - keys
 		assert not required_missing, "Key(s) missing from ret: '%s'!" % required_missing
 
-		assert isinstance(check_dict.get("tags", []), list), "Tags item must be a list!"
+		assert isinstance(check_dict.get("tags", []), (list, tuple)), "Tags item must be a list!"
 
 
 	def _process_links_into_db(self, linksDicts):
@@ -69,6 +69,7 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 				self._check_keys(link)
 
 				tags = link.pop("tags", [])
+				assert isinstance(tags, (list, tuple)), "tags must be a list or tuple!"
 
 				if 'series_name' in link and self.shouldCanonize:
 					link["series_name"] = nt.getCanonicalMangaUpdatesName(link["series_name"])
