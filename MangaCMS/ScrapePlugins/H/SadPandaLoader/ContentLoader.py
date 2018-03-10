@@ -10,43 +10,42 @@ import runStatus
 import urllib.request, urllib.parse, urllib.error
 import traceback
 
+import WebRequest
+
 import settings
 import random
-import MangaCMSOld.cleaner.processDownload
 random.seed()
 
-import MangaCMSOld.ScrapePlugins.RetreivalBase
 from . import LoginMixin
+import MangaCMS.cleaner.processDownload
+import MangaCMS.ScrapePlugins.RetreivalBase
 
-class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase, LoginMixin.ExLoginMixin):
+class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase, LoginMixin.ExLoginMixin):
 
 
 
-	dbName = settings.DATABASE_DB_NAME
-	loggerPath = "Main.Manga.SadPanda.Cl"
-	pluginName = "SadPanda Content Retreiver"
-	tableKey   = "sp"
+	logger_path = "Main.Manga.SadPanda.Cl"
+	plugin_name = "SadPanda Content Retreiver"
+	plugin_key  = "sp"
+	is_manga    = False
+
 	urlBase = "http://exhentai.org/"
-
-
-	tableName = "HentaiItems"
 
 	retreivalThreads = 1
 
 	shouldCanonize = False
+	outOfCredits   = False
 
-	outOfCredits = False
 
-
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
+	# def __init__(self, *args, **kwargs):
+	# 	super().__init__(*args, **kwargs)
 
 	def setup(self):
 		self.checkLogin()
 		if not self.checkExAccess():
 			raise ValueError("Cannot access ex! Wat?")
 
-	def getTags(self, sourceUrl, inSoup):
+	def getTags(self, inSoup):
 
 		tagDiv = inSoup.find('div', id='taglist')
 
@@ -55,7 +54,6 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase, Login
 						'parody:'      : "parody",
 						'artist:'      : "artist",
 						'group:'       : "group",
-
 					}
 
 		tagList = []
@@ -82,7 +80,6 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase, Login
 				self.log.info("Blocked item! Deleting row from database.")
 				self.log.info("Item tags = '%s'", tagList)
 				self.log.info("Blocked tag = '%s'", tag)
-				self.deleteRowsByValue(sourceUrl=sourceUrl)
 				return False
 
 		# We sometimes want to do compound blocks.
@@ -93,23 +90,19 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase, Login
 		# and not settings.sadPanda['excludeCompoundTags'][n][1], we skip the item.
 		for exclude, when in settings.sadPanda['excludeCompoundTags']:
 			if exclude in tagList:
-				if not when in tagList:
+				if when not in tagList:
 					self.log.info("Blocked item! Deleting row from database.")
 					self.log.info("Item tags = '%s'", tagList)
 					self.log.info("Triggering tags: = '%s', '%s'", exclude, when)
-					self.deleteRowsByValue(sourceUrl=sourceUrl)
 					return False
 
 		if not any([tmp in tagList for tmp in settings.tagHighlight]):
 			self.log.info("Missing any highlighted tag. Not fetching!")
 			self.log.info("Item tags = '%s'", tagList)
-			self.deleteRowsByValue(sourceUrl=sourceUrl)
 			return False
 
-		tags = " ".join(tagList)
-		self.log.info("Adding tags: '%s'", tags)
-		self.addTags(sourceUrl=sourceUrl, tags=tags)
-		return True
+		self.log.info("Adding tags: '%s'", tagList)
+		return tagList
 
 
 	def getDownloadPageUrl(self, inSoup):
@@ -120,19 +113,19 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase, Login
 		return clickUrl.group(1)
 
 
-	def getDownloadInfo(self, linkDict, retag=False):
-		sourcePage = linkDict["sourceUrl"]
-		self.log.info("Retrieving item: %s", sourcePage)
+	def getDownloadInfo(self, link_row_id):
 
-		# self.log.info("Linkdict = ")
-		# for key, value in list(linkDict.items()):
-		# 	self.log.info("		%s - %s", key, value)
+		with self.row_context(dbid=link_row_id) as row:
+			source_url = row.source_id
+			row.state = 'fetching'
+
+		self.log.info("Retrieving item: %s", source_url)
 
 		try:
-			soup = self.wg.getSoup(sourcePage, addlHeaders={'Referer': self.urlBase})
-		except Exception as e:
+			soup = self.wg.getSoup(source_url, addlHeaders={'Referer': self.urlBase})
 
-			self.log.critical("No download at url %s! SourceUrl = %s", sourcePage, linkDict["sourceUrl"])
+		except Exception as e:
+			self.log.critical("No download at url %s! SourceUrl = %s", source_url)
 			for line in traceback.format_exc().split("\n"):
 				self.log.critical(""+line)
 
@@ -140,26 +133,29 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase, Login
 
 		if "This gallery has been removed, and is unavailable." in soup.get_text():
 			self.log.info("Gallery deleted. Removing.")
-			self.deleteRowsByValue(sourceUrl=sourcePage)
+			with self.row_sess_context(dbid=link_row_id) as row_tup:
+				row, sess = row_tup
+				sess.delete(row)
 			return False
 
-		ret = self.getTags(sourcePage, soup)
-		if not ret:
+		item_tags = self.getTags(soup)
+		if not item_tags:
+			with self.row_sess_context(dbid=link_row_id) as row_tup:
+				row, sess = row_tup
+				sess.delete(row)
 			return False
 
-		linkDict['dirPath'] = os.path.join(settings.sadPanda["dlDir"], linkDict['seriesName'])
+		# self.addTags(sourceUrl=sourceUrl, tags=tags)
+		# return True
 
-		if not os.path.exists(linkDict["dirPath"]):
-			os.makedirs(linkDict["dirPath"])
-
-		self.log.info("Folderpath: %s", linkDict["dirPath"])
-
-
-		linkDict['dlPage'] = self.getDownloadPageUrl(soup)
+		ret = {
+			'dlPage'    :  self.getDownloadPageUrl(soup),
+			'item_tags' : item_tags,
+		}
 
 
 
-		return linkDict
+		return ret
 
 	def getDownloadUrl(self, dlPageUrl, referrer):
 
@@ -189,80 +185,79 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase, Login
 
 		return downloadUrl
 
-	def doDownload(self, linkDict, link, retag=False):
-
-		downloadUrl = self.getDownloadUrl(linkDict['dlPage'], linkDict["sourceUrl"])
+	def doDownload(self, link_info, link_row_id):
 
 
-		if downloadUrl:
+		# linkDict['dirPath'] = os.path.join(settings.sadPanda["dlDir"], linkDict['seriesName'])
+
+		# if not os.path.exists(linkDict["dirPath"]):
+		# 	os.makedirs(linkDict["dirPath"])
+
+		# self.log.info("Folderpath: %s", linkDict["dirPath"])
+
+		with self.row_context(dbid=link_row_id) as row:
+			source_url  = row.source_id
+			origin_name = row.origin_name
+			series_name = row.series_name
+
+		downloadUrl = self.getDownloadUrl(link_info['dlPage'], source_url)
 
 
-			fCont, fName = self.wg.getFileAndName(downloadUrl)
-
-			# self.log.info(len(content))
-			if linkDict['originName'] in fName:
-				fileN = fName
-			else:
-				fileN = '%s - %s.zip' % (linkDict['originName'], fName)
-				fileN = fileN.replace('.zip .zip', '.zip')
-
-			fileN = nt.makeFilenameSafe(fileN)
-
-			chop = len(fileN)-4
-
-			wholePath = "ERROR"
-			while 1:
-
-				try:
-					fileN = fileN[:chop]+fileN[-4:]
-					# self.log.info("geturl with processing", fileN)
-					wholePath = os.path.join(linkDict["dirPath"], fileN)
-					wholePath = self.insertCountIfFilenameExists(wholePath)
-					self.log.info("Complete filepath: %s", wholePath)
-
-					#Write all downloaded files to the archive.
-					with open(wholePath, "wb") as fp:
-						fp.write(fCont)
-					fileN = os.path.split(wholePath)[-1]
-					self.log.info("Succesfully Saved to path: %s", wholePath)
-					break
-				except IOError:
-					chop = chop - 1
-					self.log.warn("Truncating file length to %s characters.", chop)
-
-
-
-
-			if not linkDict["tags"]:
-				linkDict["tags"] = ""
-
-			self.updateDbEntry(linkDict["sourceUrl"], downloadPath=linkDict["dirPath"], fileName=fileN)
-
-			# Deduper uses the path info for relinking, so we have to dedup the item after updating the downloadPath and fileN
-			dedupState = MangaCMSOld.cleaner.processDownload.processDownload(linkDict["seriesName"], wholePath, pron=True, rowId=link['dbId'])
-			self.log.info( "Done")
-
-			if dedupState:
-				self.addTags(sourceUrl=linkDict["sourceUrl"], tags=dedupState)
-
-
-			self.updateDbEntry(linkDict["sourceUrl"], dlState=2)
-
-		else:
-
-			self.updateDbEntry(linkDict["sourceUrl"], dlState=-1, downloadPath="ERROR", fileName="ERROR: FAILED")
+		if not downloadUrl:
+			with self.row_context(dbid=link_row_id) as row:
+				row.state = 'error'
 			return False
 
 
-	def getLink(self, link):
+
+		fCont, fName = self.wg.getFileAndName(downloadUrl)
+
+
+		# self.log.info(len(content))
+		if origin_name in fName:
+			fileN = fName
+		else:
+			fileN = '%s - %s.zip' % (origin_name, fName)
+			fileN = fileN.replace('.zip .zip', '.zip')
+
+
+		fileN = nt.makeFilenameSafe(fileN)
+		fqFName = os.path.join(settings.sadPanda["dlDir"], series_name, fileN)
+
+
+		# This call also inserts the file parameters into the row
+		with self.row_sess_context(dbid=link_row_id) as row_tup:
+			row, sess = row_tup
+			fqFName = self.save_archive(row, sess, fqFName, fCont)
+
+		#self.log.info( filePath)
+
+		with self.row_context(dbid=link_row_id) as row:
+			row.state = 'processing'
+
+		# We don't want to upload the file we just downloaded, so specify doUpload as false.
+		# As a result of this, the seriesName paramerer also no longer matters
+		MangaCMS.cleaner.processDownload.processDownload(seriesName=False, archivePath=fqFName, doUpload=False)
+
+
+		self.log.info( "Done")
+		with self.row_context(dbid=link_row_id) as row:
+			row.state = 'complete'
+
+		return True
+
+
+	def get_link(self, link_row_id):
+
+
 		if self.outOfCredits:
 			self.log.warn("Out of credits. Skipping!")
-			return
+			return False
 		try:
-			self.updateDbEntry(link["sourceUrl"], dlState=1)
-			linkInfo = self.getDownloadInfo(link)
-			if linkInfo:
-				self.doDownload(linkInfo, link)
+
+			link_info = self.getDownloadInfo(link_row_id)
+			if link_info:
+				self.doDownload(link_info=link_info, link_row_id=link_row_id)
 
 				sleeptime = random.randint(10,60*5)
 			else:
@@ -275,10 +270,16 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase, Login
 					self.log.info( "Breaking due to exit flag being set")
 					break
 
-		except Exception:
-			self.log.error("Failure retrieving content for link %s", link)
+			return True
+
+		except WebRequest.WebGetException:
+
+			self.log.error("Failure retrieving content for link %s", link_row_id)
 			self.log.error("Traceback: %s", traceback.format_exc())
-			self.updateDbEntry(link["sourceUrl"], dlState=-1, downloadPath="ERROR", fileName="ERROR: FAILED")
+			with self.row_context(dbid=link_row_id) as row:
+				row.state = 'error'
+				row.err_str = traceback.format_exc()
+			return False
 
 
 if __name__ == "__main__":

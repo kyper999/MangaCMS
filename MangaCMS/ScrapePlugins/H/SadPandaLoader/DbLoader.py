@@ -1,37 +1,33 @@
 
 
-import calendar
 import traceback
 
-import settings
 import re
-import parsedatetime
-import dateutil.parser
 import copy
 import urllib.parse
 import time
 import calendar
 import random
 import runStatus
+
+import dateutil.parser
+
 import nameTools as nt
-
+import settings
 from . import LoginMixin
+import MangaCMS.ScrapePlugins.LoaderBase
 
-import MangaCMSOld.ScrapePlugins.LoaderBase
-class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase, LoginMixin.ExLoginMixin):
+class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase, LoginMixin.ExLoginMixin):
 
 
-	dbName = settings.DATABASE_DB_NAME
-	loggerPath = "Main.Manga.SadPanda.Fl"
-	pluginName = "SadPanda Link Retreiver"
-	tableKey    = "sp"
+	logger_path = "Main.Manga.SadPanda.Fl"
+	plugin_name = "SadPanda Link Retreiver"
+	plugin_key  = "sp"
+	is_manga    = False
+
+
 	urlBase = "https://exhentai.org/"
 	urlFeed = "https://exhentai.org/?page={num}&f_search={search}"
-
-
-	tableName = "HentaiItems"
-
-
 
 
 	# -----------------------------------------------------------------------------------
@@ -40,7 +36,12 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase, LoginMixin.ExLog
 
 
 
-	def loadFeed(self, tag, pageOverride=None, includeExpunge=False):
+	def loadFeed(self, tag,
+				pageOverride=None,
+				includeExpunge=False,
+				includeLowPower=False,
+				includeDownvoted=False
+			):
 		self.log.info("Retrieving feed content...",)
 		if not pageOverride:
 			pageOverride = 0  # Pages start at zero. Yeah....
@@ -49,6 +50,10 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase, LoginMixin.ExLog
 			pageUrl = self.urlFeed.format(search=tag, num=pageOverride)
 			if includeExpunge:
 				pageUrl = pageUrl + '&f_sh=on'
+			if includeLowPower:
+				pageUrl = pageUrl + '&f_sdt1=on'
+			if includeDownvoted:
+				pageUrl = pageUrl + '&f_sdt2=on'
 			soup = self.wg.getSoup(pageUrl)
 		except urllib.error.URLError:
 			self.log.critical("Could not get page from SadPanda!")
@@ -66,14 +71,14 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase, LoginMixin.ExLog
 		# ParseDatetime COMPLETELY falls over on "YYYY-MM-DD HH:MM" formatted strings. Not sure why.
 		# Anyways, dateutil.parser.parse seems to work ok, so use that.
 		updateDate = dateutil.parser.parse(dateStr, yearfirst=True)
-		ret = calendar.timegm(updateDate.timetuple())
+		# ret = calendar.timegm(updateDate.timetuple())
 
-		# Patch times for the local-GMT offset.
-		# using `calendar.timegm(time.gmtime()) - time.time()` is NOT ideal, but it's accurate
-		# to a second or two, and that's all I care about.
-		gmTimeOffset = calendar.timegm(time.gmtime()) - time.time()
-		ret = ret - gmTimeOffset
-		return ret
+		# # Patch times for the local-GMT offset.
+		# # using `calendar.timegm(time.gmtime()) - time.time()` is NOT ideal, but it's accurate
+		# # to a second or two, and that's all I care about.
+		# gmTimeOffset = calendar.timegm(time.gmtime()) - time.time()
+		# ret = ret - gmTimeOffset
+		return updateDate
 
 
 
@@ -90,24 +95,29 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase, LoginMixin.ExLog
 			self.log.info("Excluded category: '%s'. Skipping.", category)
 			return False
 
-		ret['seriesName'] = category.title()
 
+		ret['series_name'] = category.title()
 		# If there is a torrent link, decompose it so the torrent link doesn't
 		# show up in our parsing of the content link.
 		if name.find("div", class_='it3'):
 			name.find("div", class_='it3').decompose()
 
-		ret['sourceUrl']  = name.a['href']
-		ret['originName'] = name.a.get_text().strip()
-		ret['retreivalTime'] = self.getUploadTime(pubDate.get_text())
+		ret['source_id']   = name.a['href']
+		ret['origin_name'] = name.a.get_text().strip()
+		ret['posted_at']   = self.getUploadTime(pubDate.get_text())
 
 		return ret
 
-	def getFeed(self, searchTag, includeExpunge=False, pageOverride=None):
+	def get_feed(self, searchTag,
+				includeExpunge=False,
+				includeLowPower=False,
+				includeDownvoted=False,
+				pageOverride=None
+			):
 		ret = []
 
 		self.log.info("Loading feed for search: '%s'", searchTag)
-		soup = self.loadFeed(searchTag, pageOverride, includeExpunge)
+		soup = self.loadFeed(searchTag, pageOverride, includeExpunge, includeLowPower, includeDownvoted)
 
 		itemTable = soup.find("table", class_="itg")
 
@@ -136,9 +146,9 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase, LoginMixin.ExLog
 
 		for searchTag, includeExpunge, includeLowPower, includeDownvoted in settings.sadPanda['sadPandaSearches']:
 
-			dat = self.getFeed(searchTag, includeExpunge)
+			dat = self.get_feed(searchTag, includeExpunge, includeLowPower, includeDownvoted)
 
-			self._processLinksIntoDB(dat)
+			self._process_links_into_db(dat)
 
 			sleeptime = random.randrange(5, 60)
 			self.log.info("Sleeping %s seconds.", sleeptime)
@@ -178,7 +188,7 @@ def login():
 if __name__ == "__main__":
 	import utilities.testBase as tb
 
-	with tb.testSetup():
+	with tb.testSetup(load=False):
 		# login()
 		run = DbLoader()
 		run.checkLogin()

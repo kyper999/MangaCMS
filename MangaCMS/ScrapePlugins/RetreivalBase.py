@@ -236,7 +236,7 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 	# Returns {pathToDirectory string}, {HadToCreateDirectory bool}
 	def locateOrCreateDirectoryForSeries(self, seriesName):
 
-		if self.shouldCanonize:
+		if self.shouldCanonize and self.is_manga:
 			canonSeriesName = nt.getCanonicalMangaUpdatesName(seriesName)
 		else:
 			canonSeriesName = seriesName

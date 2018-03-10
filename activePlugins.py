@@ -10,7 +10,6 @@ import MangaCMSOld.ScrapePlugins.M.BuMonitor.Run
 import MangaCMSOld.ScrapePlugins.M.BuMonitor.Rescan
 
 
-# import MangaCMSOld.ScrapePlugins.H.SadPandaLoader.Run
 
 import MangaCMSOld.ScrapePlugins.M.Crunchyroll.Run
 import MangaCMSOld.ScrapePlugins.M.CxLoader.Run
@@ -50,6 +49,7 @@ import MangaCMS.ScrapePlugins.M.MangaDex.Run
 import MangaCMS.ScrapePlugins.M.YoMangaLoader.Run
 import MangaCMS.ScrapePlugins.M.MangaMadokami.Run
 
+import MangaCMS.ScrapePlugins.H.SadPandaLoader.Run
 import MangaCMS.ScrapePlugins.H.DjMoeLoader.Run
 import MangaCMS.ScrapePlugins.H.PururinLoader.Run
 import MangaCMS.ScrapePlugins.H.TsuminoLoader.Run
@@ -100,7 +100,7 @@ scrapePlugins = {
 	41  : (MangaCMS.ScrapePlugins.H.HBrowseLoader.Run,                   hours( 2)),
 	42  : (MangaCMS.ScrapePlugins.H.PururinLoader.Run,                   hours( 2)),
 	44  : (MangaCMS.ScrapePlugins.H.NHentaiLoader.Run,                   hours( 2)),
-	# 45  : (MangaCMSOld.ScrapePlugins.H.SadPandaLoader.Run,                  hours(12)),
+	45  : (MangaCMS.ScrapePlugins.H.SadPandaLoader.Run,                  hours(12)),
 	46  : (MangaCMS.ScrapePlugins.H.DjMoeLoader.Run,                     hours( 2)),
 	47  : (MangaCMS.ScrapePlugins.H.HitomiLoader.Run,                    hours( 2)),
 	48  : (MangaCMS.ScrapePlugins.H.ASMHentaiLoader.Run,                 hours( 2)),
@@ -180,7 +180,7 @@ if __name__ == "__main__":
 				MangaCMS.ScrapePlugins.H.PururinLoader.Run,
 				MangaCMS.ScrapePlugins.H.TsuminoLoader.Run,
 				# MangaCMSOld.ScrapePlugins.M.BooksMadokami.Run,
-				# MangaCMSOld.ScrapePlugins.H.SadPandaLoader.Run,
+				MangaCMS.ScrapePlugins.H.SadPandaLoader.Run,
 		]
 
 	print("Test run!")

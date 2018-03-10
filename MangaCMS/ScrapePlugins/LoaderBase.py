@@ -93,10 +93,7 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 						self.log.info("Added %s rows, doing incremental commit!", newItems)
 						sess.commit()
 
-
-				for tag in tags:
-					if tag not in have.tags:
-						have.tags.add(tag)
+				self.update_tags(row=have, tags=tags)
 
 		if self.mon_con:
 			self.mon_con.incr('new_links', newItems)
