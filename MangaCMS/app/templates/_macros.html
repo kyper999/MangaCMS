@@ -1,12 +1,14 @@
 
 
 {%- macro render_pagination(pagination, url_for_param=None) -%}
+	{%- set agg_dict = merge_dicts(request.args, kwargs) -%}
+
 	<div class=pagination>
 	{%- for page in pagination.iter_pages() -%}
 		{%- if page -%}
 			{% if page != pagination.page %}
 				{% if url_for_param %}
-					<a href="{{ url_for(url_for_param, page=page, **request.args) }}">{{ page }}</a>
+					<a href="{{ url_for(url_for_param, page=page, **agg_dict) }}">{{ page }}</a>
 				{% else %}
 					<a href="{{ page }}">{{ page }}</a>
 				{% endif %}

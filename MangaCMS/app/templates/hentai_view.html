@@ -61,7 +61,13 @@
 			{%- endif -%}
 		</td>
 		<td bgcolor={{row_meta['locationColour']}} class="showTT" mouseovertext="{{row_meta['toolTip']}}"></td>
-		<td><a href="{{url_for('hentai_category_view', category=row.series_name)}}">{{row.series_name}}</td>
+		<td>
+			{%- if row.series_name != None  -%}
+				<a href="{{url_for('hentai_category_view', category=row.series_name, page=1) if row.series_name else "None"}}">{{row.series_name}}</a>
+			{%- else -%}
+				None
+			{%- endif -%}
+		</td>
 		<td>
 
 			{%- if row.phash_duplicate -%}
@@ -71,8 +77,12 @@
 				<strike>
 			{%- endif -%}
 
+			{%- if row_meta['fsize'] > 0 -%}
+				<a href="{{url_for('view_h_by_id', rid=row.id)}}">{{row.origin_name}}</a>
+			{%- else -%}
+				{{row.origin_name}}
+			{%- endif -%}
 
-			<a href="{{url_for('view_h_by_id', rid=row.id)}}">{{row.origin_name}}</a>
 
 			{%- if row.phash_duplicate -%}
 					</span>
@@ -85,10 +95,10 @@
 		<td class='tag-col'>
 
 			{% for tag in row_meta['item-tags'] %}
-				<a href='{{url_for('hentai_tag_view', tag=tag)}}'>{{tag}}</a>
+				<a href='{{url_for('hentai_tag_view', tag=tag, page=1)}}'>{{tag}}</a>
 			{% endfor %}
 			{% for tag in row_meta['file-tags'] %}
-				+<a href='{{url_for('hentai_tag_view', tag=tag)}}'>{{tag}}</a>
+				+<a href='{{url_for('hentai_tag_view', tag=tag, page=1)}}'>{{tag}}</a>
 			{% endfor %}
 		</td>
 		<td {{'class="missing"' | safe if row_meta['fsize'] < 0 else "" | safe}}>
@@ -134,7 +144,7 @@
 			Filter Params: {{params}}
 			{{hentai_block(items, params)}}
 
-			{{ util_macros.render_pagination(items, url_for_param=url_for_param) }}
+			{{ util_macros.render_pagination(items, url_for_param=url_for_param, tag=tag, category=category) }}
 		</div>
 	{% endblock %}
 {%- else -%}
