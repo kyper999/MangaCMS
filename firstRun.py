@@ -6,7 +6,6 @@ Do the initial database setup, so a functional system can be bootstrapped from a
 
 import MangaCMSOld.ScrapePlugins.M.BuMonitor.MonitorRun
 import MangaCMSOld.ScrapePlugins.M.BuMonitor.ChangeMonitor
-import MangaCMSOld.ScrapePlugins.H.DjMoeLoader.DbLoader
 
 
 
@@ -19,7 +18,6 @@ Each plugin is instantiated, and then the plugin database setup method is called
 toInit = [
 	MangaCMSOld.ScrapePlugins.M.BuMonitor.MonitorRun.BuWatchMonitor,
 	MangaCMSOld.ScrapePlugins.M.BuMonitor.ChangeMonitor.BuDateUpdater,
-	MangaCMSOld.ScrapePlugins.H.DjMoeLoader.DbLoader.DbLoader,
 	]
 
 
