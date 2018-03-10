@@ -4,6 +4,7 @@ runStatus.preloadDicts = False
 
 
 import calendar
+import datetime
 import traceback
 
 import bs4
@@ -12,16 +13,18 @@ from dateutil import parser
 import urllib.parse
 import time
 
-import MangaCMSOld.ScrapePlugins.LoaderBase
-class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
+import MangaCMS.ScrapePlugins.LoaderBase
+class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
-	dbName = settings.DATABASE_DB_NAME
-	loggerPath = "Main.Manga.Pururin.Fl"
-	pluginName = "Pururin Link Retreiver"
-	tableKey    = "pu"
-	urlBase = "http://pururin.us/"
-	tableName = "HentaiItems"
+	logger_path = "Main.Manga.Pururin.Fl"
+	plugin_name = "Pururin Link Retreiver"
+	plugin_key  = "pu"
+	is_manga    = False
+
+	retreivalThreads = 2
+
+	urlBase = "http://pururin.io/"
 
 	def loadFeed(self, pageOverride=None):
 		self.log.info("Retrieving feed content...",)
@@ -50,13 +53,13 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 
 	def parseLinkLi(self, linkdiv):
 		ret = {}
-		ret["originName"] = " / ".join(linkdiv.find("div", class_='title').strings) # Messy hack to replace <br> tags with a ' / "', rather then just removing them.
-		ret["sourceUrl"] = urllib.parse.urljoin(self.urlBase, linkdiv["href"])
-		ret["retreivaltime"] = time.time()
+		ret["origin_name"] = " / ".join(linkdiv.find("div", class_='title').strings) # Messy hack to replace <br> tags with a ' / "', rather then just removing them.
+		ret["source_id"] = urllib.parse.urljoin(self.urlBase, linkdiv["href"])
+		ret["posted_at"] = datetime.datetime.now()
 
 		return ret
 
-	def getFeed(self, pageOverride=[None]):
+	def get_feed(self, pageOverride=[None]):
 		# for item in items:
 		# 	self.log.info(item)
 		#
@@ -82,7 +85,7 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 
 
 	def setup(self):
-		self.wg.stepThroughJsWaf("http://pururin.us/", titleContains="Pururin")
+		self.wg.stepThroughJsWaf(self.urlBase, titleContains="Pururin")
 
 
 
@@ -94,9 +97,9 @@ if __name__ == "__main__":
 	with tb.testSetup(load=False):
 
 		run = DbLoader()
-		# run.go()
+		run.do_fetch_feeds()
 		for x in range(1000):
-			dat = run.getFeed(pageOverride=[x])
+			dat = run.get_feed(pageOverride=[x])
 			print("Found %s items" % len(dat))
-			run._processLinksIntoDB(dat)
+			run._process_links_into_db(dat)
 

@@ -105,6 +105,14 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 		return newItems
 
+	def wanted_from_tags(self, tags):
+
+		# Yaoi isn't something I'm that in to.
+		if "yaoi" in tags:
+			self.log.info("Yaoi item. Skipping.")
+			return False
+
+		return True
 
 
 	def do_fetch_feeds(self, *args, **kwargs):

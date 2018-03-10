@@ -140,8 +140,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		with self.row_sess_context(dbid=link_row_id) as row_tup:
 			row, sess = row_tup
 
-			container_dir = os.path.join(settings.hbSettings["dlDir"],
-				nt.makeFilenameSafe(row.series_name))
+			container_dir = os.path.join(settings.hbSettings["dlDir"], nt.makeFilenameSafe(row.series_name))
 
 			wholePath = os.path.join(container_dir, fileN)
 			fqFName = self.save_image_set(row, sess, wholePath, images)

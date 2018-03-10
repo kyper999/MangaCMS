@@ -9,18 +9,18 @@ from dateutil import parser
 import urllib.parse
 import time
 
-import MangaCMSOld.ScrapePlugins.LoaderBase
-class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
+import MangaCMS.ScrapePlugins.LoaderBase
+class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
-	dbName = settings.DATABASE_DB_NAME
-	loggerPath = "Main.Manga.DjM.Fl"
-	pluginName = "DjMoe Link Retreiver"
-	tableKey    = "djm"
+	logger_path = "Main.Manga.DjM.Fl"
+	plugin_name = "DjMoe Link Retreiver"
+	plugin_key  = "djm"
+	is_manga    = False
+
 	urlBase = "http://doujins.com/"
 
 
-	tableName = "HentaiItems"
 	shouldCanonize = False
 
 	def loadFeed(self, pageOverride=None):
@@ -64,7 +64,7 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 		return items
 
 
-	def getFeed(self, pageOverride=None):
+	def get_feed(self, pageOverride=None):
 		# for item in items:
 		# 	self.log.info(item)
 		#
@@ -75,9 +75,9 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 			item = {}
 
 			try:
-				item["originName"] = feedEntry["name"]
-				item["sourceUrl"] = feedEntry["token"]
-				item["retreivalTime"] = calendar.timegm(parser.parse( feedEntry["date"]).utctimetuple())
+				item["origin_name"] = feedEntry["name"]
+				item["source_id"]   = feedEntry["token"]
+				item["posted_at"]   = parser.parse( feedEntry["date"])
 				#self.log.info("date = ", feedEntry['published_parsed'])
 				# item['retreivalTime'] = time.time()
 

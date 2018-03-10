@@ -2,6 +2,7 @@
 
 import pprint
 import calendar
+import datetime
 import traceback
 
 from dateutil import parser
@@ -11,18 +12,16 @@ import urllib.parse
 import time
 import calendar
 
-import MangaCMSOld.ScrapePlugins.LoaderBase
-class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
+import MangaCMS.ScrapePlugins.LoaderBase
+class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
-	dbName = settings.DATABASE_DB_NAME
-	loggerPath = "Main.Manga.Tsumino.Fl"
-	pluginName = "Tsumino Link Retreiver"
-	tableKey    = "ts"
+	logger_path = "Main.Manga.Tsumino.Fl"
+	plugin_name = "Tsumino Link Retreiver"
+	plugin_key  = "ts"
+	is_manga    = False
+
 	urlBase = "http://www.tsumino.com/"
-
-
-	tableName = "HentaiItems"
 
 	def loadFeed(self, pageOverride=None):
 		self.log.info("Retrieving feed content...",)
@@ -71,23 +70,22 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 
 			cat = rowname.get_text().strip()
 			if cat == "Title":
-				ret['originName'] = rowdat.get_text().strip()
+				ret['origin_name'] = rowdat.get_text().strip()
 
 			elif cat == "Uploaded":
 				rowtxt = rowdat.get_text().strip()
-				ulDate = parser.parse(rowtxt).utctimetuple()
+				ulDate = parser.parse(rowtxt)
 
-				ultime = calendar.timegm(ulDate)
-				if ultime > time.time():
+				if ulDate > datetime.datetime.now():
 					self.log.warning("Clamping timestamp to now!")
-					ultime = time.time()
-				ret['retreivalTime'] = ultime
+					ulDate = datetime.datetime.now()
+				ret['posted_at'] = ulDate
 			elif cat == "Category":
 				tags = self.rowToTags(rowdat)
 				if tags:
-					ret["seriesName"] = tags[0]
+					ret["series_name"] = tags[0]
 				else:
-					ret["seriesName"] = "Unknown"
+					ret["series_name"] = "Unknown"
 			elif cat == "Artist":
 				tags = self.rowToTags(rowdat)
 				tags = ["artist "+tag for tag in tags]
@@ -138,7 +136,6 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 		# Colons break the tsvector
 		ret['tags'] = [tag.replace(":", "-") for tag in ret['tags']]
 
-		ret['tags'] = " ".join(ret['tags'])
 
 		return ret
 
@@ -151,23 +148,23 @@ class DbLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 				self.log.error(line.rstrip())
 			return None
 
-		ret = {}
-		ret['sourceUrl'] = 'http://www.tsumino.com/Book/Info/{}/'.format(item['Entry']['Id'])
+		source_url = 'http://www.tsumino.com/Book/Info/{}/'.format(item['Entry']['Id'])
+
 
 		# Do not decend into items where we've already added the item to the DB
-		if len(self.getRowsByValue(sourceUrl=ret['sourceUrl'])):
-			return None
+		with self.row_context(url=source_url) as row:
+			if row:
+				return None
 
-		ret.update(self.getInfo(ret['sourceUrl']))
+		ret = self.getInfo(source_url)
+		ret['source_id'] = source_url
 
-		# Yaoi isn't something I'm that in to.
-		if "yaoi" in ret["tags"]:
-			self.log.info("Yaoi item. Skipping.")
+		if not self.wanted_from_tags(ret["tags"]):
 			return None
 
 		return ret
 
-	def getFeed(self, pageOverride=None):
+	def get_feed(self, pageOverride=None):
 		# for item in items:
 		# 	self.log.info(item)
 		#
@@ -211,9 +208,9 @@ if __name__ == "__main__":
 	import utilities.testBase as tb
 
 	with tb.testSetup(load=False):
-		getHistory()
+		# getHistory()
 		# test()
-		# run = DbLoader()
-		# run.do_fetch_feeds()
+		run = DbLoader()
+		run.do_fetch_feeds()
 
 

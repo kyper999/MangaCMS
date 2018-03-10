@@ -11,37 +11,36 @@ import json
 import sys
 import zipfile
 
-import time
+import datetime
 import pprint
 import urllib.parse
 import traceback
 
 import bs4
 
-
-import runStatus
-runStatus.preloadDicts = False
 import nameTools as nt
+
 import settings
 
 import WebRequest
-import MangaCMSOld.cleaner.processDownload
 
-import MangaCMSOld.ScrapePlugins.RetreivalBase
+import MangaCMS.cleaner.processDownload
+import MangaCMS.ScrapePlugins.RetreivalBase
 
-class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
-
-
+class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
-	dbName = settings.DATABASE_DB_NAME
-	loggerPath = "Main.Manga.Pururin.Cl"
-	pluginName = "Pururin Content Retreiver"
-	tableKey   = "pu"
-	urlBase = "http://pururin.us"
 
 
-	tableName = "HentaiItems"
+	logger_path = "Main.Manga.Pururin.Cl"
+	plugin_name = "Pururin Content Retreiver"
+	plugin_key  = "pu"
+	is_manga    = False
+
+
+	urlBase = "http://pururin.io/"
+
+
 
 	retreivalThreads = 1
 
@@ -49,7 +48,6 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 	def getFileName(self, soup):
 		container = soup.find("span", class_='info')
 		# Descriptive, eh?
-		tagTable = container.find("table", class_="table")
 		link_w_title = container.find("a", title=True)
 		title = link_w_title['title']
 
@@ -62,12 +60,9 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		if "/" in title:
 			title = title.split("/")[0]
+
 		return title
 
-		title = soup.find("h1", class_="otitle")
-		if not title:
-			raise ValueError("Could not find title. Wat?")
-		return title.get_text()
 
 
 	def imageUrls(self, soup):
@@ -147,60 +142,45 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 	def getNote(self, soup):
 		note = soup.find("div", class_="gallery-description")
 		if note == None:
-			note = " "
+			note = ""
 		else:
 			note = note.get_text()
 
 
-	def getDownloadInfo(self, linkDict):
-		sourcePage = linkDict["sourceUrl"]
+	def getDownloadInfo(self, source_url, row_id):
 
-		self.log.info("Retrieving item: %s", sourcePage)
+		self.log.info("Retrieving item: %s", source_url)
 
-		self.updateDbEntry(linkDict["sourceUrl"], dlState=1)
 
-		soup = self.wg.getSoup(sourcePage, addlHeaders={'Referer': 'http://pururin.us/'})
+		soup = self.wg.getSoup(source_url, addlHeaders={'Referer': 'http://pururin.us/'})
 
 		if not soup:
-			self.log.critical("No download at url %s! SourceUrl = %s", sourcePage, linkDict["sourceUrl"])
+			self.log.critical("No download at url %s!", source_url)
 			raise IOError("Invalid webpage")
 
 		category, tags = self.getCategoryTags(soup)
 		note = self.getNote(soup)
-		tags = ' '.join(tags)
 
-		linkDict['originName'] = self.getFileName(soup)
-		linkDict['dirPath'] = os.path.join(settings.puSettings["dlDir"], nt.makeFilenameSafe(category))
-
-		if not os.path.exists(linkDict["dirPath"]):
-			os.makedirs(linkDict["dirPath"])
-		else:
-			self.log.info("Folder Path already exists?: %s", linkDict["dirPath"])
-
-		self.log.info("Folderpath: %s", linkDict["dirPath"])
-
-		self.log.debug("Linkdict = ")
-		for key, value in list(linkDict.items()):
-			self.log.debug("		%s - %s", key, value)
-
-
-		if tags:
-			self.log.info("Adding tag info %s", tags)
-
-			self.addTags(sourceUrl=linkDict["sourceUrl"], tags=tags)
-		if note:
-			self.log.info("Adding note %s", note)
-			self.updateDbEntry(linkDict["sourceUrl"], note=note)
-
+		ret = {}
+		ret['file_name'] = self.getFileName(soup)
 
 		read_url = soup.find("a", text=re.compile("Read Online", re.IGNORECASE))
 		spage = urllib.parse.urljoin(self.urlBase, read_url['href'])
 
-		linkDict["spage"] = spage
+		ret["s_page"] = spage
 
-		self.updateDbEntry(linkDict["sourceUrl"], seriesName=category, lastUpdate=time.time())
 
-		return linkDict
+		with self.row_context(dbid=row_id) as row:
+			if tags:
+				self.update_tags(tags, row=row)
+			if note:
+				row.additional_metadata = {"note" : note}
+
+			row.last_checked = datetime.datetime.now()
+			row.series_name  = category
+			ret["source_url"] = row.source_id
+
+		return ret
 
 	def getImage(self, imageUrl, referrer):
 
@@ -213,8 +193,8 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 		self.log.info("retreived image '%s' with a size of %0.3f K", fileN, len(content)/1000.0)
 		return fileN, content
 
-	def getImages(self, linkDict):
-		soup = self.wg.getSoup(linkDict['spage'], addlHeaders={'Referer': linkDict["sourceUrl"]})
+	def getImages(self, dl_info):
+		soup = self.wg.getSoup(dl_info['s_page'], addlHeaders={'Referer': dl_info["source_url"]})
 		scripts = "\n".join([scrt.get_text() for scrt in soup.find_all("script")])
 		dat_arr = None
 		for line in [t.strip() for t in scripts.split("\n") if t.strip()]:
@@ -232,69 +212,59 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 		values = list(dat_arr.values())
 		values.sort(key=lambda x: x['page'])
 		for value in values:
-			images.append(self.getImage(value['image'], linkDict['spage']))
+			images.append(self.getImage(value['image'], dl_info['s_page']))
 
 		return images
 
 
-	def getLink(self, linkDict):
+	def get_link(self, link_row_id):
+
+		with self.row_context(dbid=link_row_id) as row:
+			row.state  = 'fetching'
+			source_url = row.source_id
+
 		try:
-			linkDict = self.getDownloadInfo(linkDict)
+			dl_info = self.getDownloadInfo(source_url=source_url, row_id=link_row_id)
+			images = self.getImages(dl_info=dl_info)
+			file_name = dl_info['file_name']
 
-			images = self.getImages(linkDict)
-			title = linkDict['originName']
 		except WebRequest.WebGetException:
-			self.updateDbEntry(linkDict["sourceUrl"], dlState=-2, downloadPath="ERROR", fileName="ERROR: FAILED")
+			with self.row_context(dbid=link_row_id) as row:
+				row.state = 'error'
 			return False
 
-		if images and title:
-			fileN = title+".zip"
-			fileN = nt.makeFilenameSafe(fileN)
 
 
-			# self.log.info("geturl with processing", fileN)
-			wholePath = os.path.join(linkDict["dirPath"], fileN)
-
-			# try:
-			# 	arch = zipfile.ZipFile(wholePath, "w")
-			# except OSError:
-			# 	title = title.encode('ascii','ignore').decode('ascii')
-			# 	fileN = title+".zip"
-			# 	fileN = nt.makeFilenameSafe(fileN)
-			# 	wholePath = os.path.join(linkDict["dirPath"], fileN)
-			# 	wholePath = self.insertCountIfFilenameExists(wholePath)
-			# 	arch = zipfile.ZipFile(wholePath, "w")
-
-			# for imageName, imageContent in images:
-			# 	arch.writestr(imageName, imageContent)
-			# arch.close()
-
-			#Write all downloaded files to the archive.
-			wholePath = self.save_image_set(wholePath, images)
-
-			self.log.info("Successfully Saved to path: %s", wholePath)
-
-
-			self.updateDbEntry(linkDict["sourceUrl"], downloadPath=linkDict["dirPath"], fileName=fileN)
-
-			# Deduper uses the path info for relinking, so we have to dedup the item after updating the downloadPath and fileN
-			dedupState = MangaCMSOld.cleaner.processDownload.processDownload(None, wholePath, pron=True, deleteDups=True, includePHash=True, rowId=linkDict['dbId'])
-			self.log.info( "Done")
-
-			if dedupState:
-				self.addTags(sourceUrl=linkDict["sourceUrl"], tags=dedupState)
-
-
-			self.updateDbEntry(linkDict["sourceUrl"], dlState=2)
-
-
-			return wholePath
-
-		else:
-			self.log.warning("No images found?")
-			self.updateDbEntry(linkDict["sourceUrl"], dlState=-1, downloadPath="ERROR", fileName="ERROR: FAILED")
-
+		if not images:
+			with self.row_context(dbid=link_row_id) as row:
+				row.state = 'error'
 			return False
+
+
+		fileN = file_name+".zip"
+		fileN = nt.makeFilenameSafe(fileN)
+
+
+		with self.row_sess_context(dbid=link_row_id) as row_tup:
+			row, sess = row_tup
+
+			container_dir = os.path.join(settings.puSettings["dlDir"], nt.makeFilenameSafe(row.series_name))
+			wholePath = os.path.join(container_dir, row.origin_name)
+			fqFName = self.save_image_set(row, sess, wholePath, images)
+
+		with self.row_context(dbid=link_row_id) as row:
+			row.state = 'processing'
+
+		# We don't want to upload the file we just downloaded, so specify doUpload as false.
+		# As a result of this, the seriesName paramerer also no longer matters
+		MangaCMS.cleaner.processDownload.processDownload(seriesName=False, archivePath=fqFName, doUpload=False)
+
+
+		self.log.info( "Done")
+		with self.row_context(dbid=link_row_id) as row:
+			row.state = 'complete'
+
+
 
 
 
@@ -309,8 +279,9 @@ if __name__ == "__main__":
 	with tb.testSetup(load=False):
 
 		run = ContentLoader()
+		run.do_fetch_content()
 
-		todo = run._retreiveTodoLinksFromDB()
-		for link in todo:
-			run.getLink(link)
+		# todo = run._retreiveTodoLinksFromDB()
+		# for link in todo:
+		# 	run.getLink(link)
 
