@@ -4,9 +4,8 @@
 
 {% block content %}
 	{% include '_block_flash.html' %}
-	<div class="well">
 
-		<div class="subdiv skId">
+		<div class="subdiv skId" id="manga_div">
 			<div class="contentdiv">
 				<h3>Manga (distinct)</h3>
 				<div id='mangatable'>
@@ -16,7 +15,7 @@
 		</div>
 
 		{%- if ip_in_whitelist() -%}
-			<div class="subdiv fuFuId">
+			<div class="subdiv fuFuId" id="pron_div">
 				<div class="contentdiv">
 					<h3>Porn!</h3>
 					<div id='prontable'>
@@ -27,7 +26,6 @@
 		{%- endif -%}
 
 
-	</div>
 
 {% endblock %}
 
@@ -39,35 +37,23 @@
 
 	<script type="text/javascript">
 		$(document).ready(function() {
-			$.get("/manga/table/",
+			$('#manga_div').load("/manga/ #manga_block",
 				function( response, status, xhr )
 				{
 					if ( status == "error" )
 					{
 						var msg = "Sorry but there was an error: ";
 						$( "#error" ).html( msg + xhr.status + " " + xhr.statusText );
-					}
-					else
-					{
-						$('#mangatable').html(response);
-
-						{{util_macros.mouseOverJs(key="showTT")}}
 					}
 				}
 			);
-			$.get("/hentai/table/",
+			$('#pron_div').load("/hentai/ #hentai_block",
 				function( response, status, xhr )
 				{
 					if ( status == "error" )
 					{
 						var msg = "Sorry but there was an error: ";
 						$( "#error" ).html( msg + xhr.status + " " + xhr.statusText );
-					}
-					else
-					{
-						$('#prontable').html(response);
-
-						{{util_macros.mouseOverJs(key="showHT")}}
 					}
 				}
 			);

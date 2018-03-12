@@ -3,17 +3,16 @@
 
 
 {%- macro hentai_table_header() -%}
-	<table class='table-striped table table-bordered table-condensed fullwidth' style="table-layout: fixed;">
+	<table class='table-striped table table-bordered table-condensed ' style="table-layout: fixed;">
 
 		<tr>
 				<th class="uncoloured" style="width: 40px; min-width: 40px;">Date</th>
 				<th class="uncoloured" style="width: 20px; min-width: 20px;">St</th>
 				<th class="uncoloured" style="width: 20px; min-width: 20px;">Lo</th>
-				<th class="uncoloured" style="width: 120px; min-width: 200px;">Category</th>
+				<th class="uncoloured" style="width: 20%; min-width: 200px;">Category</th>
 				<th class="uncoloured">BaseName</th>
-				<th class="uncoloured" style="width: 400px; min-width: 400px;">Tags</th>
+				<th class="uncoloured" style="width: 40%; min-width: 200px;">Tags</th>
 				<th class="uncoloured" style="width: 60px; min-width: 60px;">Size</th>
-				<th class="uncoloured" style="width: 105px; min-width: 105px;">DLTime</th>
 		</tr>
 
 {%- endmacro -%}
@@ -108,7 +107,6 @@
 				No File!
 			{%- endif -%}
 		</td>
-		<td>{{row_meta['terseDate']}}</td>
 	</tr>
 
 {%- endmacro -%}
@@ -138,13 +136,20 @@
 	{% extends "__base.html" %}
 	{% block content %}
 		{% include '_block_flash.html' %}
-		<div class="well">
-			<h3>Hentai</h3>
-			No render mode: '{{table_only}}', '{{whole_page}}'.<br>
-			Filter Params: {{params}}
-			{{hentai_block(items, params)}}
+		<div class='subdiv fuid'>
+			<div id='hentai_block'>
+				<h3>Hentai</h3>
+				Filter Params: {{params}}.<br>
+				{%- if request.args.get('include-deleted') -%}
+					<a href="{{url_for(endpoint=url_for_param, tag=tag if tag else None, category=category if category else None, source_site=source_site if source_site else None, include_deleted=None)}}">Exclude Deleted</a>
+				{%- else -%}
+					<a href="{{url_for(endpoint=url_for_param, tag=tag if tag else None, category=category if category else None, source_site=source_site if source_site else None, include_deleted=True)}}">Include Deleted</a>
+				{%- endif -%}
+				<span id="vp-size"></span>
+				{{hentai_block(items, params)}}
 
-			{{ util_macros.render_pagination(items, url_for_param=url_for_param, tag=tag, category=category) }}
+				{{ util_macros.render_pagination(items, url_for_param=url_for_param, tag=tag, category=category, source_site=source_site) }}
+			</div>
 		</div>
 	{% endblock %}
 {%- else -%}
@@ -157,6 +162,9 @@
 
 	<script>
 		{{util_macros.mouseOverJs(key='showHT')}}
+		var w = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+		var h = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
+		$("#vp-size").html(" VP: " + w.toString() + "x" + h.toString() + ".")
 	</script>
 
 {%- endblock -%}

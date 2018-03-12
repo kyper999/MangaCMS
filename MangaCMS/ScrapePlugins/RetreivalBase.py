@@ -13,6 +13,7 @@ import magic
 import WebRequest
 
 import settings
+import datetime
 import runStatus
 import nameTools as nt
 
@@ -125,7 +126,7 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 			res = sess.query(self.target_table)                            \
 				.filter(self.target_table.source_site == self.plugin_key)  \
 				.filter(self.target_table.state == 'new')                  \
-				.order_by(self.target_table.id.desc())                     \
+				.order_by(self.target_table.posted_at.desc())              \
 				.all()
 
 			res = [(tmp.id, tmp.posted_at) for tmp in res]
@@ -177,8 +178,28 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 				self.log.info("	-> %s", ret1)
 			self.log.info("	-> %s", ret2)
 
+
+			# Finishing checks
+			with self.row_context(dbid=link_row_id) as row:
+				if row.state == "complete":
+					assert row.first_seen    > datetime.datetime.min, "Row first_seen column never set!"
+					assert row.posted_at     > datetime.datetime.min, "Row posted_at column never set!"
+					assert row.downloaded_at > datetime.datetime.min, "Row downloaded_at column never set!"
+					assert row.last_checked  > datetime.datetime.min, "Row last_checked column never set!"
+
 		except SystemExit:
 			self.die = True
+			raise
+
+		except AssertionError:
+			self.log.critical("Exception!")
+			for line in traceback.format_exc().split("\n"):
+				self.log.critical(line)
+			self.die = True
+
+			# Reset the download, since failing because a keyboard interrupt is not a remote issue.
+			with self.row_context(dbid=link_row_id) as row:
+				row.state = 'new'
 			raise
 
 		except ScrapeExceptions.LimitedException as e:
@@ -200,8 +221,9 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 			self.log.critical("Sending log result: %s", ret)
 
 			self.log.critical("Exception!")
+			for line in traceback.format_exc().split("\n"):
+				self.log.critical(line)
 			traceback.print_exc()
-			self.log.critical(traceback.format_exc())
 
 
 

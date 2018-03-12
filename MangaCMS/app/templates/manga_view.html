@@ -3,7 +3,7 @@
 {% import '_macros.html' as util_macros %}
 
 {%- macro manga_table_header() -%}
-	<table class='table-striped table table-bordered table-condensed fullwidth' style="table-layout: fixed;">
+	<table class='table-striped table table-bordered table-condensed' style="table-layout: fixed;">
 
 		<tr>
 				<th class="uncoloured" style="width: 40px; min-width: 40px;">Date</th>
@@ -127,13 +127,15 @@
 	{% extends "__base.html" %}
 	{% block content %}
 		{% include '_block_flash.html' %}
-		<div class="well">
-			<h3>Manga {{"(distinct)" if params['distinct'] else ""}}</h3>
+		<div class='subdiv skid'>
+			<div id='manga_block'>
+				<h3>Manga {{"(distinct)" if params['distinct'] else ""}}</h3>
 
-			Filter Params: {{params}}
-			{{manga_block(items, params)}}
+				Filter Params: {{params}}
+				{{manga_block(items, params)}}
 
-			{{ util_macros.render_pagination(items, url_for_param=url_for_param) }}
+				{{ util_macros.render_pagination(items, url_for_param=url_for_param) }}
+			</div>
 		</div>
 	{% endblock %}
 {%- else -%}

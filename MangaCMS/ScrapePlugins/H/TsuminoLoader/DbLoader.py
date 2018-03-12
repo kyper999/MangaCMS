@@ -55,7 +55,8 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	def rowToTags(self, content):
 		ret = []
 		for item in content.find_all("a", class_='book-tag'):
-			ret.append(item.get_text().strip().lower())
+			tmp = item.get_text().strip().lower()
+			ret.extend([tmp.strip() for tmp in tmp.split("/")])
 		return ret
 
 	def getInfo(self, itemUrl):

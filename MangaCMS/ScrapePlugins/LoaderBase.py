@@ -2,9 +2,11 @@
 
 
 import abc
-import WebRequest
-import tqdm
+import datetime
 
+import WebRequest
+
+import settings
 import nameTools as nt
 import MangaCMS.ScrapePlugins.MangaScraperDbBase
 
@@ -84,6 +86,7 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 					have = self.target_table(
 							state       = 'new',            # Should be set automatically.
 							source_site = self.plugin_key,
+							first_seen  = datetime.datetime.now(),
 							**link
 						)
 
@@ -93,7 +96,7 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 						self.log.info("Added %s rows, doing incremental commit!", newItems)
 						sess.commit()
 
-				self.update_tags(row=have, tags=tags)
+				self.update_tags(tags=tags, row=have)
 
 		if self.mon_con:
 			self.mon_con.incr('new_links', newItems)
@@ -104,9 +107,12 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 
 	def wanted_from_tags(self, tags):
 
-		# Yaoi isn't something I'm that in to.
-		if "yaoi" in tags:
-			self.log.info("Yaoi item. Skipping.")
+		# Skip anything containing a skip tag and not also one of the
+		# keep tags.
+		if any([skip_tag in tags for skip_tag in settings.skipTags]) and \
+				not any([keep_tags in tags for keep_tags in settings.tags_keep]):
+
+			self.log.info("Masked item tag (%s). Skipping.", [skip_tag for skip_tag in settings.skipTags if skip_tag in tags])
 			return False
 
 		return True
@@ -118,7 +124,7 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 		self.setup()
 		dat = self.get_feed(*args, **kwargs)
 		self.log.info("Found %s total items", len(dat))
-		new = self._process_links_into_db(dat)
+		self._process_links_into_db(dat)
 
 
 	def go(self):

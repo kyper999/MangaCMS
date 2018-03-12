@@ -1,9 +1,6 @@
 
 import datetime
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import backref
 from sqlalchemy import Table
 from sqlalchemy import Index
@@ -12,7 +9,6 @@ from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy import BigInteger
 from sqlalchemy import Text
-from sqlalchemy import Float
 from sqlalchemy import Boolean
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
@@ -20,15 +16,13 @@ from sqlalchemy import PrimaryKeyConstraint
 from sqlalchemy import CheckConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import UniqueConstraint
-import sqlalchemy_jsonfield
 
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.associationproxy import association_proxy
 
 # Patch in knowledge of the citext type, so it reflects properly.
 from sqlalchemy.dialects.postgresql.base import ischema_names
-from sqlalchemy.dialects.postgresql import ENUM
 
+import sqlalchemy_jsonfield
 import citext
 ischema_names['citext'] = citext.CIText
 
@@ -134,6 +128,7 @@ class MangaReleases(Base):
 	source_site         = Column(Text, nullable=False, index=True)  # Actual source site
 	source_id           = Column(Text, nullable=False, index=True)  # ID On source site. Usually (but not always) the item URL
 
+	first_seen          = Column(DateTime, nullable=False)
 	posted_at           = Column(DateTime, nullable=False, default=datetime.datetime.min)
 	downloaded_at       = Column(DateTime, nullable=False, default=datetime.datetime.min)
 	last_checked        = Column(DateTime, nullable=False, default=datetime.datetime.min)
@@ -175,6 +170,7 @@ class HentaiReleases(Base):
 	source_site         = Column(Text, nullable=False, index=True)  # Actual source site
 	source_id           = Column(Text, nullable=False, index=True)  # ID On source site. Usually (but not always) the item URL
 
+	first_seen          = Column(DateTime, nullable=False)
 	posted_at           = Column(DateTime, nullable=False, default=datetime.datetime.min)
 	downloaded_at       = Column(DateTime, nullable=False, default=datetime.datetime.min)
 	last_checked        = Column(DateTime, nullable=False, default=datetime.datetime.min)

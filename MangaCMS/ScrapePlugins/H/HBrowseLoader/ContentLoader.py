@@ -4,6 +4,7 @@
 import os
 import os.path
 
+import datetime
 import random
 import sys
 import zipfile
@@ -246,6 +247,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		with self.row_context(dbid=link_row_id) as row:
 			row.state = 'complete'
 
+			row.downloaded_at = datetime.datetime.now()
+			row.last_checked = datetime.datetime.now()
 
 
 	def get_link(self, link_row_id):

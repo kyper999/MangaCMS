@@ -4,6 +4,7 @@
 import os
 import os.path
 import time
+import datetime
 import re
 import nameTools as nt
 import runStatus
@@ -243,6 +244,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase, LoginMix
 		self.log.info( "Done")
 		with self.row_context(dbid=link_row_id) as row:
 			row.state = 'complete'
+			row.downloaded_at = datetime.datetime.now()
+			row.last_checked = datetime.datetime.now()
 
 		return True
 

@@ -46,7 +46,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	def getDirAndFName(self, soup):
 		title = soup.find("div", class_="folder-title")
 		if not title:
-			raise ValueError("Could not find title. Wat?")
+			raise PageContentError("Could not find title. Wat?")
 		titleSplit = title.get_text().split("»")
 		safePath = [nt.makeFilenameSafe(item.strip()) for item in titleSplit]
 		fqPath = os.path.join(settings.djSettings["dlDir"], *safePath)
@@ -84,8 +84,13 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		image_container = soup.find("div", id='image-container')
 
+
 		ret_link_list = []
 		for img_tag in image_container.find_all("img"):
+			if img_tag['data-link'] == "/subscribe":
+				raise PageContentError("Subscription content!")
+
+			assert img_tag['data-file'], "Missing url for image: %s" % img_tag
 			ret_link_list.append((img_tag['data-file'], sourcePage))
 
 		note = soup.find("div", class_="message")
@@ -95,13 +100,11 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			note = nt.makeFilenameSafe(note.string)
 
 		tags = soup.find("li", class_="tag-area")
+		tagList = []
 		if tags:
-			tagList = []
 			for tag in tags.find_all("a"):
-				tagStr = tag.get_text()
-				tagList.append(tagStr.lower().rstrip(", ").lstrip(", ").replace(" ", "-"))
-		else:
-			tagList = []
+				tag_tmp = tag.get_text()
+				tagList.append(tag_tmp.lower().rstrip(", ").lstrip(", ").replace(" ", "-"))
 
 		artist_area = soup.find('div', class_='gallery-artist')
 		aList = []
@@ -114,6 +117,10 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		artist = ",".join(aList)
 
+		try:
+			tagStr = " ".join(tagList)
+		except Exception:
+			import pdb; pdb.set_trace()
 
 		for skipTag in settings.skipTags:
 			if skipTag in tagStr:
@@ -220,9 +227,6 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 	# 		self.updateDbEntry(link["sourceUrl"], dlState=2)
 
-	# 		delay = random.randint(5, 30)
-	# 		self.log.info("Sleeping %s", delay)
-	# 		time.sleep(delay)
 
 
 	def get_link(self, link_row_id):
@@ -261,8 +265,24 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 		except WebRequest.WebGetException:
+			self.log.info("WebRequest.WebGetException for item ID: %s", link_row_id)
 			with self.row_context(dbid=link_row_id) as row:
 				row.state = 'error'
+				row.err_str = traceback.format_exc()
+			return False
+
+		except UnwantedContentError:
+			self.log.info("UnwantedContentError for item ID: %s", link_row_id)
+			with self.row_context(dbid=link_row_id) as row:
+				row.state = 'error'
+				row.err_str = traceback.format_exc()
+			return False
+
+		except PageContentError:
+			self.log.info("PageContentError for item ID: %s", link_row_id)
+			with self.row_context(dbid=link_row_id) as row:
+				row.state = 'error'
+				row.err_str = traceback.format_exc()
 			return False
 
 		if not (images and dl_info['seriesName']):
@@ -293,6 +313,13 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		self.log.info( "Done")
 		with self.row_context(dbid=link_row_id) as row:
 			row.state = 'complete'
+			row.downloaded_at = datetime.datetime.now()
+			row.last_checked = datetime.datetime.now()
+
+
+		delay = random.randint(5, 30)
+		self.log.info("Sleeping %s", delay)
+		time.sleep(delay)
 
 		return True
 

@@ -5,9 +5,9 @@
 <html>
 	<head>
 		{%- if title -%}
-			<title>ReadProxy - {{ title }}</title>
+			<title>MangoCMS - {{ title }}</title>
 		{%- else -%}
-			<title>ReadProxy</title>
+			<title>MangoCMS</title>
 		{%- endif -%}
 
 		<!-- Base template header -->
@@ -18,20 +18,14 @@
 		<!-- template header end -->
 	</head>
 	<body>
-		<div id='segment_container'>
-			<div id='segment_body'>
-				<div class="container-fluid">
-					<div class="row">
-						<div class="col-md-2" style='width:180px !important'>
-							{%- include '_block_nav.html' -%}
-						</div>
-						<div class="col-md-10">
-							{%- block content -%}{%- endblock -%}
-						</div>
-					</div>
-
-				</div>
+		<div class='body_table'>
+			<div class="body_td_left">
+				{%- include '_block_nav.html' -%}
 			</div>
+			<div class="body_td_right">
+				{%- block content -%}{%- endblock -%}
+			</div>
+
 		</div>
 
 

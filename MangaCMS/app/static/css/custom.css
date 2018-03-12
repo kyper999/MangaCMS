@@ -307,6 +307,17 @@ body {
 	position:relative;
 }
 
+.nav
+{
+	width:110px !important;
+	display: block;
+	float: left;
+}
+.main
+{
+	float: right;
+	display: block;
+}
 
 @media (max-width: 767px)
 {

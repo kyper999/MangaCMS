@@ -148,7 +148,7 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 		return ret
 
 
-	def update_tags(self, item):
+	def update_item_tags(self, item):
 		self.log.info("Doing tag update")
 
 		# Do not decend into items where we've already added the item to the DB
@@ -178,7 +178,7 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 				total_items += 1
 
 				if retag:
-					self.update_tags(item)
+					self.update_item_tags(item)
 					ret = []
 
 		self.log.info("Found %s item divs in total", total_items)

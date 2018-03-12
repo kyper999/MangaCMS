@@ -26,6 +26,10 @@ def parse_table_args(**kwargs):
 	# Override the return parameters with the function
 	# params (if passed).
 	# Note: underscores are replaced with hyphens in the keys!
+	for key, val in request.args.items():
+		key = key.replace("_", "-")
+		if key in ret:
+			ret[key] = val
 	for key, val in kwargs.items():
 		key = key.replace("_", "-")
 		if key in ret:
@@ -45,7 +49,7 @@ def parse_table_args(**kwargs):
 	return ret
 
 def select_from_table(table, page, site=False, tag=None, category=None):
-	params = parse_table_args(limit_by_source=site)
+	params = parse_table_args(limit_by_source=site, filter_tag=tag, category=category)
 
 	query = g.session.query(table) \
 				.options(joinedload("file"), joinedload("file.hentai_tags_rel"), joinedload("tags_rel"), )
@@ -105,6 +109,7 @@ def hentai_by_site_view(source_site, page=1):
 						   whole_page    = True,
 						   items         = items,
 						   params        = params,
+						   source_site   = source_site,
 						   url_for_param = "hentai_by_site_view"
 						   )
 
