@@ -171,67 +171,6 @@
 			position: relative;
 		}
 
-		/*manga_scrapers
-		hentai_scrapers
-		other_scrapers*/
-
-		{%- for item in manga_scrapers -%}
-			div.{{item['cssClass']}}
-			{
-				background-color:{{item['baseColour']}};
-			}
-		{%- endfor -%}
-		{%- for item in hentai_scrapers -%}
-			div.{{item['cssClass']}}
-			{
-				background-color:{{item['baseColour']}};
-			}
-		{%- endfor -%}
-		{%- for item in other_scrapers -%}
-			div.{{item['cssClass']}}
-			{
-				background-color:{{item['baseColour']}};
-			}
-		{%- endfor -%}
-
-		/* Generate row ID classes */
-
-		{%- for item in manga_scrapers -%}
-			{%- if item['genRow'] -%}
-				tr.{{item["dbKey"]}}_row:nth-child(even)
-				{
-					background: {{item["evenRow"]}} !important;
-				}
-				tr.{{item["dbKey"]}}_row:nth-child(odd)
-				{
-					background: {{item["oddRow"]}} !important;
-				}
-			{%- endif -%}
-		{%- endfor -%}
-		{%- for item in hentai_scrapers -%}
-			{%- if item['genRow'] -%}
-				tr.{{item["dbKey"]}}_row:nth-child(even)
-				{
-					background: {{item["evenRow"]}} !important;
-				}
-				tr.{{item["dbKey"]}}_row:nth-child(odd)
-				{
-					background: {{item["oddRow"]}} !important;
-				}
-			{%- endif -%}
-		{%- endfor -%}
-		{%- for item in other_scrapers -%}
-			{%- if item['genRow'] -%}
-				tr.{{item["dbKey"]}}_row:nth-child(even)
-				{
-					background: {{item["evenRow"]}} !important;
-				}
-				tr.{{item["dbKey"]}}_row:nth-child(odd)
-				{
-					background: {{item["oddRow"]}} !important;
-				}
-			{%- endif -%}
-		{%- endfor -%}
 
 
 
@@ -366,6 +305,87 @@
 			display: table-cell !important;
 			width: 100%;
 		}
+
+		.hentai-table b
+		{
+			color: #0B0 !important;
+		}
+		.hentai-table strike
+		{
+			color: #f00 !important;
+		}
+
+
+		/*manga_scrapers
+		hentai_scrapers
+		other_scrapers*/
+
+		{% for item in manga_scrapers %}
+			div.{{item['cssClass']}}
+			{
+				background-color:{{item['baseColour']}};
+			}
+		{% endfor %}
+		{% for item in hentai_scrapers %}
+			div.{{item['cssClass']}}
+			{
+				background-color:{{item['baseColour']}};
+			}
+		{% endfor %}
+		{% for item in other_scrapers %}
+			div.{{item['cssClass']}}
+			{
+				background-color:{{item['baseColour']}};
+			}
+		{% endfor %}
+
+		/* Generate row ID classes */
+
+
+		{% for item in manga_scrapers %}
+			{% if item['genRow'] %}
+				tr.{{item["dbKey"]}}_row:nth-child(even)
+				{
+					background: {{item["evenRow"]}} !important;
+				}
+
+				tr.{{item["dbKey"]}}_row:nth-child(odd)
+				{
+					background: {{item["oddRow"]}} !important;
+				}
+
+			{% endif %}
+		{% endfor %}
+		{% for item in hentai_scrapers %}
+			{% if item['genRow'] %}
+				tr.{{item["dbKey"]}}_row:nth-child(even)
+				{
+					background: {{item["evenRow"]}} !important;
+				}
+
+				tr.{{item["dbKey"]}}_row:nth-child(odd)
+				{
+					background: {{item["oddRow"]}} !important;
+				}
+
+			{% endif %}
+		{% endfor %}
+		{% for item in other_scrapers %}
+			{% if item['genRow'] %}
+				tr.{{item["dbKey"]}}_row:nth-child(even)
+				{
+					background: {{item["evenRow"]}} !important;
+				}
+
+				tr.{{item["dbKey"]}}_row:nth-child(odd)
+				{
+					background: {{item["oddRow"]}} !important;
+				}
+
+			{% endif %}
+		{% endfor %}
+
+
 
 	</style>
 

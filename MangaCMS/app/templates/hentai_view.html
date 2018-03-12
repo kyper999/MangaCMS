@@ -1,9 +1,9 @@
 <!-- extend base layout -->
-{% import '_macros.html' as util_macros %}
+{%- import '_macros.html' as util_macros -%}
 
 
 {%- macro hentai_table_header() -%}
-	<table class='table-striped table table-bordered table-condensed ' style="table-layout: fixed;">
+	<table class='table-striped table table-bordered table-condensed hentai-table' style="table-layout: fixed;">
 
 		<tr>
 				<th class="uncoloured" style="width: 40px; min-width: 40px;">Date</th>
@@ -92,13 +92,17 @@
 
 		</td>
 		<td class='tag-col'>
+			{%- for tag in row_meta['item-tags'] -%}
+				{%- set tag_tag_start, tag_tag_end = tag_tag(tag)%}
+				<a href='{{url_for('hentai_tag_view', tag=tag, page=1)}}'>{{tag_tag_start|safe}}{{tag}}{{tag_tag_end|safe}}</a>
+			{%- endfor -%}
+			{%- for tag in row_meta['file-tags'] -%}
+				{%- if tag not in row_meta['item-tags'] -%}
+					{%- set tag_tag_start, tag_tag_end = tag_tag(tag)%}
+					+<a href='{{url_for('hentai_tag_view', tag=tag, page=1)}}'>{{tag_tag_start|safe}}{{tag}}{{tag_tag_end|safe}}</a>
+				{%- endif -%}
 
-			{% for tag in row_meta['item-tags'] %}
-				<a href='{{url_for('hentai_tag_view', tag=tag, page=1)}}'>{{tag}}</a>
-			{% endfor %}
-			{% for tag in row_meta['file-tags'] %}
-				+<a href='{{url_for('hentai_tag_view', tag=tag, page=1)}}'>{{tag}}</a>
-			{% endfor %}
+			{%- endfor -%}
 		</td>
 		<td {{'class="missing"' | safe if row_meta['fsize'] < 0 else "" | safe}}>
 			{%- if row_meta['fsize'] > 0 -%}
@@ -133,9 +137,9 @@
 	Filter Params: {{params}}
 		{{hentai_block(items, params)}}
 {%- elif whole_page -%}
-	{% extends "__base.html" %}
-	{% block content %}
-		{% include '_block_flash.html' %}
+	{%- extends "__base.html" -%}
+	{%- block content -%}
+		{%- include '_block_flash.html' -%}
 		<div class='subdiv fuid'>
 			<div id='hentai_block'>
 				<h3>Hentai</h3>
@@ -151,7 +155,7 @@
 				{{ util_macros.render_pagination(items, url_for_param=url_for_param, tag=tag, category=category, source_site=source_site) }}
 			</div>
 		</div>
-	{% endblock %}
+	{%- endblock -%}
 {%- else -%}
 	No render mode: {{table_only}}, {{whole_page}}.
 

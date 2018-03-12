@@ -420,7 +420,30 @@ def merge_dicts(*args):
 		ret.update(in_dict)
 	return ret
 
+def tag_tag(in_tag):
 
+	for want_str in settings.tagHighlight:
+		if want_str in in_tag:
+			return "<b>", "</b>"
+	for unwanted_str in settings.tagNegativeHighlight:
+		if unwanted_str in in_tag:
+			return "<strike>", "</strike>"
+
+	return "", ""
+
+	# lStyle = ''
+	# if doNotWant:
+	# 	lStyle = 'style="color:#f00;"'
+	# elif highlight:
+	# 	lStyle = 'style="color:#0B0;"'
+
+
+	# %>
+	# ${"<b>" if highlight else ""}
+	# ${"<strike>" if doNotWant else ""}
+	# <a ${ lStyle} href="/itemsPron?byTag=${tagname|u}">${tag}</a>
+	# ${"</strike>" if doNotWant else ""}
+	# ${"</b>" if highlight else ""}
 
 app.jinja_env.globals.update(
 		generate_row_meta     = generate_row_meta,
@@ -437,6 +460,7 @@ app.jinja_env.globals.update(
 		other_scrapers        = all_scrapers_ever.other_scrapers,
 		merge_dicts           = merge_dicts,
 		timeAgo               = timeAgo,
-		timeAhead             = timeAhead
+		timeAhead             = timeAhead,
+		tag_tag               = tag_tag,
 	)
 

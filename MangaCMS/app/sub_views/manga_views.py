@@ -15,12 +15,15 @@ from MangaCMS.app.utilities import paginate
 import MangaCMS.db as db
 
 def parse_table_args(**kwargs):
-	print(request.args)
-	ret = {
-		'distinct'        : False,
-		'include-deleted' : False,
-		'limit-by-source' : False,
-		'filter-tag'      : None,
+
+	print((request.args, kwargs))
+
+	filter_params = {
+		'distinct'        : [],
+		'include-deleted' : [],
+		'limit-by-source' : [],
+		'filter-tag'      : [],
+		'filter-category' : [],
 	}
 
 	# Override the return parameters with the function
@@ -28,28 +31,38 @@ def parse_table_args(**kwargs):
 	# Note: underscores are replaced with hyphens in the keys!
 	for key, val in request.args.items():
 		key = key.replace("_", "-")
-		if key in ret:
-			ret[key] = val
+		if key in filter_params and val:
+			filter_params[key].append(val)
 	for key, val in kwargs.items():
 		key = key.replace("_", "-")
-		if key in ret:
-			ret[key] = val
+		if key in filter_params and val:
+			filter_params[key].append(val)
 
-	if 'distinct' in request.args and request.args['distinct'].lower() == "true":
-		ret['distinct'] = True
-	if 'include-deleted' in request.args and request.args['include-deleted'].lower() == "true":
-		ret['include-deleted'] = True
-	if 'limit-by-source' in request.args:
-		val = request.args['limit-by-source'].lower()
-		if val in [tmp['dbKey'] for tmp in all_scrapers_ever.all_scrapers]:
-			ret['limit-by-source'] = val
+	print("Filter params: ", filter_params)
 
-	if 'filter-tag' in request.args:
-		raise ValueError("Implement me!")
-	return ret
+	if 'distinct' in filter_params and filter_params['distinct'] and filter_params['distinct'][0].lower() == "true":
+		filter_params['distinct'] = True
+	if 'include-deleted' in filter_params and filter_params['include-deleted'] and filter_params['include-deleted'][0].lower() == "true":
+		filter_params['include-deleted'] = True
+	if 'limit-by-source' in filter_params and filter_params['limit-by-source']:
+		for val in filter_params['limit-by-source']:
+			if not val:
+				continue
+			val = val.lower()
+			new = []
+			if val in [tmp['dbKey'] for tmp in all_scrapers_ever.all_scrapers]:
+				new.append(val)
+			filter_params['limit-by-source'] = new
 
-def select_from_table(table, page, site=False, tag=None, category=None):
-	params = parse_table_args(limit_by_source=site, filter_tag=tag, category=category)
+	if 'filter-tag' in filter_params and filter_params['filter-tag']:
+		filter_params['filter-tag'] = [str(tmp) for tmp in filter_params['filter-tag']]
+	if 'filter-category' in filter_params and filter_params['filter-category']:
+		filter_params['filter-category'] = [str(tmp) for tmp in filter_params['filter-category']]
+
+	return filter_params
+
+def select_from_table(table, page, site=False, filter_tag=None, filter_category=None):
+	params = parse_table_args(limit_by_source=site, filter_tag=filter_tag, filter_category=filter_category)
 
 	query = g.session.query(table) \
 				.options(joinedload("file"), joinedload("file.hentai_tags_rel"), joinedload("tags_rel"), )
@@ -116,7 +129,7 @@ def hentai_by_site_view(source_site, page=1):
 @app.route('/hentai/by-tag/<tag>/', methods=['GET'])
 @app.route('/hentai/by-tag/<tag>/<int:page>', methods=['GET'])
 def hentai_tag_view(tag, page=1):
-	params, items = select_from_table(db.HentaiReleases, page=page, tag=tag)
+	params, items = select_from_table(db.HentaiReleases, page=page, filter_tag=tag)
 	return render_template('hentai_view.html',
 						   whole_page    = True,
 						   items         = items,
@@ -128,7 +141,7 @@ def hentai_tag_view(tag, page=1):
 @app.route('/hentai/by-category/<category>/', methods=['GET'])
 @app.route('/hentai/by-category/<category>/<int:page>', methods=['GET'])
 def hentai_category_view(category, page=1):
-	params, items = select_from_table(db.HentaiReleases, page=page, category=category)
+	params, items = select_from_table(db.HentaiReleases, page=page, filter_category=category)
 	return render_template('hentai_view.html',
 						   whole_page    = True,
 						   items         = items,
