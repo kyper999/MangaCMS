@@ -478,7 +478,9 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 				)
 
 			with self.row_context(dbid=row_id) as row:
-				row.state = 'complete'
+				row.state         = 'complete'
+				row.downloaded_at = datetime.datetime.now()
+				row.last_checked  = datetime.datetime.now()
 
 	def do_fetch_content(self):
 		if hasattr(self, 'setup'):

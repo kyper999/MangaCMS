@@ -94,7 +94,6 @@ scrapePlugins = {
 	28  : (MangaCMSOld.ScrapePlugins.M.MangaZuki.Run,                       hours(12)),
 
 
-
 	# FoolSlide modules
 
 	61 : (MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.CanisMajorRun,      hours(12)),
@@ -132,6 +131,57 @@ scrapePlugins = {
 	51  : (MangaCMS.ScrapePlugins.H.TsuminoLoader.Run,                   hours( 2)),
 
 }
+
+
+
+
+def get_plugins():
+	ret = {}
+	runner_map = {}
+	for plugin_module, dummy_interval in scrapePlugins.values():
+		plugin = plugin_module.Runner
+		print("plugin.pluginName: ", plugin.pluginName)
+		# print(dir(plugin))
+		if not hasattr(plugin, 'pluginName'):
+			print("No pluginName: ", plugin)
+			continue
+
+		if not hasattr(plugin, 'feedLoader'):
+			print("No feedLoader: ", plugin)
+			continue
+		if not hasattr(plugin, 'contentLoader'):
+			print("No contentLoader: ", plugin)
+			continue
+
+		if hasattr(plugin.feedLoader, 'tableKey'):
+			pass
+		elif hasattr(plugin.feedLoader, 'plugin_key'):
+			print("Has plugin_key")
+			plugin.feedLoader.tableKey = plugin.feedLoader.plugin_key
+		else:
+			print("No tableKey in feedLoader: ", plugin.feedLoader, hasattr(plugin.feedLoader, 'plugin_key'))
+			continue
+
+		if plugin.feedLoader.tableKey != "mk":
+			assert plugin.feedLoader.tableKey not in ret, "Duplicate keys? Key: %s, for %s, matches %s" % (
+				plugin.feedLoader.tableKey, plugin, ret[plugin.feedLoader.tableKey]['name'])
+
+		item = {
+			'feedLoader'    : plugin.feedLoader,
+			'contentLoader' : plugin.contentLoader,
+			'runner'        : plugin,
+			'name'          : plugin.pluginName,
+			"is_h"          : ".H." in plugin_module.__name__,
+			"key"           : plugin.feedLoader.tableKey,
+		}
+		ret[plugin.feedLoader.tableKey]    = item
+		runner_map[plugin_module.__name__] = item
+	return ret, runner_map
+
+
+
+
+PLUGIN_MAP, RUNNER_MAP = get_plugins()
 
 
 if __name__ == "__main__":

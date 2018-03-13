@@ -2,6 +2,73 @@
 {%- import '_macros.html' as util_macros -%}
 
 
+{%- macro renderStatus(item) -%}
+	{%- set css_class = item['meta']['key'] if item['meta'] else "unk" -%}
+	<div class="statusdiv {{cssClass}}_id" >
+		<strong>
+			{{item.name}}
+		</strong><br />
+		{%- if item.last_error > min_date() -%}
+			<a href="/errorLog">Error {{ terse_ago(item.last_error) }} ago!</a><br />
+		{%- endif -%}
+	</div>
+
+{%- endmacro -%}
+
+{%- macro renderStatus_old(item) -%}
+	<%
+
+	if vals:
+		running, runStart, lastRunDuration, lastErr = vals
+		runStart = ut.timeAgo(runStart)
+	else:
+		running, runStart, lastRunDuration, lastErr = False, "Never!", None, 0
+
+	if running:
+		runState = "<b>Running</b>"
+	else:
+		runState = "Not Running"
+
+	errored = False
+	if lastErr > (time.time() - 60*60*24): # If the last error was within the last 24 hours
+		errored = ut.timeAgo(lastErr)
+
+
+
+	%>
+	<div class="${cssClass}" >
+		<strong>
+			${name}
+		</strong><br />
+		% if errored:
+			<a href="/errorLog">Error ${errored} ago!</a><br />
+		% endif
+		${runStart}<br />
+		${runState}
+
+		% if dictKey != None:
+			% if dictKey in statusDict:
+				<%
+				keys = [DNLDED, DLING, QUEUED, FAILED]
+				pres = [key in statusDict[dictKey] for key in keys]
+
+				%>
+				% if all(pres):
+					<ul>
+						<li>Have: ${statusDict[dictKey][DNLDED]}</li>
+						<li>DLing: ${statusDict[dictKey][DLING]}</li>
+						<li>Want: ${statusDict[dictKey][QUEUED]}</li>
+						<li>Failed: ${statusDict[dictKey][FAILED]}</li>
+					</ul>
+				% endif
+			## % else:
+				## <b>WARN: No lookup dict built yet!</b>
+			% endif
+		% endif
+
+	</div>
+
+{%- endmacro -%}
 
 
 {%- extends "__base.html" -%}
@@ -15,12 +82,9 @@
 				<h1>Status:</h1>
 				<h4>Active Manga Plugins</h4>
 				{%- for item in states -%}
-					{{item}}
-					<%
-					vals = allPlugins.get(item["dbKey"], False)
 
-					renderStatus(item["name"], item['cssClass']+" statediv", statusDict, item["dictKey"], vals)
-					%>
+					{{ renderStatus(item) }}
+
 				{%- endfor -%}
 				<hr>
 				% if ut.ip_in_whitelist():

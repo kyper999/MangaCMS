@@ -17,6 +17,7 @@ from sqlalchemy.sql import text
 
 from MangaCMS.app import app
 import MangaCMS.db as db
+import MangaCMS.activePlugins
 
 
 
@@ -50,6 +51,12 @@ def get_scheduled_tasks(session):
 		tgt = then - now
 		print("Then, now:", type(then), type(now), then, now)
 		value['time_til_job'] = tgt
+
+		if name in MangaCMS.activePlugins.RUNNER_MAP:
+			value['meta'] = MangaCMS.activePlugins.RUNNER_MAP[name]
+		else:
+			value['meta'] = None
+
 	ret.sort(key=lambda x: x[2]['time_til_job'])
 	return ret
 

@@ -93,6 +93,8 @@ class Loader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase,
 		self.log.info( "Done")
 		with self.row_context(url=dlurl) as row:
 			row.state = 'complete'
+			row.downloaded_at = datetime.datetime.now()
+			row.last_checked = datetime.datetime.now()
 
 		return
 

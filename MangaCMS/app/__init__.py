@@ -446,6 +446,9 @@ def tag_tag(in_tag):
 	# ${"</strike>" if doNotWant else ""}
 	# ${"</b>" if highlight else ""}
 
+def min_date():
+	return datetime.datetime.min
+
 app.jinja_env.globals.update(
 		generate_row_meta     = generate_row_meta,
 		generate_hentai_meta  = generate_hentai_meta,
@@ -463,5 +466,6 @@ app.jinja_env.globals.update(
 		timeAgo               = timeAgo,
 		timeAhead             = timeAhead,
 		tag_tag               = tag_tag,
+		min_date              = min_date,
 	)
 
