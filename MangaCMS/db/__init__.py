@@ -7,6 +7,7 @@ from .db_models import HentaiReleases
 from .db_models import MangaTags
 from .db_models import HentaiTags
 from .db_models import ReleaseFile
+from .db_models import PluginStatus
 
 from .db_types import dlstate_enum
 from .db_types import file_type

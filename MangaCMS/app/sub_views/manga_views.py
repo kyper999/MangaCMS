@@ -22,7 +22,7 @@ def parse_table_args(**kwargs):
 		'distinct'        : [],
 		'include-deleted' : [],
 		'limit-by-source' : [],
-		'filter-tag'      : [],
+		'filter-tags'      : [],
 		'filter-category' : [],
 	}
 
@@ -54,26 +54,44 @@ def parse_table_args(**kwargs):
 				new.append(val)
 			filter_params['limit-by-source'] = new
 
-	if 'filter-tag' in filter_params and filter_params['filter-tag']:
-		filter_params['filter-tag'] = [str(tmp) for tmp in filter_params['filter-tag']]
+	if 'filter-tags' in filter_params and filter_params['filter-tags']:
+		filter_params['filter-tags'] = [str(tmp) for tmp in filter_params['filter-tags']]
 	if 'filter-category' in filter_params and filter_params['filter-category']:
 		filter_params['filter-category'] = [str(tmp) for tmp in filter_params['filter-category']]
 
 	return filter_params
 
-def select_from_table(table, page, site=False, filter_tag=None, filter_category=None):
-	params = parse_table_args(limit_by_source=site, filter_tag=filter_tag, filter_category=filter_category)
+def select_from_table(table, page, site=False, filter_tags=None, filter_category=None):
+	params = parse_table_args(limit_by_source=site, filter_tags=filter_tags, filter_category=filter_category)
 
 	query = g.session.query(table) \
 				.options(joinedload("file"), joinedload("file.hentai_tags_rel"), joinedload("tags_rel"), )
+
+	tags_table = db.MangaTags if table == db.MangaReleases else db.HentaiTags
+	# query = query.join(tags_table)
+	query = query.join(db.ReleaseFile)
+	# query = query.filter( table = AC.id )
 
 
 	if not params['include-deleted']:
 		query = query.filter(table.deleted == False)
 	if params['limit-by-source']:
-		query = query.filter(table.source_site == params['limit-by-source'])
+		for source in params['limit-by-source']:
+			query = query.filter(table.source_site == source)
+	if params['filter-category']:
+		for filter_cat in params['filter-category']:
+			query = query.filter(table.series_name == filter_cat)
+
+	print("params['filter-tags']", params['filter-tags'])
+
+	if params['filter-tags']:
+
+		for filter_tag in params['filter-tags']:
+			print("Adding filter:", tags_table, tags_table.tag, filter_tag, tags_table.tag == filter_tag)
+			query = query.filter(filter_tag in table.tags_rel)
+
 	if params['distinct']:
-		query = query.distinct(table.series_name) \
+		query = query.distinct(table.series_name)             \
 			.order_by(sql_desc(sql_max(table.downloaded_at)))
 	else:
 		query = query.order_by(table.downloaded_at.desc())
@@ -129,7 +147,7 @@ def hentai_by_site_view(source_site, page=1):
 @app.route('/hentai/by-tag/<tag>/', methods=['GET'])
 @app.route('/hentai/by-tag/<tag>/<int:page>', methods=['GET'])
 def hentai_tag_view(tag, page=1):
-	params, items = select_from_table(db.HentaiReleases, page=page, filter_tag=tag)
+	params, items = select_from_table(db.HentaiReleases, page=page, filter_tags=tag)
 	return render_template('hentai_view.html',
 						   whole_page    = True,
 						   items         = items,

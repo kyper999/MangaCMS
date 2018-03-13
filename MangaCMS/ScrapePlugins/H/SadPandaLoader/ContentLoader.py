@@ -200,6 +200,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase, LoginMix
 			source_url  = row.source_id
 			origin_name = row.origin_name
 			series_name = row.series_name
+			
+			self.update_tags(link_info['item_tags'], row=row)
 
 		downloadUrl = self.getDownloadUrl(link_info['dlPage'], source_url)
 

@@ -1,6 +1,7 @@
 
 import os
 import uuid
+import time
 import datetime
 import urllib.parse
 import sys
@@ -209,7 +210,7 @@ def timeAgo(inTimeStamp):
 	deltatime = datetime.datetime.now() - inTimeStamp
 	delta = int(deltatime.total_seconds())
 	if delta < 0:
-		return "Past?"
+		return "Future (%s)?" % delta
 	elif delta < 60:
 		return "{delta} s".format(delta=delta)
 	delta = delta // 60
@@ -230,7 +231,7 @@ def timeAhead(inTimeStamp):
 	deltatime = inTimeStamp - datetime.datetime.now()
 	delta = deltatime.total_seconds()
 	if delta < 0:
-		return "Future?"
+		return "Past (%s)?" % delta
 	elif delta < 60:
 		return "{delta} s".format(delta=delta)
 	delta = delta // 60

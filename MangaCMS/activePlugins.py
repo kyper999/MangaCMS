@@ -1,60 +1,65 @@
 
-
+# pylint: disable=C0413
+# Disable the import ordering crap, because we need to do the log setup
+# first, as some of the plugins may have side effects (also, fix that)
 if __name__ == "__main__":
-	import MangaCMS.lib.logSetup
-	MangaCMS.lib.logSetup.initLogging()
+	import MangaCMSOld.lib.logSetup
+	MangaCMSOld.lib.logSetup.initLogging()
 
-# import MangaCMS.ScrapePlugins.M.BuMonitor.Run
-# import MangaCMS.ScrapePlugins.M.BuMonitor.Rescan
+import MangaCMSOld.ScrapePlugins.M.BuMonitor.Run
+import MangaCMSOld.ScrapePlugins.M.BuMonitor.Rescan
 
 
-# import MangaCMS.ScrapePlugins.H.ASMHentaiLoader.Run
-# import MangaCMS.ScrapePlugins.H.DjMoeLoader.Run
-# import MangaCMS.ScrapePlugins.H.DoujinOnlineLoader.Run
-# import MangaCMS.ScrapePlugins.H.HBrowseLoader.Run
-# import MangaCMS.ScrapePlugins.H.Hentai2Read.Run
-# import MangaCMS.ScrapePlugins.H.HitomiLoader.Run
-# import MangaCMS.ScrapePlugins.H.NHentaiLoader.Run
-# import MangaCMS.ScrapePlugins.H.PururinLoader.Run
-# import MangaCMS.ScrapePlugins.H.SadPandaLoader.Run
-# import MangaCMS.ScrapePlugins.H.TsuminoLoader.Run
 
-# import MangaCMS.ScrapePlugins.M.Crunchyroll.Run
-# import MangaCMS.ScrapePlugins.M.CxLoader.Run
-# import MangaCMS.ScrapePlugins.M.DynastyLoader.Run
-# import MangaCMS.ScrapePlugins.M.GameOfScanlationLoader.Run
-# import MangaCMS.ScrapePlugins.M.IrcGrabber.BotRunner
-# import MangaCMS.ScrapePlugins.M.IrcGrabber.IrcEnqueueRun
-# import MangaCMS.ScrapePlugins.M.Kawaii.Run
-# import MangaCMS.ScrapePlugins.M.KissLoader.Run
-# import MangaCMS.ScrapePlugins.M.MangaBox.Run
-# import MangaCMS.ScrapePlugins.M.MangaDex.Run
-# import MangaCMS.ScrapePlugins.M.MangaHere.Run
-# import MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run
-# import MangaCMS.ScrapePlugins.M.McLoader.Run
-# import MangaCMS.ScrapePlugins.M.MerakiScans.Run
-# import MangaCMS.ScrapePlugins.M.MangaZuki.Run
-# import MangaCMS.ScrapePlugins.M.WebtoonLoader.Run            # Yeah. There is webtoon.com. and WebtoonsReader.com. Confusing much?
-# import MangaCMS.ScrapePlugins.M.YoMangaLoader.Run
-# import MangaCMS.ScrapePlugins.M.ZenonLoader.Run
+import MangaCMSOld.ScrapePlugins.M.Crunchyroll.Run
+import MangaCMSOld.ScrapePlugins.M.CxLoader.Run
+import MangaCMSOld.ScrapePlugins.M.DynastyLoader.Run
+import MangaCMSOld.ScrapePlugins.M.GameOfScanlationLoader.Run
+import MangaCMSOld.ScrapePlugins.M.IrcGrabber.BotRunner
+import MangaCMSOld.ScrapePlugins.M.IrcGrabber.IrcEnqueueRun
+import MangaCMSOld.ScrapePlugins.M.Kawaii.Run
+import MangaCMSOld.ScrapePlugins.M.KissLoader.Run
+import MangaCMSOld.ScrapePlugins.M.MangaBox.Run
+import MangaCMSOld.ScrapePlugins.M.MangaHere.Run
+import MangaCMSOld.ScrapePlugins.M.McLoader.Run
+import MangaCMSOld.ScrapePlugins.M.MerakiScans.Run
+import MangaCMSOld.ScrapePlugins.M.MangaZuki.Run
+import MangaCMSOld.ScrapePlugins.M.WebtoonLoader.Run            # Yeah. There is webtoon.com. and WebtoonsReader.com. Confusing much?
+import MangaCMSOld.ScrapePlugins.M.ZenonLoader.Run
 
-# import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.CanisMajorRun
-# import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.ChibiMangaRun
-# import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.DokiRun
-# import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.GoMangaCoRun
-# import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.IlluminatiMangaRun
-# import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.JaptemMangaRun
-# import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.MangatopiaRun
-# import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.RoseliaRun
-# import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.S2Run
-# import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.SenseRun
-# import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.ShoujoSenseRun
-# import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.TripleSevenRun
-# import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.TwistedHelRun
-# import MangaCMS.ScrapePlugins.M.FoolSlide.Modules.VortexRun
+import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.CanisMajorRun
+import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.ChibiMangaRun
+import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.DokiRun
+import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.GoMangaCoRun
+import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.IlluminatiMangaRun
+import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.JaptemMangaRun
+import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.MangatopiaRun
+import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.RoseliaRun
+import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.S2Run
+import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.SenseRun
+import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.ShoujoSenseRun
+import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.TripleSevenRun
+import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.TwistedHelRun
+import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.VortexRun
 
+
+import MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run
+import MangaCMS.ScrapePlugins.M.MangaDex.Run
+
+import MangaCMS.ScrapePlugins.M.YoMangaLoader.Run
 import MangaCMS.ScrapePlugins.M.MangaMadokami.Run
-# import MangaCMS.ScrapePlugins.M.BooksMadokami.Run
+
+import MangaCMS.ScrapePlugins.H.SadPandaLoader.Run
+import MangaCMS.ScrapePlugins.H.DjMoeLoader.Run
+import MangaCMS.ScrapePlugins.H.PururinLoader.Run
+import MangaCMS.ScrapePlugins.H.TsuminoLoader.Run
+import MangaCMS.ScrapePlugins.H.Hentai2Read.Run
+import MangaCMS.ScrapePlugins.H.DoujinOnlineLoader.Run
+import MangaCMS.ScrapePlugins.H.ASMHentaiLoader.Run
+import MangaCMS.ScrapePlugins.H.HitomiLoader.Run
+import MangaCMS.ScrapePlugins.H.NHentaiLoader.Run
+import MangaCMS.ScrapePlugins.H.HBrowseLoader.Run
+# import MangaCMSOld.ScrapePlugins.M.BooksMadokami.Run
 
 # Convenience functions to make intervals clearer.
 def days(num):
@@ -69,59 +74,62 @@ def minutes(num):
 # All they do is specify the order in which plugins
 # are run, initially, starting after 1-minue*{key} intervals
 scrapePlugins = {
-	# 0   : (MangaCMS.ScrapePlugins.M.MangaDex.Run,                        hours( 1)),
-	# 1   : (MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run,               hours( 6)),
-	# 2   : (MangaCMS.ScrapePlugins.M.BuMonitor.Run,                       hours( 1)),
-	# 3   : (MangaCMS.ScrapePlugins.M.BuMonitor.Rescan,                    days(  7)),
+	2   : (MangaCMSOld.ScrapePlugins.M.BuMonitor.Run,                       hours( 1)),
+	3   : (MangaCMSOld.ScrapePlugins.M.BuMonitor.Rescan,                    days(  7)),
 
-	# 11  : (MangaCMS.ScrapePlugins.M.McLoader.Run,                        hours(12)),  # every 12 hours, it's just a single scanlator site.
-	# # 13  : (MangaCMS.ScrapePlugins.M.CxLoader.Run,                        hours(12)),  # every 12 hours, it's just a single scanlator site.
-	# # 12  : (MangaCMS.ScrapePlugins.M.IrcGrabber.IrcEnqueueRun,            hours(12)),  # Queue up new items from IRC bots.
-	# # 15  : (MangaCMS.ScrapePlugins.M.IrcGrabber.BotRunner,                hours( 1)),  # Irc bot never returns. It runs while the app is live. Rerun interval doesn't matter, as a result.
-	# 16  : (MangaCMS.ScrapePlugins.M.MangaHere.Run,                       hours(12)),
-	# 17  : (MangaCMS.ScrapePlugins.M.WebtoonLoader.Run,                   hours( 8)),
-	# 18  : (MangaCMS.ScrapePlugins.M.DynastyLoader.Run,                   hours( 8)),
-	# # 19  : (MangaCMS.ScrapePlugins.M.KissLoader.Run,                      hours( 1)),
-	# 20  : (MangaCMS.ScrapePlugins.M.Crunchyroll.Run,                     hours( 4)),
-	# 22  : (MangaCMS.ScrapePlugins.M.Kawaii.Run,                          hours(12)),
-	# 23  : (MangaCMS.ScrapePlugins.M.ZenonLoader.Run,                     hours(24)),
-	# 24  : (MangaCMS.ScrapePlugins.M.MangaBox.Run,                        hours(12)),
-	# 25  : (MangaCMS.ScrapePlugins.M.YoMangaLoader.Run,                   hours(12)),
-	# 26  : (MangaCMS.ScrapePlugins.M.GameOfScanlationLoader.Run,          hours(12)),
-	# 27  : (MangaCMS.ScrapePlugins.M.MerakiScans.Run,                     hours(12)),
-	# 28  : (MangaCMS.ScrapePlugins.M.MangaZuki.Run,                       hours(12)),
+	11  : (MangaCMSOld.ScrapePlugins.M.McLoader.Run,                        hours(12)),  # every 12 hours, it's just a single scanlator site.
+	# 13  : (MangaCMSOld.ScrapePlugins.M.CxLoader.Run,                        hours(12)),  # every 12 hours, it's just a single scanlator site.
+	# 12  : (MangaCMSOld.ScrapePlugins.M.IrcGrabber.IrcEnqueueRun,            hours(12)),  # Queue up new items from IRC bots.
+	# 15  : (MangaCMSOld.ScrapePlugins.M.IrcGrabber.BotRunner,                hours( 1)),  # Irc bot never returns. It runs while the app is live. Rerun interval doesn't matter, as a result.
+	16  : (MangaCMSOld.ScrapePlugins.M.MangaHere.Run,                       hours(12)),
+	17  : (MangaCMSOld.ScrapePlugins.M.WebtoonLoader.Run,                   hours( 8)),
+	18  : (MangaCMSOld.ScrapePlugins.M.DynastyLoader.Run,                   hours( 8)),
+	# 19  : (MangaCMSOld.ScrapePlugins.M.KissLoader.Run,                      hours( 1)),
+	20  : (MangaCMSOld.ScrapePlugins.M.Crunchyroll.Run,                     hours( 4)),
+	22  : (MangaCMSOld.ScrapePlugins.M.Kawaii.Run,                          hours(12)),
+	23  : (MangaCMSOld.ScrapePlugins.M.ZenonLoader.Run,                     hours(24)),
+	24  : (MangaCMSOld.ScrapePlugins.M.MangaBox.Run,                        hours(12)),
+	26  : (MangaCMSOld.ScrapePlugins.M.GameOfScanlationLoader.Run,          hours(12)),
+	27  : (MangaCMSOld.ScrapePlugins.M.MerakiScans.Run,                     hours(12)),
+	28  : (MangaCMSOld.ScrapePlugins.M.MangaZuki.Run,                       hours(12)),
 
 
-	# 41  : (MangaCMS.ScrapePlugins.H.HBrowseLoader.Run,                   hours( 2)),
-	# 42  : (MangaCMS.ScrapePlugins.H.PururinLoader.Run,                   hours( 2)),
-	# 44  : (MangaCMS.ScrapePlugins.H.NHentaiLoader.Run,                   hours( 2)),
-	# 45  : (MangaCMS.ScrapePlugins.H.SadPandaLoader.Run,                  hours(12)),
-	# 46  : (MangaCMS.ScrapePlugins.H.DjMoeLoader.Run,                     hours( 2)),
-	# 47  : (MangaCMS.ScrapePlugins.H.HitomiLoader.Run,                    hours( 2)),
-	# 48  : (MangaCMS.ScrapePlugins.H.ASMHentaiLoader.Run,                 hours( 2)),
-	# 49  : (MangaCMS.ScrapePlugins.H.Hentai2Read.Run,                     hours( 2)),
-	# 50  : (MangaCMS.ScrapePlugins.H.DoujinOnlineLoader.Run,              hours( 2)),
-	# 51  : (MangaCMS.ScrapePlugins.H.TsuminoLoader.Run,                   hours( 2)),
 
-	# # FoolSlide modules
+	# FoolSlide modules
 
-	# 61 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.CanisMajorRun,      hours(12)),
-	# 62 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.ChibiMangaRun,      hours(12)),
-	# 63 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.DokiRun,            hours(12)),
-	# 64 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.GoMangaCoRun,       hours(12)),
-	# 65 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.IlluminatiMangaRun, hours(12)),
-	# # 66 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.JaptemMangaRun,     hours(12)),
-	# 67 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.MangatopiaRun,      hours(12)),
-	# # 68 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.RoseliaRun,         hours(12)),
-	# 69 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.S2Run,              hours(12)),
-	# 70 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.SenseRun,           hours(12)),
-	# 71 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.ShoujoSenseRun,     hours(12)),
-	# 72 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.TripleSevenRun,     hours(12)),
-	# 73 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.TwistedHelRun,      hours(12)),
-	# 74 : (MangaCMS.ScrapePlugins.M.FoolSlide.Modules.VortexRun,          hours(12)),
+	61 : (MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.CanisMajorRun,      hours(12)),
+	62 : (MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.ChibiMangaRun,      hours(12)),
+	63 : (MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.DokiRun,            hours(12)),
+	64 : (MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.GoMangaCoRun,       hours(12)),
+	65 : (MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.IlluminatiMangaRun, hours(12)),
+	# 66 : (MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.JaptemMangaRun,     hours(12)),
+	67 : (MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.MangatopiaRun,      hours(12)),
+	# 68 : (MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.RoseliaRun,         hours(12)),
+	69 : (MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.S2Run,              hours(12)),
+	70 : (MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.SenseRun,           hours(12)),
+	71 : (MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.ShoujoSenseRun,     hours(12)),
+	72 : (MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.TripleSevenRun,     hours(12)),
+	73 : (MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.TwistedHelRun,      hours(12)),
+	74 : (MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.VortexRun,          hours(12)),
 
-	80 : (MangaCMS.ScrapePlugins.M.MangaMadokami.Run,                    hours(4)),
-	# 81 : (MangaCMS.ScrapePlugins.M.BooksMadokami.Run,                    hours(4)),
+
+	# 81 : (MangaCMSOld.ScrapePlugins.M.BooksMadokami.Run,                    hours(4)),
+	#
+	0   : (MangaCMS.ScrapePlugins.M.MangaDex.Run,                        hours( 1)),
+	1   : (MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run,               hours( 6)),
+	25  : (MangaCMS.ScrapePlugins.M.YoMangaLoader.Run,                   hours(12)),
+	80  : (MangaCMS.ScrapePlugins.M.MangaMadokami.Run,                    hours(4)),
+
+	41  : (MangaCMS.ScrapePlugins.H.HBrowseLoader.Run,                   hours( 2)),
+	42  : (MangaCMS.ScrapePlugins.H.PururinLoader.Run,                   hours( 2)),
+	44  : (MangaCMS.ScrapePlugins.H.NHentaiLoader.Run,                   hours( 2)),
+	45  : (MangaCMS.ScrapePlugins.H.SadPandaLoader.Run,                  hours(12)),
+	46  : (MangaCMS.ScrapePlugins.H.DjMoeLoader.Run,                     hours( 2)),
+	47  : (MangaCMS.ScrapePlugins.H.HitomiLoader.Run,                    hours( 2)),
+	48  : (MangaCMS.ScrapePlugins.H.ASMHentaiLoader.Run,                 hours( 2)),
+	49  : (MangaCMS.ScrapePlugins.H.Hentai2Read.Run,                     hours( 2)),
+	50  : (MangaCMS.ScrapePlugins.H.DoujinOnlineLoader.Run,              hours( 2)),
+	51  : (MangaCMS.ScrapePlugins.H.TsuminoLoader.Run,                   hours( 2)),
 
 }
 
@@ -136,46 +144,50 @@ if __name__ == "__main__":
 	# }
 
 	run = [
-				# MangaCMS.ScrapePlugins.M.Crunchyroll.Run,
-				# MangaCMS.ScrapePlugins.M.DynastyLoader.Run,
-				# MangaCMS.ScrapePlugins.M.FoolSlide.Modules.CanisMajorRun,
-				# MangaCMS.ScrapePlugins.M.FoolSlide.Modules.ChibiMangaRun,
-				# MangaCMS.ScrapePlugins.M.FoolSlide.Modules.DokiRun,
-				# MangaCMS.ScrapePlugins.M.FoolSlide.Modules.GoMangaCoRun,
-				# MangaCMS.ScrapePlugins.M.FoolSlide.Modules.IlluminatiMangaRun,
-				# MangaCMS.ScrapePlugins.M.FoolSlide.Modules.MangatopiaRun,
-				# MangaCMS.ScrapePlugins.M.FoolSlide.Modules.S2Run,
-				# MangaCMS.ScrapePlugins.M.FoolSlide.Modules.SenseRun,
-				# MangaCMS.ScrapePlugins.M.FoolSlide.Modules.ShoujoSenseRun,
-				# MangaCMS.ScrapePlugins.M.FoolSlide.Modules.TripleSevenRun,
-				# MangaCMS.ScrapePlugins.M.FoolSlide.Modules.TwistedHelRun,
-				# MangaCMS.ScrapePlugins.M.FoolSlide.Modules.VortexRun,
-				# MangaCMS.ScrapePlugins.M.GameOfScanlationLoader.Run,
-				# MangaCMS.ScrapePlugins.M.Kawaii.Run,
-				# MangaCMS.ScrapePlugins.M.MangaBox.Run,
-				# MangaCMS.ScrapePlugins.M.MangaDex.Run,
-				# MangaCMS.ScrapePlugins.M.MangaHere.Run,
 				MangaCMS.ScrapePlugins.M.MangaMadokami.Run,
-				# MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run,
-				# MangaCMS.ScrapePlugins.M.MangaZuki.Run,
-				# MangaCMS.ScrapePlugins.M.McLoader.Run,
-				# MangaCMS.ScrapePlugins.M.MerakiScans.Run,
-				# MangaCMS.ScrapePlugins.M.WebtoonLoader.Run,
-				# MangaCMS.ScrapePlugins.M.YoMangaLoader.Run,
-				# MangaCMS.ScrapePlugins.M.ZenonLoader.Run,
-				# MangaCMS.ScrapePlugins.M.BuMonitor.Rescan,
-				# MangaCMS.ScrapePlugins.M.BuMonitor.Run,
-				# MangaCMS.ScrapePlugins.H.ASMHentaiLoader.Run,
-				# MangaCMS.ScrapePlugins.H.DjMoeLoader.Run,
-				# MangaCMS.ScrapePlugins.H.DoujinOnlineLoader.Run,
-				# MangaCMS.ScrapePlugins.H.HBrowseLoader.Run,
-				# MangaCMS.ScrapePlugins.H.Hentai2Read.Run,
-				# MangaCMS.ScrapePlugins.H.HitomiLoader.Run,
-				# MangaCMS.ScrapePlugins.H.NHentaiLoader.Run,
-				# MangaCMS.ScrapePlugins.H.PururinLoader.Run,
-				# MangaCMS.ScrapePlugins.H.TsuminoLoader.Run,
-				# MangaCMS.ScrapePlugins.M.BooksMadokami.Run,
-				# MangaCMS.ScrapePlugins.H.SadPandaLoader.Run,
+
+				MangaCMSOld.ScrapePlugins.M.Crunchyroll.Run,
+				MangaCMSOld.ScrapePlugins.M.DynastyLoader.Run,
+				MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.CanisMajorRun,
+				MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.ChibiMangaRun,
+				MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.DokiRun,
+				MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.GoMangaCoRun,
+				MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.IlluminatiMangaRun,
+				MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.MangatopiaRun,
+				MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.S2Run,
+				MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.SenseRun,
+				MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.ShoujoSenseRun,
+				MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.TripleSevenRun,
+				MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.TwistedHelRun,
+				MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.VortexRun,
+				MangaCMSOld.ScrapePlugins.M.GameOfScanlationLoader.Run,
+				MangaCMSOld.ScrapePlugins.M.Kawaii.Run,
+				MangaCMSOld.ScrapePlugins.M.MangaBox.Run,
+				MangaCMS.ScrapePlugins.M.MangaDex.Run,
+				MangaCMSOld.ScrapePlugins.M.MangaHere.Run,
+				MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run,
+				MangaCMSOld.ScrapePlugins.M.MangaZuki.Run,
+				MangaCMSOld.ScrapePlugins.M.McLoader.Run,
+				MangaCMSOld.ScrapePlugins.M.MerakiScans.Run,
+				MangaCMSOld.ScrapePlugins.M.WebtoonLoader.Run,
+				MangaCMS.ScrapePlugins.M.YoMangaLoader.Run,
+				MangaCMSOld.ScrapePlugins.M.ZenonLoader.Run,
+				MangaCMSOld.ScrapePlugins.M.BuMonitor.Rescan,
+				MangaCMSOld.ScrapePlugins.M.BuMonitor.Run,
+
+				# MangaCMSOld.ScrapePlugins.M.BooksMadokami.Run,
+
+
+				MangaCMS.ScrapePlugins.H.ASMHentaiLoader.Run,
+				MangaCMS.ScrapePlugins.H.DjMoeLoader.Run,
+				MangaCMS.ScrapePlugins.H.DoujinOnlineLoader.Run,
+				MangaCMS.ScrapePlugins.H.HBrowseLoader.Run,
+				MangaCMS.ScrapePlugins.H.Hentai2Read.Run,
+				MangaCMS.ScrapePlugins.H.HitomiLoader.Run,
+				MangaCMS.ScrapePlugins.H.NHentaiLoader.Run,
+				MangaCMS.ScrapePlugins.H.PururinLoader.Run,
+				MangaCMS.ScrapePlugins.H.TsuminoLoader.Run,
+				MangaCMS.ScrapePlugins.H.SadPandaLoader.Run,
 		]
 
 	print("Test run!")

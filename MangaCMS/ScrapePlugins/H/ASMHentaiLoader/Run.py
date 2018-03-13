@@ -13,8 +13,8 @@ class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
 	loggerPath = "Main.Manga.ASMHentai.Run"
 	pluginName = "ASMHentai"
 
-
 	sourceName = "ASMHentai"
+
 	feedLoader = DbLoader
 	contentLoader = ContentLoader
 

@@ -1,0 +1,90 @@
+<!-- extend base layout -->
+{%- import '_macros.html' as util_macros -%}
+
+
+
+
+{%- extends "__base.html" -%}
+{%- block content -%}
+	{%- include '_block_flash.html' -%}
+	<div class='subdiv fuid'>
+		<div id='status_block'>
+			<h3>Status</h3>
+
+			<div class='contentdiv'>
+				<h1>Status:</h1>
+				<h4>Active Manga Plugins</h4>
+				{%- for item in states -%}
+					{{item}}
+					<%
+					vals = allPlugins.get(item["dbKey"], False)
+
+					renderStatus(item["name"], item['cssClass']+" statediv", statusDict, item["dictKey"], vals)
+					%>
+				{%- endfor -%}
+				<hr>
+				% if ut.ip_in_whitelist():
+					<h4>Active Hentai Plugins</h4>
+					{%- for item in states -%}
+						<%
+						vals = allPlugins.get(item["dbKey"], False)
+						renderStatus(item["name"], item['cssClass']+" statediv", statusDict, item["dictKey"], vals)
+						%>
+					% endfor
+					<hr>
+				% endif
+
+				<h4>Other plugins</h4>
+				{%- for item in states -%}
+					<%
+					vals = allPlugins.get(item["dbKey"], False)
+					renderStatus(item["name"], item['cssClass']+" statediv", statusDict, item["dictKey"], vals)
+					%>
+				{%- endfor -%}
+				<hr>
+
+				<h4>Dead Plugins</h4>
+				{%- for item in states -%}
+					<%
+					vals = allPlugins.get(item["dbKey"], False)
+					renderStatus(item["name"], item['cssClass']+" statediv", statusDict, item["dictKey"], vals)
+					%>
+				{%- endfor -%}
+				<hr>
+				<h4>All scheduled modules</h4>
+				% for key, value in allPlugins.items():
+					<%
+					if key.endswith("Scrape"):
+						key = key[:-6]
+					renderStatus(key, 'extrastatediv', statusDict, 'Nope', value)
+
+					%>
+				{%- endfor -%}
+
+
+				<h2>Schedule:</h2>
+				<table>
+					<col width="400px">
+					<col width="200px">
+					<col width="100px">
+					{%- for jId, nextRun, state in tasks -%}
+						<tr>
+							<td>{{jId}}</td>
+							<td>{{state['time_til_job']}}</td>
+							<td>{{state | length}}</td>
+						</tr>
+					{%- endfor -%}
+				</table>
+			</div>
+
+
+			{{states}}
+		</div>
+	</div>
+{%- endblock -%}
+
+
+{%- block footer -%}
+
+
+{%- endblock -%}

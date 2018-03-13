@@ -9,6 +9,7 @@ from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy import BigInteger
 from sqlalchemy import Text
+from sqlalchemy import Interval
 from sqlalchemy import Boolean
 from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
@@ -239,5 +240,19 @@ class ReleaseFile(Base):
 		)
 
 
+
+
+
+class PluginStatus(Base):
+	__tablename__ = 'plugin_status'
+	id             = Column(Integer, primary_key=True)
+
+	name           = Column(Text, nullable=False, unique=True, index=True)
+	last_output    = Column(Text)
+	running        = Column(Boolean, nullable=False, default=False)
+
+	last_run       = Column(DateTime, nullable=False, default=datetime.datetime.min)
+	last_error     = Column(DateTime, nullable=False, default=datetime.datetime.min)
+	run_time       = Column(Interval, nullable=False, default=datetime.timedelta)
 
 

@@ -181,7 +181,7 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 
 			# Finishing checks
 			with self.row_context(dbid=link_row_id) as row:
-				if row.state == "complete":
+				if row and row.state == "complete":
 					assert row.first_seen    > datetime.datetime.min, "Row first_seen column never set!"
 					assert row.posted_at     > datetime.datetime.min, "Row posted_at column never set!"
 					assert row.downloaded_at > datetime.datetime.min, "Row downloaded_at column never set!"

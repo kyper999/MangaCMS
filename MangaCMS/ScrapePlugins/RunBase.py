@@ -1,5 +1,6 @@
 
 
+import datetime
 import logging
 import settings
 import psycopg2
@@ -8,6 +9,7 @@ import time
 import traceback
 import abc
 
+import MangaCMS.db as db
 
 class ScraperBase(metaclass=abc.ABCMeta):
 
@@ -24,82 +26,98 @@ class ScraperBase(metaclass=abc.ABCMeta):
 	def loggerPath(self):
 		return None
 
+	@abc.abstractmethod
+	def feedLoader(self):
+		return None
+
+	@abc.abstractmethod
+	def contentLoader(self):
+		return None
+
 
 	def __init__(self):
 		self.log = logging.getLogger(self.loggerPath)
 		self.log.info("Loading %s Runner", self.pluginName)
-		self.checkStatusTableExists()
 
-	def checkStatusTableExists(self):
-		con = psycopg2.connect(host=settings.DATABASE_IP, dbname=settings.DATABASE_DB_NAME, user=settings.DATABASE_USER,password=settings.DATABASE_PASS)
-		with con.cursor() as cur:
-
-			cur.execute("SELECT relname FROM pg_class;")
-			haveItems = cur.fetchall()
-			haveItems = [index[0] for index in haveItems]
-			if not "pluginstatus" in haveItems:
-				raise ValueError("PluginStatus table does not exist. Has MainScrape never been run?")
-
-			print(self.pluginName)
-
-			cur.execute('''SELECT name FROM pluginStatus WHERE name=%s''', (self.pluginName,))
-			ret = cur.fetchall()
-			if not ret:
-				cur.execute('''INSERT INTO pluginStatus (name, running, lastRun, lastRunTime) VALUES (%s, %s, %s, %s)''', (self.pluginName, False, -1, -1))
-				con.commit()
-
-		con.close()
 
 	def amRunning(self):
+		assert isinstance(self.pluginName, str)
 
-		con = psycopg2.connect(host=settings.DATABASE_IP, dbname=settings.DATABASE_DB_NAME, user=settings.DATABASE_USER,password=settings.DATABASE_PASS)
-		with con.cursor() as cur:
-			cur.execute("""SELECT running FROM pluginStatus WHERE name=%s""", (self.pluginName, ))
-			rets = cur.fetchone()[0]
-		self.log.info("%s is running = '%s', as bool = '%s'", self.pluginName, rets, bool(rets))
-		return rets
+		with db.session_context() as sess:
+			have = sess.query(db.PluginStatus)                       \
+					.filter(db.PluginStatus.name == self.pluginName) \
+					.scalar()
+			if have:
+				return have.running
+			return False
 
-	def setStatus(self, pluginName=None, running=None, lastRun=None, lastRunTime=None):
-		if pluginName == None:
-			pluginName=self.pluginName
 
-		con = psycopg2.connect(host=settings.DATABASE_IP, dbname=settings.DATABASE_DB_NAME, user=settings.DATABASE_USER,password=settings.DATABASE_PASS)
-		with con.cursor() as cur:
-			if running != None:  # Note: Can be set to "False". This is valid!
-				cur.execute('''UPDATE pluginStatus SET running=%s WHERE name=%s;''', (running, pluginName))
-			if lastRun != None:
-				cur.execute('''UPDATE pluginStatus SET lastRun=%s WHERE name=%s;''', (lastRun, pluginName))
-			if lastRunTime != None:
-				cur.execute('''UPDATE pluginStatus SET lastRunTime=%s WHERE name=%s;''', (lastRunTime, pluginName))
+	# name           = Column(Text, nullable=False, unique=True, index=True)
+	# last_output    = Column(Text)
+	# running        = Column(Boolean, nullable=False, default=False)
 
-		con.commit()
-		con.close()
+	# last_run       = Column(DateTime, nullable=False, default=datetime.datetime.min)
+	# last_error     = Column(DateTime, nullable=False, default=datetime.datetime.min)
+	# run_time       = Column(Interval, nullable=False, default=0)
 
-	def setError(self, errTime):
 
-		con = psycopg2.connect(host=settings.DATABASE_IP, dbname=settings.DATABASE_DB_NAME, user=settings.DATABASE_USER,password=settings.DATABASE_PASS)
-		with con.cursor() as cur:
-			cur.execute('''UPDATE pluginStatus SET lastError=%s WHERE name=%s;''', (errTime, self.pluginName))
 
-		con.commit()
-		con.close()
 
+	def update_status(self,
+				pluginName  = None,
+				running     = None,
+				last_run    = None,
+				last_error  = None,
+				run_time    = None,
+				last_output = None,
+			):
+		if pluginName is None:
+			pluginName = self.pluginName
+
+		with db.session_context() as sess:
+			have = sess.query(db.PluginStatus)                       \
+					.filter(db.PluginStatus.name == self.pluginName) \
+					.scalar()
+			if have:
+				self.log.info("Have plugin row. Updating")
+				if running:
+					have.running = running
+				if last_run:
+					have.last_run = last_run
+				if last_error:
+					have.last_error = last_error
+				if run_time:
+					have.run_time = run_time
+				if last_output:
+					have.last_output = last_output
+			else:
+				self.log.info("Plugin appears to be new. Adding initial row!")
+				new = db.PluginStatus(
+						name        = pluginName,
+						running     = running,
+						last_run    = last_run,
+						last_error  = last_error,
+						run_time    = run_time,
+						last_output = last_output,
+					)
+				sess.add(new)
 
 	def go(self):
+		self.log.info("Executing plugin %s", self.pluginName)
 		if self.amRunning():
 			self.log.critical("%s is already running! Not launching again!", self.pluginName)
 			return
 		else:
 			self.log.info("%s Started.", self.pluginName)
 
-			runStart = time.time()
-			self.setStatus(running=True, lastRun=runStart)
+			run_start = datetime.datetime.now()
+			self.update_status(running=True, last_run=run_start)
 			try:
 				self._go()
 			except Exception:
 				# If we have a uncaught exception in the plugin, log the exception traceback (which will get logged to
 				# the DB), and then re-raise
-				self.setError(errTime=time.time())
+				self.update_status(last_error=datetime.datetime.now(), last_output=traceback.format_exc())
 				self.log.critical("Uncaught major exception in plugin!")
 				self.log.critical("Traceback:")
 				for line in traceback.format_exc().split("\n"):
@@ -108,15 +126,15 @@ class ScraperBase(metaclass=abc.ABCMeta):
 				raise
 
 			finally:
-				self.setStatus(running=False, lastRunTime=time.time()-runStart)
-				self.log.info("%s finished.", self.pluginName)
+				run_stop = datetime.datetime.now()
+				self.update_status(running=False, run_time=run_stop-run_start)
+				self.log.info("%s finished. Execution time: %s.", self.pluginName, run_stop-run_start)
 
 
 
 
 	def _go(self):
 
-		self.log.info("Checking %s feeds for updates", self.sourceName)
 		fl = self.feedLoader()
 		fl.do_fetch_feeds()
 
@@ -127,4 +145,4 @@ class ScraperBase(metaclass=abc.ABCMeta):
 			return
 
 		cl = self.contentLoader()
-		todo = cl.do_fetch_content()
+		cl.do_fetch_content()

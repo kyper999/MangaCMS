@@ -3,27 +3,25 @@ if sys.version_info < ( 3, 4):
 	# python too old, kill the script
 	sys.exit("This script requires Python 3.4 or newer!")
 
-import logging_tree
-
 if __name__ == "__main__":
 	import runStatus
 	runStatus.preloadDicts = True
 
 
-import MangaCMSOld.lib.logSetup
 import settings
 import schemaUpdater.schemaRevisioner
 
-import MangaCMSOld.lib.statusManager
 import time
-
 import runStatus
 import signal
 import nameTools as nt
-import activePlugins
 import firstRun
 
-import utilities.runPlugin
+import MangaCMS.util.runPlugin
+
+import MangaCMS.activePlugins
+import MangaCMS.lib.logSetup
+import MangaCMS.lib.statusManager
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.executors.pool import ThreadPoolExecutor
@@ -47,17 +45,18 @@ jobstores = {
 
 	'transient_jobstore' : MemoryJobStore(),
 	'main_jobstore'      : SQLAlchemyJobStore(url='postgresql://{username}:{password}@{address}:5432/{dbname}'.format(
-				username=settings.DATABASE_USER,
-				password=settings.DATABASE_PASS,
-				address=settings.DATABASE_IP,
-				dbname=settings.DATABASE_DB_NAME))
+				username = settings.NEW_DATABASE_USER,
+				password = settings.NEW_DATABASE_PASS,
+				address  = settings.NEW_DATABASE_IP,
+				dbname   = settings.NEW_DATABASE_DB_NAME,
+			))
 }
 
 
 # Should probably be a lambda? Laaaazy.
 def callMod(passMod):
 	lut = {}
-	for item, dummy_interval in activePlugins.scrapePlugins.values():
+	for item, dummy_interval in MangaCMS.activePlugins.scrapePlugins.values():
 		lut[item.__name__] = item
 	if not passMod in lut:
 		raise ValueError("Callable '%s' is not in the class lookup table: '%s'!" % (passMod, lut))
@@ -70,7 +69,9 @@ def scheduleJobs(sched, timeToStart):
 
 	jobs = []
 	offset = 0
-	for key, value in activePlugins.scrapePlugins.items():
+	print("Jobs:")
+	for key, value in MangaCMS.activePlugins.scrapePlugins.items():
+		print("	", key, value)
 		baseModule, interval = value
 		jobs.append((key, baseModule, interval, timeToStart+datetime.timedelta(seconds=60*offset)))
 		offset += 1
@@ -130,44 +131,34 @@ def scheduleJobs(sched, timeToStart):
 # proper system operation, reset database state,
 # check/update database schema, etc...
 def preflight():
-	MangaCMSOld.lib.logSetup.initLogging(logToDb=True)
+	MangaCMS.lib.logSetup.initLogging(logToDb=True)
 
 	# A side effect of get_plugins() is to validate there are no database key conflicts.
 	# This has been an issue in the past.
-	utilities.runPlugin.get_plugins()
+	MangaCMS.util.runPlugin.get_plugins()
 
 	firstRun.checkInitTables()
 
 	# runStatus.notq = UploadPlugins.Madokami.notifier.start_notifier()
 	runStatus.notq = None
 
-	MangaCMSOld.lib.statusManager.resetAllRunningFlags()
+	MangaCMS.lib.statusManager.resetAllRunningFlags()
 	schemaUpdater.schemaRevisioner.updateDatabaseSchema()
 
 	nt.dirNameProxy.startDirObservers()
 
 
-def go():
+def go_new():
 	preflight()
 
 	sched = BackgroundScheduler(jobstores=jobstores, executors=executors, job_defaults=job_defaults)
 	sched.start()
 
-	# startTime = datetime.datetime.now()+datetime.timedelta(seconds=60*60)
-	# startTime = datetime.datetime.now()+datetime.timedelta(seconds=60*15)
-	# startTime = datetime.datetime.now()+datetime.timedelta(seconds=60*5)
-	# startTime = datetime.datetime.now()+datetime.timedelta(seconds=20)
 	startTime = datetime.datetime.now()+datetime.timedelta(seconds=10)
 	scheduleJobs(sched, startTime)
 
-	# spinwait for ctrl+c, and exit when it's received.
-	loops = 0
 	while runStatus.run:
 		time.sleep(0.1)
-		# loops += 1
-		# if loops > 100:
-		# 	logging_tree.printout()
-		# 	loops = 0
 
 	print("Scraper stopping scheduler")
 	sched.shutdown()
@@ -186,6 +177,6 @@ def signal_handler(dummy_signal, dummy_frame):
 		raise KeyboardInterrupt
 
 if __name__ == "__main__":
-
+	print("New MainScrape!")
 	signal.signal(signal.SIGINT, signal_handler)
-	go()
+	go_new()
