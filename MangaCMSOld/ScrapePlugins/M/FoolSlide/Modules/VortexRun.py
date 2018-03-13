@@ -6,7 +6,7 @@ import MangaCMSOld.ScrapePlugins.M.FoolSlide.FoolSlideDownloadBase
 import MangaCMSOld.ScrapePlugins.M.FoolSlide.FoolSlideFetchBase
 
 
-import MangaCMSOld.ScrapePlugins.RunBase
+import MangaCMS.ScrapePlugins.RunBase
 import settings
 import settings
 import time
@@ -43,7 +43,7 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.M.FoolSlide.FoolSlideDownloadBase.
 
 	contentSelector = ('article', 'content')
 
-class Runner(MangaCMSOld.ScrapePlugins.RunBase.ScraperBase):
+class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
 	loggerPath = "Main.Manga.Vx.Run"
 
 	pluginName = "VortexLoader"

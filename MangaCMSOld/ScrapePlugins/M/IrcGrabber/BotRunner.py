@@ -2,7 +2,7 @@
 
 
 import runStatus
-import MangaCMSOld.ScrapePlugins.RunBase
+import MangaCMS.ScrapePlugins.RunBase
 
 from MangaCMSOld.ScrapePlugins.M.IrcGrabber.FetchBot import IrcRetreivalInterface
 import time
@@ -11,7 +11,7 @@ import time
 
 # The IRC bot run class is slightly special.
 # It never returns. The parent class prevents more then one bot from being run.
-class Runner(MangaCMSOld.ScrapePlugins.RunBase.ScraperBase):
+class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
 	loggerPath = "Main.Manga.IRC.Bot"
 
 	pluginName = "IrcBot"

@@ -6,7 +6,7 @@ import MangaCMSOld.ScrapePlugins.M.FoolSlide.FoolSlideDownloadBase
 import MangaCMSOld.ScrapePlugins.M.FoolSlide.FoolSlideFetchBase
 
 
-import MangaCMSOld.ScrapePlugins.RunBase
+import MangaCMS.ScrapePlugins.RunBase
 import settings
 import time
 
@@ -42,7 +42,7 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.M.FoolSlide.FoolSlideFetchBase.FoolFe
 
 
 
-class Runner(MangaCMSOld.ScrapePlugins.RunBase.ScraperBase):
+class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
 	loggerPath = "Main.Manga.Rs.Run"
 
 	pluginName = "RoseliaLoader"

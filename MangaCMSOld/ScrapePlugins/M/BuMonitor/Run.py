@@ -1,9 +1,9 @@
 
 from . import MonitorRun
 from . import ChangeMonitor
-import MangaCMSOld.ScrapePlugins.RunBase
+import MangaCMS.ScrapePlugins.RunBase
 
-class Runner(MangaCMSOld.ScrapePlugins.RunBase.ScraperBase):
+class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
 
 	loggerPath = "Main.Manga.Bu.Run"
 	pluginName = "BuMon"

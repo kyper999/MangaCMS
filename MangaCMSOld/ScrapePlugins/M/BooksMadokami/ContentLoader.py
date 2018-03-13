@@ -16,7 +16,7 @@ import traceback
 import bs4
 
 import MangaCMSOld.ScrapePlugins.RetreivalBase
-import MangaCMSOld.ScrapePlugins.RunBase
+import MangaCMS.ScrapePlugins.RunBase
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -172,7 +172,7 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 
-class Runner(MangaCMSOld.ScrapePlugins.RunBase.ScraperBase):
+class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
 	loggerPath = "Main.Manga.MkC.Run"
 
 	pluginName = "MkCLoader"

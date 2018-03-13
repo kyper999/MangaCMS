@@ -1,12 +1,12 @@
 
 from .Loader import Loader
 
-import MangaCMSOld.ScrapePlugins.RunBase
+import MangaCMS.ScrapePlugins.RunBase
 
 import time
 
 
-class Runner(MangaCMSOld.ScrapePlugins.RunBase.ScraperBase):
+class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
 	loggerPath = "Main.Manga.Mbx.Run"
 
 	pluginName = "MbxLoader"

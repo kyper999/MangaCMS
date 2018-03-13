@@ -11,7 +11,7 @@ import MangaCMSOld.ScrapePlugins.M.FoolSlide.FoolSlideDownloadBase
 import MangaCMSOld.ScrapePlugins.RetreivalBase
 import MangaCMSOld.ScrapePlugins.LoaderBase
 
-import MangaCMSOld.ScrapePlugins.RunBase
+import MangaCMS.ScrapePlugins.RunBase
 import settings
 import time
 import urllib.request, urllib.parse, urllib.error
@@ -153,7 +153,7 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 
 
 
-class Runner(MangaCMSOld.ScrapePlugins.RunBase.ScraperBase):
+class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
 
 
 	loggerPath = "Main.Manga.TwistedHel.Run"

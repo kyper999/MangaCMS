@@ -156,8 +156,8 @@ class MangaReleases(Base):
 	tags           = association_proxy('tags_rel', 'tag', creator=MangaTags.get_or_create)
 
 	__table_args__ = (
-		UniqueConstraint('source_site', 'source_id'),
-		Index('manga_releases_source_site_id_idx', 'source_site', 'source_id')
+			UniqueConstraint('source_site', 'source_id'),
+			Index('manga_releases_source_site_id_idx', 'source_site', 'source_id')
 		)
 
 
@@ -198,8 +198,8 @@ class HentaiReleases(Base):
 	tags           = association_proxy('tags_rel', 'tag', creator=HentaiTags.get_or_create)
 
 	__table_args__ = (
-		UniqueConstraint('source_site', 'source_id'),
-		Index('hentai_releases_source_site_id_idx', 'source_site', 'source_id')
+			UniqueConstraint('source_site', 'source_id'),
+			Index('hentai_releases_source_site_id_idx', 'source_site', 'source_id')
 		)
 
 
@@ -230,16 +230,12 @@ class ReleaseFile(Base):
 										collection_class=set)
 	hentai_tags          = association_proxy('hentai_tags_rel', 'tag', creator=HentaiTags.get_or_create)
 
-
-
 	# releases       = relationship('MangaReleases')
 
 	__table_args__ = (
-		UniqueConstraint('dirpath', 'filename'),
-		UniqueConstraint('fhash'),
+			UniqueConstraint('dirpath', 'filename'),
+			UniqueConstraint('fhash'),
 		)
-
-
 
 
 

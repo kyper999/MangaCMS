@@ -3,12 +3,12 @@ import runStatus
 from .FeedLoader import FeedLoader
 from .ContentLoader import ContentLoader
 
-import MangaCMSOld.ScrapePlugins.RunBase
+import MangaCMS.ScrapePlugins.RunBase
 
 import time
 
 
-class Runner(MangaCMSOld.ScrapePlugins.RunBase.ScraperBase):
+class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
 	loggerPath = "Main.Manga.Wt.Run"
 
 	pluginName = "WtLoader"

@@ -16,14 +16,14 @@ import MangaCMSOld.ScrapePlugins.M.IrcGrabber.RenzokuseiScans.IrcQueue
 # Channel grabber
 import MangaCMSOld.ScrapePlugins.M.IrcGrabber.ChannelLister.ChanLister
 
-import MangaCMSOld.ScrapePlugins.RunBase
+import MangaCMS.ScrapePlugins.RunBase
 
 import time
 import traceback
 import runStatus
 
 
-class Runner(MangaCMSOld.ScrapePlugins.RunBase.ScraperBase):
+class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
 	loggerPath = "Main.Manga.IRC.Q.Run"
 
 	pluginName = "IrcEnqueue"
