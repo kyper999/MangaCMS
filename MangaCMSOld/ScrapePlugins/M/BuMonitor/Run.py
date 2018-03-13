@@ -8,6 +8,10 @@ class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
 	loggerPath = "Main.Manga.Bu.Run"
 	pluginName = "BuMon"
 
+
+	contentLoader = None
+	feedLoader = None
+
 	def _go(self):
 
 		runner = MonitorRun.BuWatchMonitor()

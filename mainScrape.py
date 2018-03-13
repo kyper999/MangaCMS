@@ -55,14 +55,19 @@ jobstores = {
 
 # Should probably be a lambda? Laaaazy.
 def callMod(passMod):
-	lut = {}
-	for item, dummy_interval in MangaCMS.activePlugins.scrapePlugins.values():
-		lut[item.__name__] = item
-	if not passMod in lut:
-		raise ValueError("Callable '%s' is not in the class lookup table: '%s'!" % (passMod, lut))
-	module = lut[passMod]
-	instance = module.Runner()
-	instance.go()
+	try:
+		lut = {}
+		for item, dummy_interval in MangaCMS.activePlugins.scrapePlugins.values():
+			lut[item.__name__] = item
+		if not passMod in lut:
+			raise ValueError("Callable '%s' is not in the class lookup table: '%s'!" % (passMod, lut))
+		module = lut[passMod]
+		instance = module.Runner()
+		instance.go()
+	except Exception as e:
+		print("Error executing module: %s!" % passMod)
+		raise e
+
 
 
 def scheduleJobs(sched, timeToStart):

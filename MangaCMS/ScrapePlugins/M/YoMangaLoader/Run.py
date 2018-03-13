@@ -9,6 +9,8 @@ class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
 
 	pluginName = "YoLoader"
 
+	contentLoader = None
+	feedLoader = None
 
 	def _go(self):
 

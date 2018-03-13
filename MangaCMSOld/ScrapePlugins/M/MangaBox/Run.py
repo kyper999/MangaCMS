@@ -12,6 +12,9 @@ class Runner(MangaCMS.ScrapePlugins.RunBase.ScraperBase):
 	pluginName = "MbxLoader"
 
 
+	contentLoader = None
+	feedLoader = None
+
 	def _go(self):
 
 		self.log.info("Checking Manga Box for updates")
