@@ -80,15 +80,15 @@ class ScraperBase(metaclass=abc.ABCMeta):
 					.scalar()
 			if have:
 				self.log.info("Have plugin row. Updating")
-				if running:
+				if running is not None:
 					have.running = running
-				if last_run:
+				if last_run is not None:
 					have.last_run = last_run
-				if last_error:
+				if last_error is not None:
 					have.last_error = last_error
-				if run_time:
+				if run_time is not None:
 					have.run_time = run_time
-				if last_output:
+				if last_output is not None:
 					have.last_output = last_output
 			else:
 				self.log.info("Plugin appears to be new. Adding initial row!")
@@ -117,7 +117,7 @@ class ScraperBase(metaclass=abc.ABCMeta):
 			except Exception:
 				# If we have a uncaught exception in the plugin, log the exception traceback (which will get logged to
 				# the DB), and then re-raise
-				self.update_status(last_error=datetime.datetime.now(), last_output=traceback.format_exc())
+				self.update_status(running=False, last_error=datetime.datetime.now(), last_output=traceback.format_exc())
 				self.log.critical("Uncaught major exception in plugin!")
 				self.log.critical("Traceback:")
 				for line in traceback.format_exc().split("\n"):
