@@ -91,12 +91,14 @@ def select_from_table(main_table, tag_table, link_table, page, site=False, filte
 
 	print("params['filter-tags']", params['filter-tags'])
 
-	# if params['filter-tags']:
-	# 	# query.join(tag_table, link_table.c.releases_id == main_table.id)
-	# 	for filter_tag in params['filter-tags']:
-	# 		tag_id = get_tag_id_for_tag(tag_table, filter_tag)
-	# 		print("Adding filter:", tag_table, tag_table.tag, filter_tag, tag_table.tag == filter_tag, tag_id)
-	# 		query = query.filter(link_table.c.tags_id == tag_id)
+	if params['filter-tags']:
+		# query.join(tag_table, link_table.c.releases_id == main_table.id)
+		for filter_tag in params['filter-tags']:
+			tag_id = get_tag_id_for_tag(tag_table, filter_tag)
+			print("Adding filter:", tag_table, tag_table.tag, filter_tag, tag_table.tag == filter_tag, tag_id)
+			query = query.filter(main_table.id.in_(
+					g.session.query(link_table.c.releases_id).filter(link_table.c.tags_id == tag_id)
+				))
 
 	if params['distinct']:
 		query = query.distinct(main_table.series_name)             \
@@ -104,11 +106,11 @@ def select_from_table(main_table, tag_table, link_table, page, site=False, filte
 	else:
 		query = query.order_by(main_table.downloaded_at.desc())
 
-	print("Query:")
-	print(query)
-	print("Executing")
+	# print("Query:")
+	# print(query)
+	# print("Executing")
 	ret = params, paginate(query, page=page)
-	print("Query complete")
+	# print("Query complete")
 	return ret
 
 
