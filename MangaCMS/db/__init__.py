@@ -9,6 +9,12 @@ from .db_models import HentaiTags
 from .db_models import ReleaseFile
 from .db_models import PluginStatus
 
+from .db_models import manga_files_tags_link
+from .db_models import manga_releases_tags_link
+
+from .db_models import hentai_files_tags_link
+from .db_models import hentai_releases_tags_link
+
 from .db_types import dlstate_enum
 from .db_types import file_type
 from .db_types import dir_type

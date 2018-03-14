@@ -61,48 +61,61 @@ def parse_table_args(**kwargs):
 
 	return filter_params
 
-def select_from_table(table, page, site=False, filter_tags=None, filter_category=None):
+def get_tag_id_for_tag(tag_table, tag_str):
+	have = g.session.query(tag_table).filter(tag_table.tag == tag_str).scalar()
+	if have:
+		return have.id
+	else:
+		return -1
+
+
+def select_from_table(main_table, tag_table, link_table, page, site=False, filter_tags=None, filter_category=None):
 	params = parse_table_args(limit_by_source=site, filter_tags=filter_tags, filter_category=filter_category)
 
-	query = g.session.query(table) \
+	query = g.session.query(main_table) \
 				.options(joinedload("file"), joinedload("file.hentai_tags_rel"), joinedload("tags_rel"), )
 
-	tags_table = db.MangaTags if table == db.MangaReleases else db.HentaiTags
-	# query = query.join(tags_table)
+	# query = query.join(tag_table)
 	query = query.join(db.ReleaseFile)
 	# query = query.filter( table = AC.id )
 
 
 	if not params['include-deleted']:
-		query = query.filter(table.deleted == False)
+		query = query.filter(main_table.deleted == False)
 	if params['limit-by-source']:
 		for source in params['limit-by-source']:
-			query = query.filter(table.source_site == source)
+			query = query.filter(main_table.source_site == source)
 	if params['filter-category']:
 		for filter_cat in params['filter-category']:
-			query = query.filter(table.series_name == filter_cat)
+			query = query.filter(main_table.series_name == filter_cat)
 
 	print("params['filter-tags']", params['filter-tags'])
 
-	if params['filter-tags']:
-
-		for filter_tag in params['filter-tags']:
-			print("Adding filter:", tags_table, tags_table.tag, filter_tag, tags_table.tag == filter_tag)
-			query = query.filter(filter_tag in table.tags_rel)
+	# if params['filter-tags']:
+	# 	# query.join(tag_table, link_table.c.releases_id == main_table.id)
+	# 	for filter_tag in params['filter-tags']:
+	# 		tag_id = get_tag_id_for_tag(tag_table, filter_tag)
+	# 		print("Adding filter:", tag_table, tag_table.tag, filter_tag, tag_table.tag == filter_tag, tag_id)
+	# 		query = query.filter(link_table.c.tags_id == tag_id)
 
 	if params['distinct']:
-		query = query.distinct(table.series_name)             \
-			.order_by(sql_desc(sql_max(table.downloaded_at)))
+		query = query.distinct(main_table.series_name)             \
+			.order_by(sql_desc(sql_max(main_table.downloaded_at)))
 	else:
-		query = query.order_by(table.downloaded_at.desc())
+		query = query.order_by(main_table.downloaded_at.desc())
 
-	return params, paginate(query, page=page)
+	print("Query:")
+	print(query)
+	print("Executing")
+	ret = params, paginate(query, page=page)
+	print("Query complete")
+	return ret
 
 
 @app.route('/manga/', methods=['GET'])
 @app.route('/manga/page/<int:page>', methods=['GET'])
 def manga_only_view(page=1):
-	params, items = select_from_table(db.MangaReleases, page=page)
+	params, items = select_from_table(main_table=db.MangaReleases, tag_table=db.MangaTags, link_table=db.manga_files_tags_link, page=page)
 	return render_template('manga_view.html',
 						   whole_page    = True,
 						   items         = items,
@@ -113,7 +126,7 @@ def manga_only_view(page=1):
 @app.route('/manga/by-site/<source_site>/', methods=['GET'])
 @app.route('/manga/by-site/<source_site>/<int:page>', methods=['GET'])
 def manga_by_site_view(source_site, page=1):
-	params, items = select_from_table(db.MangaReleases, page=page, site=source_site)
+	params, items = select_from_table(main_table=db.MangaReleases, tag_table=db.MangaTags, link_table=db.manga_files_tags_link, page=page, site=source_site)
 	return render_template('manga_view.html',
 						   whole_page    = True,
 						   items         = items,
@@ -124,7 +137,7 @@ def manga_by_site_view(source_site, page=1):
 @app.route('/hentai/', methods=['GET'])
 @app.route('/hentai/page/<int:page>', methods=['GET'])
 def hentai_only_view(page=1):
-	params, items = select_from_table(db.HentaiReleases, page=page)
+	params, items = select_from_table(main_table=db.HentaiReleases, tag_table=db.HentaiTags, link_table=db.hentai_releases_tags_link, page=page)
 	return render_template('hentai_view.html',
 						   whole_page    = True,
 						   items         = items,
@@ -135,7 +148,7 @@ def hentai_only_view(page=1):
 @app.route('/hentai/by-site/<source_site>/', methods=['GET'])
 @app.route('/hentai/by-site/<source_site>/<int:page>', methods=['GET'])
 def hentai_by_site_view(source_site, page=1):
-	params, items = select_from_table(db.HentaiReleases, page=page, site=source_site)
+	params, items = select_from_table(main_table=db.HentaiReleases, tag_table=db.HentaiTags, link_table=db.hentai_releases_tags_link, page=page, site=source_site)
 	return render_template('hentai_view.html',
 						   whole_page    = True,
 						   items         = items,
@@ -147,7 +160,7 @@ def hentai_by_site_view(source_site, page=1):
 @app.route('/hentai/by-tag/<tag>/', methods=['GET'])
 @app.route('/hentai/by-tag/<tag>/<int:page>', methods=['GET'])
 def hentai_tag_view(tag, page=1):
-	params, items = select_from_table(db.HentaiReleases, page=page, filter_tags=tag)
+	params, items = select_from_table(main_table=db.HentaiReleases, tag_table=db.HentaiTags, link_table=db.hentai_releases_tags_link, page=page, filter_tags=tag)
 	return render_template('hentai_view.html',
 						   whole_page    = True,
 						   items         = items,
@@ -159,7 +172,7 @@ def hentai_tag_view(tag, page=1):
 @app.route('/hentai/by-category/<category>/', methods=['GET'])
 @app.route('/hentai/by-category/<category>/<int:page>', methods=['GET'])
 def hentai_category_view(category, page=1):
-	params, items = select_from_table(db.HentaiReleases, page=page, filter_category=category)
+	params, items = select_from_table(main_table=db.HentaiReleases, tag_table=db.HentaiTags, link_table=db.hentai_releases_tags_link, page=page, filter_category=category)
 	return render_template('hentai_view.html',
 						   whole_page    = True,
 						   items         = items,

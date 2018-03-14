@@ -2,6 +2,8 @@
 import os
 import uuid
 import time
+import string
+import random
 import datetime
 import urllib.parse
 import sys
@@ -11,10 +13,12 @@ import settings
 from flask import Flask
 from flask import g
 from flask import request
+from flask_debugtoolbar import DebugToolbarExtension
 from flask_wtf.csrf import CsrfProtect
 from babel.dates import format_datetime
 
 import nameTools as nt
+
 
 
 print("App import!")
@@ -24,6 +28,12 @@ app = Flask(__name__)
 if "debug" in sys.argv:
 	print("Flask running in debug mode!")
 	app.debug = True
+
+	app.config['SECRET_KEY'] = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(20))
+
+	toolbar = DebugToolbarExtension(app)
+
+
 app.config.from_object('MangaCMS.app.config.BaseConfig')
 
 CsrfProtect(app)
