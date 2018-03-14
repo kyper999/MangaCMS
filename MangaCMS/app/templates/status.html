@@ -4,7 +4,7 @@
 
 {%- macro renderStatus(item) -%}
 	{%- set css_class = item['meta']['key'] if item['meta'] else "unk" -%}
-	<div class="statusdiv {{cssClass}}_id" >
+	<div class="extrastatediv {{plugin_key_for_name(item.name)}}_id" >
 		<strong>
 			{{item.name}}
 		</strong><br />

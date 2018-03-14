@@ -179,8 +179,6 @@ def get_plugins():
 	return ret, runner_map
 
 
-
-
 PLUGIN_MAP, RUNNER_MAP = get_plugins()
 
 

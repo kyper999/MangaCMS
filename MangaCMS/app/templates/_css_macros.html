@@ -316,73 +316,66 @@
 		}
 
 
-		/*manga_scrapers
-		hentai_scrapers
-		other_scrapers*/
 
+		/*manga_scrapers*/
 		{% for item in manga_scrapers %}
-			div.{{item['cssClass']}}
+			div.{{item['css_class']}}
 			{
 				background-color:{{item['baseColour']}};
+			}
+		{% endfor %}
+		/*hentai_scrapers*/
+		{% for item in hentai_scrapers %}
+			div.{{item['css_class']}}
+			{
+				background-color:{{item['baseColour']}};
+			}
+		{% endfor %}
+
+		/*other_scrapers*/
+		{% for item in other_scrapers %}
+			div.{{item['css_class']}}
+			{
+				background-color:{{item['baseColour']}};
+			}
+		{% endfor %}
+
+		/* row ID classes */
+
+
+		{% for item in manga_scrapers %}
+			tr.{{item["key"]}}_row:nth-child(even)
+			{
+				background: {{item["evenRow"]}} !important;
+			}
+
+			tr.{{item["key"]}}_row:nth-child(odd)
+			{
+				background: {{item["oddRow"]}} !important;
 			}
 		{% endfor %}
 		{% for item in hentai_scrapers %}
-			div.{{item['cssClass']}}
+			tr.{{item["key"]}}_row:nth-child(even)
 			{
-				background-color:{{item['baseColour']}};
+				background: {{item["evenRow"]}} !important;
+			}
+
+			tr.{{item["key"]}}_row:nth-child(odd)
+			{
+				background: {{item["oddRow"]}} !important;
 			}
 		{% endfor %}
 		{% for item in other_scrapers %}
-			div.{{item['cssClass']}}
+			tr.{{item["key"]}}_row:nth-child(even)
 			{
-				background-color:{{item['baseColour']}};
+				background: {{item["evenRow"]}} !important;
 			}
-		{% endfor %}
 
-		/* Generate row ID classes */
+			tr.{{item["key"]}}_row:nth-child(odd)
+			{
+				background: {{item["oddRow"]}} !important;
+			}
 
-
-		{% for item in manga_scrapers %}
-			{% if item['genRow'] %}
-				tr.{{item["dbKey"]}}_row:nth-child(even)
-				{
-					background: {{item["evenRow"]}} !important;
-				}
-
-				tr.{{item["dbKey"]}}_row:nth-child(odd)
-				{
-					background: {{item["oddRow"]}} !important;
-				}
-
-			{% endif %}
-		{% endfor %}
-		{% for item in hentai_scrapers %}
-			{% if item['genRow'] %}
-				tr.{{item["dbKey"]}}_row:nth-child(even)
-				{
-					background: {{item["evenRow"]}} !important;
-				}
-
-				tr.{{item["dbKey"]}}_row:nth-child(odd)
-				{
-					background: {{item["oddRow"]}} !important;
-				}
-
-			{% endif %}
-		{% endfor %}
-		{% for item in other_scrapers %}
-			{% if item['genRow'] %}
-				tr.{{item["dbKey"]}}_row:nth-child(even)
-				{
-					background: {{item["evenRow"]}} !important;
-				}
-
-				tr.{{item["dbKey"]}}_row:nth-child(odd)
-				{
-					background: {{item["oddRow"]}} !important;
-				}
-
-			{% endif %}
 		{% endfor %}
 
 

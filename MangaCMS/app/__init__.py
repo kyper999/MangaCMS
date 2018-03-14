@@ -54,6 +54,7 @@ if not app.debug:
 
 from MangaCMS.app import all_scrapers_ever
 from MangaCMS.app import views
+from MangaCMS import activePlugins
 
 
 colours = {
@@ -456,6 +457,12 @@ def tag_tag(in_tag):
 	# ${"</strike>" if doNotWant else ""}
 	# ${"</b>" if highlight else ""}
 
+def plugin_key_for_name(name):
+	for plugin in activePlugins.PLUGIN_MAP.values():
+		if plugin['name'] == name:
+			return plugin['key']
+	return 'unk'
+
 def min_date():
 	return datetime.datetime.min
 
@@ -477,5 +484,6 @@ app.jinja_env.globals.update(
 		timeAhead             = timeAhead,
 		tag_tag               = tag_tag,
 		min_date              = min_date,
+		plugin_key_for_name   = plugin_key_for_name,
 	)
 

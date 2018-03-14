@@ -49,7 +49,7 @@ def get_scheduled_tasks(session):
 		# print((ts, now_utc, then, type(then)))
 		now = datetime.datetime.now(datetime.timezone.utc)
 		tgt = then - now
-		print("Then, now:", type(then), type(now), then, now)
+		# print("Then, now:", type(then), type(now), then, now)
 		value['time_til_job'] = tgt
 
 		if name in MangaCMS.activePlugins.RUNNER_MAP:
