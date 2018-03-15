@@ -9,7 +9,7 @@
 				<th class="uncoloured" style="width: 40px; min-width: 40px;">Date</th>
 				<th class="uncoloured" style="width: 20px; min-width: 20px;">St</th>
 				<th class="uncoloured" style="width: 20px; min-width: 20px;">Lo</th>
-				<th class="uncoloured" style="width: 20%; min-width: 200px;">Category</th>
+				<th class="uncoloured" style="width: 15%; min-width: 200px;">Category</th>
 				<th class="uncoloured">BaseName</th>
 				<th class="uncoloured" style="width: 40%; min-width: 200px;">Tags</th>
 				<th class="uncoloured" style="width: 60px; min-width: 60px;">Size</th>
@@ -59,7 +59,7 @@
 				</script>
 			{%- endif -%}
 		</td>
-		<td bgcolor={{row_meta['locationColour']}} class="showTT" mouseovertext="{{row_meta['toolTip']}}"></td>
+		<td bgcolor={{row_meta['locationColour']}} class="showHT" mouseovertext="{{row_meta['toolTip']}}"></td>
 		<td>
 			{%- if row.series_name != None  -%}
 				<a href="{{url_for('hentai_category_view', category=row.series_name, page=1) if row.series_name else "None"}}">{{row.series_name}}</a>

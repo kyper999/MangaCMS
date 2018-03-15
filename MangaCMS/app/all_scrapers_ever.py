@@ -131,9 +131,14 @@ for keyset in [manga_scrapers, hentai_scrapers, other_scrapers]:
 		item_dict["baseColour"] = hsvToHex(baseC)
 		item_dict["evenRow"] = hsvToHex(light1)
 		item_dict["oddRow"] = hsvToHex(light2)
+		item_dict["renderSideBar"] = item_dict['type'] in ['Manga', 'Hentai']
 
 		item_dict['css_class'] = str(item_dict['key']) + "_id"
 
 manga_scrapers.sort(key=lambda x: x['name'])
 hentai_scrapers.sort(key=lambda x: x['name'])
 other_scrapers.sort(key=lambda x: x['name'])
+
+scraper_dict = {
+	scrape['name'] : scrape for scrape in manga_scrapers + hentai_scrapers + other_scrapers
+}

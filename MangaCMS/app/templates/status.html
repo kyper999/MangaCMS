@@ -8,6 +8,12 @@
 		<strong>
 			{{item.name}}
 		</strong><br />
+		{%- if item.running -%}
+			<b>Running</b>
+		{%- else -%}
+			Not Running
+		{%- endif -%}
+		<br>
 		{%- if item.last_error > min_date() -%}
 			<a href="/errorLog">Error {{ terse_ago(item.last_error) }} ago!</a><br />
 		{%- endif -%}
@@ -81,49 +87,26 @@
 			<div class='contentdiv'>
 				<h1>Status:</h1>
 				<h4>Active Manga Plugins</h4>
-				{%- for item in states -%}
+				{%- for item in states if item['name'] in scraper_dict and scraper_dict[item['name']]['type'] == 'Manga' -%}
 
 					{{ renderStatus(item) }}
 
 				{%- endfor -%}
 				<hr>
-				% if ut.ip_in_whitelist():
-					<h4>Active Hentai Plugins</h4>
-					{%- for item in states -%}
-						<%
-						vals = allPlugins.get(item["dbKey"], False)
-						renderStatus(item["name"], item['cssClass']+" statediv", statusDict, item["dictKey"], vals)
-						%>
-					% endfor
-					<hr>
-				% endif
+				<h4>Active Hentai Plugins</h4>
+				{%- for item in states if item['name'] in scraper_dict and scraper_dict[item['name']]['type'] == 'Hentai' -%}
 
+					{{ renderStatus(item) }}
+
+				{%- endfor -%}
+				<hr>
 				<h4>Other plugins</h4>
-				{%- for item in states -%}
-					<%
-					vals = allPlugins.get(item["dbKey"], False)
-					renderStatus(item["name"], item['cssClass']+" statediv", statusDict, item["dictKey"], vals)
-					%>
+				{%- for item in states if item['name'] not in scraper_dict -%}
+
+					{{ renderStatus(item) }}
+
 				{%- endfor -%}
 				<hr>
-
-				<h4>Dead Plugins</h4>
-				{%- for item in states -%}
-					<%
-					vals = allPlugins.get(item["dbKey"], False)
-					renderStatus(item["name"], item['cssClass']+" statediv", statusDict, item["dictKey"], vals)
-					%>
-				{%- endfor -%}
-				<hr>
-				<h4>All scheduled modules</h4>
-				% for key, value in allPlugins.items():
-					<%
-					if key.endswith("Scrape"):
-						key = key[:-6]
-					renderStatus(key, 'extrastatediv', statusDict, 'Nope', value)
-
-					%>
-				{%- endfor -%}
 
 
 				<h2>Schedule:</h2>
@@ -142,7 +125,6 @@
 			</div>
 
 
-			{{states}}
 		</div>
 	</div>
 {%- endblock -%}

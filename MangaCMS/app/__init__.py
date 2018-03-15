@@ -370,10 +370,10 @@ def generate_hentai_meta(row):
 	else:
 		ret['statusColour'] = colours["error"]
 
-
+	path_is_valid = os.path.exists(filePath)
 	if filePath:
-		if os.path.exists(filePath):
-			ret['locationColour'] = colours["no match"]
+		if path_is_valid:
+			ret['locationColour'] = colours["Done"]
 		else:
 			ret['locationColour'] = colours["moved"]
 	else:
@@ -406,7 +406,7 @@ def generate_hentai_meta(row):
 	toolTip += "Source: " + str(row.source_site) + "<br>"
 
 	ret['cellId'] = None
-	if os.path.exists(filePath):
+	if filePath and path_is_valid:
 		toolTip += "File found."
 		ret['fsize'] = os.path.getsize(filePath)
 
@@ -479,6 +479,7 @@ app.jinja_env.globals.update(
 		manga_scrapers        = all_scrapers_ever.manga_scrapers,
 		hentai_scrapers       = all_scrapers_ever.hentai_scrapers,
 		other_scrapers        = all_scrapers_ever.other_scrapers,
+		scraper_dict          = all_scrapers_ever.scraper_dict,
 		merge_dicts           = merge_dicts,
 		timeAgo               = timeAgo,
 		timeAhead             = timeAhead,

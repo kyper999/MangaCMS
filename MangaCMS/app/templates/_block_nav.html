@@ -11,8 +11,8 @@
 	<br>
 	<div class='nav-item'><a href='/manga/'>All Mango</a></div>
 	{%- for scraper in manga_scrapers -%}
-		{%- if scraper['renderSideBar'] and scraper["dbKey"] -%}
-			<div class='nav-item'> - <a href='{{url_for('manga_by_site_view', page=1, source_site=scraper["dbKey"])}}'>{{scraper['name']}}</a></div>
+		{%- if scraper['renderSideBar'] and scraper["key"] -%}
+			<div class='nav-item'> - <a href='{{url_for('manga_by_site_view', page=1, source_site=scraper["key"])}}'>{{scraper['name'][:9]}}</a></div>
 		{%- endif -%}
 	{%- endfor -%}
 
@@ -21,8 +21,8 @@
 		<br>
 		<div class='nav-item'><a href='/hentai/'>All Hentai</a></div>
 		{%- for scraper in hentai_scrapers -%}
-			{%- if scraper['renderSideBar'] and scraper["dbKey"] -%}
-				<div class='nav-item'> - <a href='{{url_for('hentai_by_site_view', page=1, source_site=scraper["dbKey"])}}'>{{scraper['name']}}</a></div>
+			{%- if scraper['renderSideBar'] and scraper["key"] -%}
+				<div class='nav-item'> - <a href='{{url_for('hentai_by_site_view', page=1, source_site=scraper["key"])}}'>{{scraper['name'][:9]}}</a></div>
 			{%- endif -%}
 		{%- endfor -%}
 	{%- endif -%}
