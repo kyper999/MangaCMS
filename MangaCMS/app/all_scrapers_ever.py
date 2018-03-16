@@ -71,7 +71,6 @@ additional_other = [
 # 		{'dbKey' : "asmh",    'name' : "ASMHentai",   'dictKey' : "ASMHentai",        'cssClass' : "asmhId",  'showOnHome' : True,  'renderSideBar' : True,  'genRow' : True,  'type' : 'Porn'          },
 # 		{'dbKey' : "h2r",     'name' : "Hentai2R",    'dictKey' : "Hentai2R",         'cssClass' : "h2rId",   'showOnHome' : True,  'renderSideBar' : True,  'genRow' : True,  'type' : 'Porn'          },
 # 		{'dbKey' : "ts",      'name' : "Tsumino",     'dictKey' : "Tsumino",          'cssClass' : "tsId",    'showOnHome' : True,  'renderSideBar' : True,  'genRow' : True,  'type' : 'Porn'          },
-
 # 	]
 
 
@@ -96,6 +95,7 @@ def linspace(a, b, n=100):
 
 
 manga_scrapers = []
+all_scrapers = []
 hentai_scrapers = []
 other_scrapers = []
 
@@ -104,23 +104,31 @@ for plugin_name, plugin in MangaCMS.activePlugins.PLUGIN_MAP.items():
 		if plugin["is_h"] == True:
 			plugin['type'] = "Hentai"
 			hentai_scrapers.append(plugin)
+			all_scrapers.append(plugin)
 		elif plugin['is_h'] == False:
 			plugin['type'] = "Manga"
 			manga_scrapers.append(plugin)
+			all_scrapers.append(plugin)
 	else:
 		plugin['type'] = "Info"
 		other_scrapers.append(plugin)
+		all_scrapers.append(plugin)
 
 for plugin in additional_manga:
 	manga_scrapers.append(plugin)
+	all_scrapers.append(plugin)
 for plugin in additional_hentai:
 	hentai_scrapers.append(plugin)
+	all_scrapers.append(plugin)
 for plugin in additional_other:
 	other_scrapers.append(plugin)
+	all_scrapers.append(plugin)
 
 s_base, v_base = 0.35, 0.95
+print("All scrapers:")
+print(all_scrapers)
 
-for keyset in [manga_scrapers, hentai_scrapers, other_scrapers]:
+for keyset in [manga_scrapers, hentai_scrapers, other_scrapers, all_scrapers]:
 	hues = linspace(0.0, 1.0, n=len(keyset)+1)
 	for item_dict in keyset:
 		h = hues.pop()

@@ -96,7 +96,6 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 					}
 
 		ignoreTags = [
-					"type",
 					]
 
 		# print("soup.h2", )
@@ -112,7 +111,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			what = what.get_text().strip().lower()
 			if what in ignoreTags:
 				continue
-			elif what == "Type":
+			elif what == "type":
 				category = values.get_text().strip()
 				if category == "Manga One-shot":
 					category = "=0= One-Shot"
@@ -140,8 +139,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 	def getDownloadInfo(self, link_row_id):
 		with self.row_context(dbid=link_row_id) as row:
+
 			source_url = row.source_id
-			row.state = 'fetching'
+			# row.state = 'fetching'
 
 		self.log.info("Retrieving item: %s", source_url)
 
@@ -317,6 +317,6 @@ if __name__ == "__main__":
 	with tb.testSetup(load=False):
 
 		run = ContentLoader()
-		# run.getDownloadInfo({'sourceUrl':'https://hitomi.la/galleries/284.html'})
+		# run.getDownloadInfo(317486)
 		run.do_fetch_content()
 

@@ -14,7 +14,7 @@ from flask import Flask
 from flask import g
 from flask import request
 from flask_debugtoolbar import DebugToolbarExtension
-from flask_wtf.csrf import CsrfProtect
+from flask_wtf.csrf import CSRFProtect
 from babel.dates import format_datetime
 
 import nameTools as nt
@@ -36,7 +36,7 @@ if "debug" in sys.argv:
 
 app.config.from_object('MangaCMS.app.config.BaseConfig')
 
-CsrfProtect(app)
+CSRFProtect(app)
 
 
 if not app.debug:

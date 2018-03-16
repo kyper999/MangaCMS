@@ -50,8 +50,10 @@ def parse_table_args(**kwargs):
 				continue
 			val = val.lower()
 			new = []
-			if val in [tmp['dbKey'] for tmp in all_scrapers_ever.all_scrapers]:
+			if val in [tmp['key'] for tmp in all_scrapers_ever.all_scrapers]:
 				new.append(val)
+			else:
+				print("Bad val: ", val, [tmp['key'] for tmp in all_scrapers_ever.all_scrapers])
 			filter_params['limit-by-source'] = new
 
 	if 'filter-tags' in filter_params and filter_params['filter-tags']:

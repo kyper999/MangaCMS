@@ -113,7 +113,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		fext = mimetypes.guess_extension(mimetype)
 
 		# Assume jpeg if we can't figure it out, because it's probably safe.
-		if fext == '.a' or not fext:
+		if fext == '.a' or fext == '.jpe' or not fext:
 			fext = ".jpg"
 
 		filename = "{orig} {counter}{ext}".format(

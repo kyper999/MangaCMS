@@ -427,11 +427,16 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 						assert "image" in mtype.lower(), "Image not in mimetype ('%s') of file '%s'?" % (mtype, imageName)
 
 					_, ext = os.path.splitext(imageName)
+					fext = mimetypes.guess_extension(mtype)
 					if not ext:
 						self.log.warning("Missing extension in archive file: %s", imageName)
-						fext = mimetypes.guess_extension(mtype)
 						self.log.warning("Appending guessed file-extension %s", fext)
 						imageName += fext
+					elif fext != ext:
+						self.log.warning("Archive file extension mismatches guessed extension: %s", imageName)
+						self.log.warning("Appending guessed file-extension %s", fext)
+						imageName += fext
+
 
 					arch.writestr(imageName, imageContent)
 				arch.close()
