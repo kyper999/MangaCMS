@@ -42,7 +42,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 
-	retreivalThreads = 1
+	retreivalThreads = 2
 
 
 	def getFileName(self, soup):

@@ -88,7 +88,7 @@ class MangaScraperDbBase(MangaCMS.lib.LogMixin.LoggerMixin, MangaCMS.lib.Monitor
 		assert isinstance(tags, (list, tuple)), "Tags must be a list or tuple"
 
 		assert all([len(tag) >= 2 for tag in tags]), "All tags must be at least one character long. Bad tags: %s" % [tag for tag in tags if len(tag) < 2]
-		assert all([len(tag) < 80 for tag in tags]), "All tags must be less then 80 characters long. Bad tags: %s" % [(tag, len(tag)) for tag in tags if len(tag) >= 80]
+		assert all([len(tag) < 90 for tag in tags]), "All tags must be less then 90 characters long. Bad tags: %s" % [(tag, len(tag)) for tag in tags if len(tag) >= 90]
 		if row:
 			for tag in tags:
 				row.tags.add(tag)

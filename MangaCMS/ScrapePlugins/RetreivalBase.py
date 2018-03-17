@@ -77,7 +77,9 @@ def prep_check_fq_filename(fqfilename):
 
 	# Create the target container directory (if needed)
 	if not os.path.exists(filepath):
-		os.makedirs(filepath)
+		os.makedirs(filepath, exist_ok=True)    # Hurray for race conditions!
+
+
 
 	assert os.path.isdir(filepath)
 
@@ -164,10 +166,17 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 	def sync_file_tags(self, link_row_id):
 		self.log.info("Synchronizing tags with file row")
 		with self.row_context(dbid=link_row_id) as row:
+			# Occurs if the row got deleted.
+			if not row:
+				return
 			if not row.file:
 				return
+
 			release_list = row.file.manga_releases if self.is_manga else row.file.hentai_releases
 			file_tag_list = row.file.manga_tags if self.is_manga else row.file.hentai_tags
+			if not release_list:
+				return
+
 			self.log.info("Found %s release rows associated with file with %s tag(s)", len(release_list), [len(tmp.tags) for tmp in release_list])
 			self.log.info("%s tags attached to file row before sync.", len(file_tag_list))
 
@@ -188,6 +197,11 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 			if not runStatus.run:
 				self.log.info( "Breaking due to exit flag being set")
 				return
+
+			with self.row_context(dbid=link_row_id) as row:
+				if row.state != 'new':
+					self.log.warning("Muliple fetch attemps for the same entry (%s) in plugin %s!", link_row_id, self.plugin_name)
+					return
 
 			status = self.get_link(link_row_id=link_row_id)
 
@@ -367,9 +381,16 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 					self.log.error("Files: %s, %s. Row id: %s", have_fqp, fqfilename, row.id)
 					raise RuntimeError
 
-				self.log.warning("Duplicate file found by md5sum search. Re-using existing file.")
-				self.log.warning("Files: '%s', '%s'.", have_fqp, fqfilename)
-				os.unlink(fqfilename)
+				if fqfilename == have_fqp:
+					self.log.warning("Row for file-path already exists?.")
+					self.log.warning("Files: '%s', '%s'.", have_fqp, fqfilename)
+				elif os.path.exists(have_fqp) and os.path.exists(fqfilename):
+					self.log.warning("Duplicate file found by md5sum search. Re-using existing file.")
+					self.log.warning("Files: '%s', '%s'.", have_fqp, fqfilename)
+					os.unlink(fqfilename)
+				else:
+					self.log.warning("Duplicate file found by md5sum search, but a file is missing?")
+					self.log.warning("Files: '%s', '%s'.", have_fqp, fqfilename)
 
 				row.fileid = have.id
 				return have, have_fqp
