@@ -254,33 +254,36 @@ class MangaProcessor(DownloadProcessor):
 	tableName = 'MangaItems'
 	is_manga = True
 
-	def __init__(self, *args, **kwargs):
-		self.logger_path += "-" + self.tableName
+	def __init__(self, plugin_name, *args, **kwargs):
+		self.logger_path = "{}.{}.{}".format(self.logger_path, self.tableName, plugin_name.title())
 		super().__init__(*args, **kwargs)
 
 class HentaiProcessor(DownloadProcessor):
 	tableName = 'HentaiItems'
 	is_manga = False
 
-	def __init__(self, *args, **kwargs):
-		self.logger_path += "-" + self.tableName
+	def __init__(self, plugin_name, *args, **kwargs):
+		self.logger_path = "{}.{}.{}".format(self.logger_path, self.tableName, plugin_name.title())
 		super().__init__(*args, **kwargs)
+
 
 def processDownload(*args, **kwargs):
 	if 'pron' in kwargs:
 		isPron = kwargs.pop('pron')
 	else:
 		isPron = False
+	assert 'plugin_name' in kwargs, 'You need to pass `plugin_name` to processDownload() now!'
+	plugin_name = kwargs.pop('plugin_name')
 
 	if isPron:
-		dlProc = HentaiProcessor()
+		dlProc = HentaiProcessor(plugin_name=plugin_name)
 	else:
-		dlProc = MangaProcessor()
+		dlProc = MangaProcessor(plugin_name=plugin_name)
 
 	return dlProc.processDownload(*args, **kwargs)
 
-def dedupItem(itemPath, rmPath):
-	dlProc = MangaProcessor()
+def dedupItem(itemPath, rmPath, name):
+	dlProc = MangaProcessor(plugin_name=name)
 	dlProc.processDownload(seriesName=None, archivePath=itemPath, dedupMove=rmPath, deleteDups=True, includePHash=True)
 
 

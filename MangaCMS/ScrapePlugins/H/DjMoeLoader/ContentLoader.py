@@ -188,47 +188,6 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		return images
 
-
-	# def getLink(self, link):
-
-	# 	try:
-	# 		self.updateDbEntry(link["sourceUrl"], dlState=1)
-	# 		image_url_list = self.getDownloadInfo(link)
-
-	# 		images = self.getImages(image_url_list)
-	# 		title  = link['seriesName']
-	# 		artist = link['artist']
-
-	# 	except WebRequest.WebGetException:
-	# 		self.updateDbEntry(link["sourceUrl"], dlState=-2, downloadPath="ERROR", fileName="ERROR: FAILED")
-	# 		return False
-	# 	except UnwantedContentError:
-	# 		self.updateDbEntry(link["sourceUrl"], dlState=-3, downloadPath="ERROR", fileName="ERROR: Unwanted Tags applied to series!")
-	# 		return False
-	# 	except PageContentError:
-	# 		self.updateDbEntry(link["sourceUrl"], dlState=-3, downloadPath="ERROR", fileName="ERROR: FAILED (PageContentError)")
-	# 		return False
-
-	# 	if images and title:
-	# 		fileN = title+" "+artist+".zip"
-	# 		fileN = nt.makeFilenameSafe(fileN)
-	# 		wholePath = os.path.join(link["dirPath"], fileN)
-
-	# 		wholePath = self.save_image_set(wholePath, images)
-
-	# 		self.updateDbEntry(link["sourceUrl"], downloadPath=link["dirPath"], fileName=fileN)
-
-	# 		# Deduper uses the path info for relinking, so we have to dedup the item after updating the downloadPath and fileN
-	# 		dedupState = MangaCMS.cleaner.processDownload.processDownload(None, wholePath, pron=True, deleteDups=True, includePHash=True, rowId=link['dbId'])
-	# 		self.log.info( "Done")
-
-	# 		if dedupState:
-	# 			self.addTags(sourceUrl=link["sourceUrl"], tags=dedupState)
-
-	# 		self.updateDbEntry(link["sourceUrl"], dlState=2)
-
-
-
 	def get_link(self, link_row_id):
 
 		images = None
@@ -307,7 +266,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		# We don't want to upload the file we just downloaded, so specify doUpload as false.
 		# As a result of this, the seriesName paramerer also no longer matters
-		MangaCMS.cleaner.processDownload.processDownload(seriesName=False, archivePath=fqFName, doUpload=False)
+		self.processDownload(seriesName=False, archivePath=fqFName, doUpload=False)
 
 
 		self.log.info( "Done")

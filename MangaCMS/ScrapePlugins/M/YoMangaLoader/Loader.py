@@ -85,9 +85,7 @@ class Loader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase,
 		with self.row_context(url=dlurl) as row:
 			row.state = 'processing'
 
-		# We don't want to upload the file we just downloaded, so specify doUpload as false.
-		# As a result of this, the seriesName paramerer also no longer matters
-		MangaCMS.cleaner.processDownload.processDownload(seriesName=False, archivePath=fqFName, deleteDups=True, doUpload=False)
+		self.processDownload(seriesName=seriesName, archivePath=fqFName)
 
 
 		self.log.info( "Done")

@@ -144,11 +144,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 			fqFName = self.save_image_set(row, sess, fqFName, images)
 
-		MangaCMS.cleaner.processDownload.processDownload(
-				seriesName   = linkDict['series_name'],
-				archivePath  = fqFName,
-				doUpload     = self.is_manga
-			)
+		self.processDownload(seriesName=False, archivePath=fqFName, doUpload=False)
 
 		with self.row_context(dbid=link_row_id) as row:
 			row.state = 'complete'

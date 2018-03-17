@@ -115,6 +115,18 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 	def setup(self):
 		pass
 
+	def processDownload(self, **kwargs):
+		assert "plugin_name" not in kwargs, "You can't pass a plugin name to RetreivalBase.processDownload() (%s)" % kwargs
+		assert        "pron" not in kwargs, "You can't pass a pron to RetreivalBase.processDownload() (%s)" % kwargs
+
+		kwargs["plugin_name"] = self.plugin_key
+		kwargs[       "pron"] = not self.is_manga
+
+		# Never upload hentai, but default to upoading otherwise.
+		kwargs[   "doUpload"] = self.is_manga and kwargs.get("doUpload", True)
+
+		return MangaCMS.cleaner.processDownload.processDownload(**kwargs)
+
 	def _retreiveTodoLinksFromDB(self):
 
 		# self.QUERY_DEBUG = True
@@ -149,6 +161,21 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 
 		return items
 
+	def sync_file_tags(self, link_row_id):
+		self.log.info("Synchronizing tags with file row")
+		with self.row_context(dbid=link_row_id) as row:
+			if not row.file:
+				return
+			release_list = row.file.manga_releases if self.is_manga else row.file.hentai_releases
+			file_tag_list = row.file.manga_tags if self.is_manga else row.file.hentai_tags
+			self.log.info("Found %s release rows associated with file with %s tag(s)", len(release_list), [len(tmp.tags) for tmp in release_list])
+			self.log.info("%s tags attached to file row before sync.", len(file_tag_list))
+
+			for release in release_list:
+				for tag in release.tags:
+					file_tag_list.add(tag)
+			self.log.info("File has %s tags after synchronizing", len(file_tag_list))
+
 
 	def _fetch_link(self, link_row_id):
 		try:
@@ -163,6 +190,8 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 				return
 
 			status = self.get_link(link_row_id=link_row_id)
+
+			self.sync_file_tags(link_row_id=link_row_id)
 
 			ret1 = None
 			if status == 'phash-duplicate':
@@ -182,10 +211,10 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 			# Finishing checks
 			with self.row_context(dbid=link_row_id) as row:
 				if row and row.state == "complete":
-					assert row.first_seen    > datetime.datetime.min, "Row first_seen column never set!"
-					assert row.posted_at     > datetime.datetime.min, "Row posted_at column never set!"
-					assert row.downloaded_at > datetime.datetime.min, "Row downloaded_at column never set!"
-					assert row.last_checked  > datetime.datetime.min, "Row last_checked column never set!"
+					assert row.first_seen    > datetime.datetime.min, "Row first_seen column never set in plugin %s!" % self.plugin_name
+					assert row.posted_at     > datetime.datetime.min, "Row posted_at column never set in plugin %s!" % self.plugin_name
+					assert row.downloaded_at > datetime.datetime.min, "Row downloaded_at column never set in plugin %s!" % self.plugin_name
+					assert row.last_checked  > datetime.datetime.min, "Row last_checked column never set in plugin %s!" % self.plugin_name
 
 		except SystemExit:
 			self.die = True
@@ -428,12 +457,17 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 
 					_, ext = os.path.splitext(imageName)
 					fext = mimetypes.guess_extension(mtype)
+					if fext == '.jpe':
+						fext = ".jpg"
+					if fext == '.jpeg':
+						fext = ".jpg"
+
 					if not ext:
 						self.log.warning("Missing extension in archive file: %s", imageName)
 						self.log.warning("Appending guessed file-extension %s", fext)
 						imageName += fext
 					elif fext != ext:
-						self.log.warning("Archive file extension mismatches guessed extension: %s", imageName)
+						self.log.warning("Archive file extension mismatches guessed extension: %s", (imageName, ext))
 						self.log.warning("Appending guessed file-extension %s", fext)
 						imageName += fext
 
@@ -449,8 +483,6 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 			except (IOError, OSError):
 				traceback.print_exc()
 
-				import pdb
-				pdb.set_trace()
 
 				chop = chop - 1
 				filepath, fileN = os.path.split(fqfilename)
@@ -476,11 +508,7 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase
 				row, sess = row_tup
 				fqFName = self.save_image_set(row, sess, fqFName, image_list)
 
-			MangaCMS.cleaner.processDownload.processDownload(
-					seriesName   = series_name,
-					archivePath  = fqFName,
-					doUpload     = self.is_manga
-				)
+			self.processDownload(seriesName = series_name, archivePath = fqFName, doUpload = self.is_manga)
 
 			with self.row_context(dbid=row_id) as row:
 				row.state         = 'complete'

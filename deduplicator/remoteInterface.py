@@ -74,7 +74,7 @@ def cleanDirectory(dirPath, delDir):
 
 		if fType == 'application/zip' or fType == 'application/x-rar':
 			print(basePath)
-			MangaCMSOld.cleaner.processDownload.dedupItem(basePath, delDir)
+			MangaCMSOld.cleaner.processDownload.dedupItem(basePath, delDir, "Cleaner")
 			# run.processNewArchive(fileP)
 
 

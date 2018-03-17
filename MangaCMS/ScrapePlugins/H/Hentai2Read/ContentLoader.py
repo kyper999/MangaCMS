@@ -3,6 +3,7 @@
 
 import os
 import re
+import datetime
 import os.path
 
 import zipfile
@@ -139,15 +140,13 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 			fqFName = self.save_image_set(row, sess, fqFName, images)
 
-		MangaCMS.cleaner.processDownload.processDownload(
-				seriesName   = None,
-				archivePath  = fqFName,
-				doUpload     = False
-			)
+		self.processDownload(seriesName=False, archivePath=fqFName, doUpload=False)
 
 		with self.row_context(dbid=link_row_id) as row:
 			row.state = 'complete'
 
+			row.downloaded_at = datetime.datetime.now()
+			row.last_checked = datetime.datetime.now()
 
 		return True
 

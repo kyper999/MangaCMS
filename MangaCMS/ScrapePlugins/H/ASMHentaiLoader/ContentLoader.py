@@ -15,7 +15,6 @@ import traceback
 import urllib
 import settings
 import bs4
-import MangaCMS.cleaner.processDownload
 import MangaCMS.ScrapePlugins.RetreivalBase
 
 import MangaCMS.ScrapePlugins.ScrapeExceptions as ScrapeExceptions
@@ -151,7 +150,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		# We don't want to upload the file we just downloaded, so specify doUpload as false.
 		# As a result of this, the seriesName paramerer also no longer matters
-		MangaCMS.cleaner.processDownload.processDownload(seriesName=False, archivePath=fqFName, doUpload=False)
+		self.processDownload(seriesName=False, archivePath=fqFName, doUpload=False)
 
 
 		self.log.info( "Done")

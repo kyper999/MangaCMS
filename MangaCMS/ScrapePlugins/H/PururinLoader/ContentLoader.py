@@ -131,11 +131,14 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 					category = "=0= One-Shot"
 			elif what in formatters:
 				for li in values.find_all("li"):
-					tag = " ".join([formatters[what], li.get_text()])
-					tag = tag.strip()
-					tag = tag.replace("  ", " ")
-					tag = tag.replace(" ", "-")
-					tags.append(tag)
+					tag_raw = li.get_text(strip=True)
+					tag_chunks = [tmp.strip() for tmp in re.split(r"[,\|]", tag_raw) if tmp.strip()]
+					for chunk in tag_chunks:
+						tag = " ".join([formatters[what], chunk])
+						tag = tag.strip()
+						tag = tag.replace("  ", " ")
+						tag = tag.replace(" ", "-")
+						tags.append(tag)
 
 		return category, tags
 
@@ -257,7 +260,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		# We don't want to upload the file we just downloaded, so specify doUpload as false.
 		# As a result of this, the seriesName paramerer also no longer matters
-		MangaCMS.cleaner.processDownload.processDownload(seriesName=False, archivePath=fqFName, doUpload=False)
+		self.processDownload(seriesName=False, archivePath=fqFName, doUpload=False)
 
 
 		self.log.info( "Done")

@@ -36,6 +36,7 @@ class MonitorMixin(metaclass=abc.ABCMeta):
 								logger_path = self.logger_path.replace("-", "_").replace(" ", "_"),
 							)
 
+			print("Graphite prefix path: '%s'" % prefix_str)
 
 			self.mon_con = statsd.StatsClient(
 					host = settings.GRAPHITE_DB_IP,

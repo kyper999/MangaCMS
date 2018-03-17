@@ -22,6 +22,7 @@ import MangaCMS.db as mdb
 import MangaCMS.lib.LogMixin
 import MangaCMS.lib.MonitorMixin
 
+
 class MangaScraperDbBase(MangaCMS.lib.LogMixin.LoggerMixin, MangaCMS.lib.MonitorMixin.MonitorMixin):
 
 
