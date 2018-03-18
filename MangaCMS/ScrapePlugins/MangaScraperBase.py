@@ -45,9 +45,11 @@ class MangaScraperDbMixin(MangaCMS.lib.LogMixin.LoggerMixin):
 		if self.is_manga:
 			self.shouldCanonize = True
 			self.target_table = self.db.MangaReleases
+			self.target_tags_table = self.db.MangaTags
 		else:
 			self.shouldCanonize = False
 			self.target_table = self.db.HentaiReleases
+			self.target_tags_table = self.db.HentaiTags
 
 
 	# ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -128,10 +130,10 @@ class MangaScraperBase(MangaScraperDbMixin, MangaCMS.lib.LogMixin.LoggerMixin, M
 
 		# Skip anything containing a skip tag and not also one of the
 		# keep tags.
-		if any([skip_tag in tags for skip_tag in settings.skipTags]) and \
-				not any([keep_tags in tags for keep_tags in settings.tags_keep]):
+		if any([skip_tag in str(tags) for skip_tag in settings.skipTags]) and \
+				not any([keep_tags in str(tags) for keep_tags in settings.tags_keep]):
 
-			self.log.info("Masked item tag (%s). Skipping.", [skip_tag for skip_tag in settings.skipTags if skip_tag in tags])
+			self.log.info("Masked item tag (%s).", [skip_tag for skip_tag in settings.skipTags if skip_tag in tags])
 			return False
 
 		return True

@@ -151,7 +151,6 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 		source_url = 'http://www.tsumino.com/Book/Info/{}/'.format(item['Entry']['Id'])
 
-
 		# Do not decend into items where we've already added the item to the DB
 		with self.row_context(url=source_url) as row:
 			if row:

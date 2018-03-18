@@ -13,9 +13,7 @@ import MangaCMSOld.ScrapePlugins.MonitorDbBase
 import psycopg2
 import Levenshtein as lv
 
-from utilities.cleanDb import PathCleaner
-
-
+from utilities.cleanDbOld import PathCleaner
 from utilities.askUser import query_response, query_response_bool
 
 # from deduplicator.DbUtilities import DedupManager

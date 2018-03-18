@@ -3,13 +3,14 @@
 import os
 import os.path
 import sys
+import tqdm
 import gzip
 import json
 import time
 
-import MangaCMSOld.lib.logSetup
+import MangaCMS.lib.logSetup
 if __name__ == "__main__":
-	MangaCMSOld.lib.logSetup.initLogging()
+	MangaCMS.lib.logSetup.initLogging()
 
 
 import runStatus
@@ -17,518 +18,18 @@ runStatus.preloadDicts = False
 
 import traceback
 import re
-import MangaCMSOld.DbBase
-import MangaCMSOld.ScrapePlugins.MangaScraperDbBase
 import nameTools as nt
 import shutil
 import settings
 import hashlib
 
+from sqlalchemy import or_
 
-import utilities.EmptyRetreivalDb
-import MangaCMSOld.cleaner.processDownload
+import MangaCMS.cleaner.processDownload
+import MangaCMS.ScrapePlugins.MangaScraperBase
 
 
-class PathCleaner(MangaCMSOld.DbBase.DbBase):
-	loggerPath = "Main.Pc"
-	tableName  = "MangaItems"
-	pluginName = "PathCleanerUtil"
-	pluginType = "Utility"
-
-	def moveFile(self, srcPath, dstPath):
-		dlPath, fName = os.path.split(srcPath)
-		# print("dlPath, fName", dlPath, fName)
-		with self.transaction() as cur:
-
-			cur.execute("SELECT dbId FROM {tableName} WHERE downloadPath=%s AND fileName=%s".format(tableName=self.tableName), (dlPath, fName))
-			ret = cur.fetchall()
-
-			if not ret:
-				cur.execute("COMMIT;")
-				return
-			dbId = ret.pop()
-
-			cur.execute("UPDATE {tableName} SET downloadPath=%s, fileName=%s WHERE dbId=%s".format(tableName=self.tableName), (dlPath, fName, dbId))
-		self.log.info("Moved file in local DB.")
-
-	def updatePath(self, dbId, dlPath, cur):
-
-		cur.execute("UPDATE {tableName} SET downloadPath=%s WHERE dbId=%s".format(tableName=self.tableName), (dlPath, dbId))
-		self.log.info("Moved file in local DB.")
-
-	def findIfMigrated(self, filePath):
-		dirPath, fileName = os.path.split(filePath)
-
-		series = dirPath.split("/")[-1]
-		series = nt.getCanonicalMangaUpdatesName(series)
-		otherDir = nt.dirNameProxy[series]
-
-		if not otherDir["fqPath"]:
-			return False
-		if otherDir["fqPath"] == dirPath:
-			return False
-
-		newPath = os.path.join(otherDir["fqPath"], fileName)
-		if os.path.exists(newPath):
-			print("File moved!")
-			return otherDir["fqPath"]
-
-		return False
-
-	def resetDlState(self, dbId, newState, cur):
-		cur.execute("UPDATE {tableName}  SET dlState=%s WHERE dbId=%s".format(tableName=self.tableName), (newState, dbId))
-
-	def resetMissingDownloads(self):
-
-
-		if not nt.dirNameProxy.observersActive():
-			nt.dirNameProxy.startDirObservers()
-
-
-
-
-		with self.transaction() as cur:
-			cur.execute("SELECT dbId, sourceSite, downloadPath, fileName, tags FROM {tableName} WHERE dlState=%s ORDER BY retreivalTime DESC;".format(tableName=self.tableName), (2, ))
-			ret = cur.fetchall()
-
-		print("Ret", len(ret))
-
-		with self.transaction() as cur:
-			loops = 0
-			for dbId, sourceSite, downloadPath, fileName, tags in ret:
-				filePath = os.path.join(downloadPath, fileName)
-				if tags == None:
-					tags = ""
-
-				if not os.path.exists(filePath):
-					migPath = self.findIfMigrated(filePath)
-					if not migPath:
-						print("Resetting download for ", filePath, "source=", sourceSite)
-						self.resetDlState(dbId, 0, cur)
-
-					else:
-						print("Moved!")
-						print("		Old = '%s'" % filePath)
-						print("		New = '%s'" % migPath)
-						self.updatePath(dbId, migPath, cur)
-
-				loops += 1
-				if loops % 1000 == 0:
-					cur.execute("COMMIT;")
-					print("Incremental Commit!")
-					cur.execute("BEGIN;")
-
-
-	def updateTags(self, dbId, newTags, cur=None):
-		if not cur:
-			cur = self.get_cursor()
-		cur.execute("UPDATE {tableName} SET tags=%s WHERE dbId=%s;".format(tableName=self.tableName), (newTags, dbId))
-
-	def clearInvalidDedupTags(self):
-
-		cur = self.get_cursor()
-		cur.execute("BEGIN;")
-		print("Querying")
-		cur.execute("SELECT dbId, downloadPath, fileName, tags FROM {tableName}".format(tableName=self.tableName))
-		print("Queried. Fetching results")
-		ret = cur.fetchall()
-		cur.execute("COMMIT;")
-		print("Have results. Processing")
-
-		cur.execute("BEGIN;")
-		for  dbId, downloadPath, fileName, tagstr in ret:
-			if tagstr is None:
-				tagstr = ""
-			tags = set(tagstr.split(" "))
-
-			changed = False
-
-			if "deleted" in tags and "was-duplicate" in tags:
-				fPath = os.path.join(downloadPath, fileName)
-				if os.path.exists(fPath):
-					changed = True
-					tags.remove("deleted")
-					tags.remove("was-duplicate")
-					self.log.info("File %s exists (%s)", fPath, dbId, )
-
-			if 'phash-thresh-3' in tags:
-				changed = True
-				tags.remove('phash-thresh-3')
-			if 'phash-thresh-reduced' in tags:
-				changed = True
-				tags.remove('phash-thresh-reduced')
-
-			if changed:
-				taglist = list(tags)
-				taglist.sort()
-				tagNew = " ".join(taglist)
-				self.log.info("Updating tags to: '%s'", tagNew)
-				self.updateTags(dbId, tagNew, cur=cur)
-
-		cur.execute("COMMIT;")
-
-
-
-	def patchBatotoLinks(self):
-
-
-		cur = self.get_cursor()
-		cur.execute("BEGIN;")
-		print("Querying")
-		cur.execute("SELECT dbId, sourceUrl FROM {tableName} WHERE sourceSite='bt';".format(tableName=self.tableName))
-		print("Queried. Fetching results")
-		ret = cur.fetchall()
-		cur.execute("COMMIT;")
-		print("Have results. Processing")
-
-		cur.execute("BEGIN;")
-		for  dbId, sourceUrl in ret:
-			if "batoto" in sourceUrl.lower():
-				sourceUrl = sourceUrl.replace("http://www.batoto.net/", "http://bato.to/")
-				print("Link", sourceUrl)
-
-				cur.execute("SELECT dbId FROM {tableName} WHERE sourceUrl=%s;".format(tableName=self.tableName), (sourceUrl, ))
-				ret = cur.fetchall()
-				if not ret:
-					print("Updating")
-					cur.execute("UPDATE {tableName} SET sourceUrl=%s WHERE dbId=%s;".format(tableName=self.tableName), (sourceUrl, dbId))
-
-				else:
-					print("Replacing")
-					cur.execute("DELETE FROM {tableName} WHERE sourceUrl=%s;".format(tableName=self.tableName), (sourceUrl, ))
-					cur.execute("UPDATE {tableName} SET sourceUrl=%s WHERE dbId=%s;".format(tableName=self.tableName), (sourceUrl, dbId))
-
-
-		cur.execute("COMMIT;")
-
-
-
-
-	def insertNames(self, buId, names):
-
-		with self.get_cursor() as cur:
-			for name in names:
-				fsSafeName = nt.prepFilenameForMatching(name)
-				cur.execute("""SELECT COUNT(*) FROM munamelist WHERE buId=%s AND name=%s;""", (buId, name))
-				ret = cur.fetchone()
-				if not ret[0]:
-					cur.execute("""INSERT INTO munamelist (buId, name, fsSafeName) VALUES (%s, %s, %s);""", (buId, name, fsSafeName))
-				else:
-					print("wat", ret[0], bool(ret[0]))
-
-	def crossSyncNames(self):
-
-		cur = self.get_cursor()
-		cur.execute("BEGIN;")
-		print("Querying")
-		cur.execute("SELECT DISTINCT ON (buname) buname, buId FROM mangaseries ORDER BY buname, buid;")
-		print("Queried. Fetching results")
-		ret = cur.fetchall()
-		cur.execute("COMMIT;")
-		print("Have results. Processing")
-
-		cur.execute("BEGIN;")
-
-		missing = 0
-		for item in ret:
-			buName, buId = item
-			if not buName:
-				continue
-
-			cur.execute("SELECT * FROM munamelist WHERE name=%s;", (buName, ))
-			ret = cur.fetchall()
-			# mId = nt.getMangaUpdatesId(buName)
-
-			if not ret:
-				print("Item missing '{item}', mid:{mid}".format(item=item, mid=ret))
-				self.insertNames(buId, [buName])
-				missing += 1
-
-			if not runStatus.run:
-				break
-				# print("Item '{old}', '{new}', mid:{mid}".format(old=item, new=nt.getCanonicalMangaUpdatesName(item), mid=mId))
-		print("Total: ", len(ret))
-		print("Missing: ", missing)
-
-
-	def consolidateSeriesNaming(self):
-
-
-		cur = self.get_cursor()
-		# cur.execute("BEGIN;")
-		# print("Querying")
-		# cur.execute("SELECT DISTINCT(seriesName) FROM {tableName};".format(tableName=self.tableName))
-		# print("Queried. Fetching results")
-		# ret = cur.fetchall()
-		# cur.execute("COMMIT;")
-		# print("Have results. Processing")
-
-		# for item in ret:
-		# 	item = item[0]
-		# 	if not item:
-		# 		continue
-
-		# 	mId = nt.getMangaUpdatesId(item)
-		# 	if not mId:
-		# 		print("Item '{old}', '{new}', mid:{mid}".format(old=item, new=nt.getCanonicalMangaUpdatesName(item), mid=mId))
-		# print("Total: ", len(ret))
-
-		items = ["Murciélago", "Murcielago", "Murciélago"]
-
-		for item in items:
-			print("------", item, nt.getCanonicalMangaUpdatesName(item), nt.haveCanonicalMangaUpdatesName(item))
-
-		# cur.execute("BEGIN;")
-		# print("Querying")
-		# cur.execute("SELECT DISTINCT ON (buname) buname, buId FROM mangaseries ORDER BY buname, buid;")
-		# print("Queried. Fetching results")
-		# ret = cur.fetchall()
-		# cur.execute("COMMIT;")
-		# print("Have results. Processing")
-
-		# cur.execute("BEGIN;")
-
-		# missing = 0
-		# for item in ret:
-		# 	buName, buId = item
-		# 	if not buName:
-		# 		continue
-
-		# 	cur.execute("SELECT * FROM munamelist WHERE name=%s;", (buName, ))
-		# 	ret = cur.fetchall()
-		# 	# mId = nt.getMangaUpdatesId(buName)
-
-		# 	if not ret:
-		# 		print("Item missing '{item}', mid:{mid}".format(item=item, mid=ret))
-		# 		self.insertNames(buId, [buName])
-		# 		missing += 1
-
-		# 	if not runStatus.run:
-		# 		break
-		# 		# print("Item '{old}', '{new}', mid:{mid}".format(old=item, new=nt.getCanonicalMangaUpdatesName(item), mid=mId))
-		# print("Total: ", len(ret))
-		# print("Missing: ", missing)
-
-
-		# for  dbId, sourceUrl in ret:
-		# 	if "batoto" in sourceUrl.lower():
-		# 		sourceUrl = sourceUrl.replace("http://www.batoto.net/", "http://bato.to/")
-		# 		print("Link", sourceUrl)
-
-		# 		cur.execute("SELECT dbId FROM {tableName} WHERE sourceUrl=%s;".format(tableName=self.tableName), (sourceUrl, ))
-		# 		ret = cur.fetchall()
-		# 		if not ret:
-		# 			print("Updating")
-		# 			cur.execute("UPDATE {tableName} SET sourceUrl=%s WHERE dbId=%s;".format(tableName=self.tableName), (sourceUrl, dbId))
-
-		# 		else:
-		# 			print("Replacing")
-		# 			cur.execute("DELETE FROM {tableName} WHERE sourceUrl=%s;".format(tableName=self.tableName), (sourceUrl, ))
-		# 			cur.execute("UPDATE {tableName} SET sourceUrl=%s WHERE dbId=%s;".format(tableName=self.tableName), (sourceUrl, dbId))
-
-
-		cur.execute("COMMIT;")
-
-	def renameDlPaths(self):
-		nt.dirNameProxy.startDirObservers()
-		cur = self.get_cursor()
-		cur.execute("BEGIN ;")
-		cur.execute("SELECT dbId, downloadPath, seriesName FROM mangaitems ORDER BY retreivalTime DESC;")
-		rows = cur.fetchall()
-		print("Processing %s items" % len(rows))
-		cnt = 0
-		for row in rows:
-			dbId, filePath, seriesName = row
-			if filePath == None:
-				filePath = ''
-			if seriesName == '' or seriesName == None:
-				print("No series name", row)
-				continue
-
-			if not os.path.exists(filePath):
-				if seriesName in nt.dirNameProxy:
-					itemPath = nt.dirNameProxy[seriesName]['fqPath']
-					if os.path.exists(itemPath):
-						print("Need to change", filePath, itemPath)
-						cur.execute("UPDATE mangaitems SET downloadPath=%s WHERE dbId=%s", (itemPath, dbId))
-
-			cnt += 1
-			if cnt % 1000 == 0:
-				print("ON row ", cnt)
-				cur.execute("COMMIT;")
-				cur.execute("BEGIN;")
-
-		cur.execute("COMMIT;")
-		nt.dirNameProxy.stop()
-
-	def regenerateNameMappings(self):
-		cur = self.get_cursor()
-		cur.execute("BEGIN ;")
-		cur.execute("SELECT dbId, name, fsSafeName FROM munamelist;")
-		rows = cur.fetchall()
-		print("Processing %s items" % len(rows))
-		cnt = 0
-		for row in rows:
-			dbId, name, fsSafeName = row
-
-			prepped = nt.prepFilenameForMatching(name)
-			if not prepped or (len(name) - len(prepped)) > 2:
-				continue
-
-			if prepped != fsSafeName:
-				print("Bad match", row, prepped)
-				cur.execute("UPDATE munamelist SET fsSafeName=%s WHERE dbId=%s", (prepped, dbId))
-			cnt += 1
-			if cnt % 1000 == 0:
-				print("ON row ", cnt)
-
-		cur.execute("COMMIT;")
-		nt.dirNameProxy.stop()
-
-	def extractTags(self, name):
-		tagre = re.compile(r'{\(Tags\)(.+?)}')
-		tagout = tagre.findall(name)
-		tagout = set(" ".join(tagout).strip().split(" "))
-		if "none" in tagout:
-			tagout.remove("none")
-		return tagout
-
-	def fetchLinkList(self, itemList):
-
-		dbInt = utilities.EmptyRetreivalDb.ScraperDbTool()
-
-		try:
-			for item in itemList:
-
-				srcStr = 'import-{hash}'.format(hash=hashlib.md5(item.encode("utf-8")).hexdigest())
-				itemtags = self.extractTags(item)
-				if itemtags == "None" or itemtags == None:
-					itemtags = ''
-				fPath = os.path.join(settings.djMoeDir, "imported")
-
-				if not os.path.exists(fPath):
-					os.makedirs(fPath)
-
-				srcPath = os.path.join(self.sourcePath, item)
-				dstPath = os.path.join(fPath, item)
-
-				if os.path.exists(dstPath):
-					raise ValueError("Destination path already exists? = '%s'" % dstPath)
-
-
-
-				# print("os.path.exists", os.path.exists(srcPath), os.path.exists(dstPath))
-
-				# print("Item '%s' '%s' '%s'" % (srcPath, dstPath, itemtags))
-				shutil.move(srcPath, dstPath)
-				dbInt.insertIntoDb(retreivalTime=200,
-									sourceUrl=srcStr,
-									originName=item,
-									dlState=2,
-									downloadPath=fPath,
-									fileName=item,
-									seriesName="imported")
-
-
-
-
-				dedupState = MangaCMSOld.cleaner.processDownload.processDownload("imported", dstPath, pron=True, deleteDups=True)
-
-
-				tags = dedupState + ' ' + ' '.join(itemtags)
-				tags = tags.strip()
-				if dedupState:
-					dbInt.addTags(sourceUrl=srcStr, tags=tags)
-
-				self.log.info( "Done")
-
-				if not runStatus.run:
-					self.log.info( "Breaking due to exit flag being set")
-					break
-
-		except:
-			self.log.critical("Exception!")
-			traceback.print_exc()
-			self.log.critical(traceback.format_exc())
-
-
-	def processTodoItems(self, items):
-		if items:
-
-			self.fetchLinkList(items)
-
-
-
-
-
-	def importDjMItems(self, sourcePath):
-
-		# Horrible tweak the class definition before instantiating.
-		utilities.EmptyRetreivalDb.ScraperDbTool.tableKey = "djm"
-		self.sourcePath = sourcePath
-
-		items = os.listdir(sourcePath)
-		self.processTodoItems(items)
-
-	def fixDjMItems(self):
-
-		# Horrible tweak the class definition before instantiating.
-		utilities.EmptyRetreivalDb.ScraperDbTool.tableKey = "djm"
-
-		dbInt = utilities.EmptyRetreivalDb.ScraperDbTool()
-		cur = dbInt.get_cursor()
-		print("Cursor", cur)
-		cur.execute("SELECT sourceUrl, fileName, tags FROM HentaiItems WHERE sourceSite='djm' AND retreivalTime=200;")
-		rows = cur.fetchall()
-
-		bad = 0
-		for row in rows:
-			sourceUrl, fileName, tags = row
-			itemtags = self.extractTags(fileName)
-			if itemtags == "None" or itemtags == None:
-				itemtags = ''
-
-			if tags != itemtags and itemtags:
-				bad += 1
-				print("Wat?", tags, itemtags)
-				dbInt.addTags(sourceUrl=sourceUrl, tags=" ".join(itemtags))
-
-		print("need to fix", bad, "of", len(rows))
-
-
-	def btUrlFix(self):
-		'''
-		Fix batoto URLs from http -> https switch.
-		'''
-		print("Fixing Batoto URLs.")
-
-		with self.transaction() as cur:
-			print("Querying")
-			cur.execute("""SELECT dbId, sourceurl FROM {tableName} WHERE sourcesite = %s AND sourceurl LIKE %s""".format(tableName=self.tableName), ('bt', "http://%"))
-			items = cur.fetchall()
-			print("Updating %s items" % len(items))
-			updated = 0
-			for dbid, srcurl in items:
-				srcurl_fixed = srcurl.replace("http://", "https://")
-				# print("{} -> {}".format(srcurl, srcurl_fixed))
-				cur.execute("""UPDATE {tableName} SET sourceurl = %s WHERE dbid=%s""".format(tableName=self.tableName), (srcurl_fixed, dbid))
-				updated += 1
-
-				sys.stdout.write('|')
-				sys.stdout.flush()
-
-				if updated % 1000 == 0:
-					print("Updating - %s" % updated)
-					cur.execute("commit;")
-					print("Committed")
-
-
-			cur.execute("commit;")
-			print(len(items))
-			print(items[:5])
-
-
-class CleanerBase(MangaCMSOld.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
+class CleanerBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 
 	# QUERY_DEBUG = True
 
@@ -536,132 +37,6 @@ class CleanerBase(MangaCMSOld.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBas
 		self.tableKey = tableKey
 		super().__init__()
 
-	def resetMissingDownloads(self):
-
-
-
-		with self.transaction() as cur:
-			cur.execute("SELECT dbId, sourceSite, downloadPath, fileName, tags FROM {tableName} WHERE dlState=%s ORDER BY retreivalTime DESC;".format(tableName=self.tableName), (2, ))
-			ret = cur.fetchall()
-
-		print("Ret", len(ret))
-
-		match = []
-		loops = 0
-		for dbId, sourceSite, downloadPath, fileName, tags in ret:
-
-
-			filePath = os.path.join(downloadPath, fileName)
-			if os.path.exists(filePath):
-				self.log.info("File exists: %s", filePath)
-			else:
-				self.log.info("Item missing: %s", filePath)
-				self.updateDbEntryById(dbId=dbId, dlState=0, commit=False)
-
-				removeTags = ["deleted", "was-duplicate", "dup-checked"]
-				tagList = tags.split(" ")
-
-				self.log.info("Processing '%s', '%s'", downloadPath, fileName)
-				for tag in tagList:
-					if "crosslink" in tag:
-						removeTags.append(tag)
-				if not "crosslink" in " ".join(removeTags):
-					print("Wat?", sourceSite, downloadPath, fileName)
-
-				rows = self.getRowsByValue(limitByKey=False, filename=fileName, downloadpath=downloadPath)
-
-				for row in rows:
-					self.removeTags(dbId=row['dbId'], limitByKey=False, tags=" ".join(removeTags), commit=False)
-
-
-				loops += 1
-				if loops % 1000 == 0:
-
-					with self.transaction() as cur:
-							cur.execute("COMMIT;")
-							print("Incremental Commit!")
-							cur.execute("BEGIN;")
-
-				match.append(downloadPath)
-
-		with self.transaction() as cur:
-				cur.execute("COMMIT;")
-				print("Incremental Commit!")
-				cur.execute("BEGIN;")
-
-
-	def clearInvalidDedupTags(self):
-
-		cur = self.get_cursor()
-		cur.execute("BEGIN;")
-		print("Querying")
-		cur.execute("SELECT dbId, downloadPath, fileName, tags FROM {tableName}".format(tableName=self.tableName))
-		print("Queried. Fetching results")
-		ret = cur.fetchall()
-		cur.execute("COMMIT;")
-		print("Have results. Processing")
-
-		changed = 0
-		cur.execute("BEGIN;")
-		for  dbId, downloadPath, fileName, tagstr in ret:
-			if tagstr is None:
-				tagstr = ""
-			tags = set(tagstr.split(" "))
-
-			removed = ""
-
-			if "deleted" in tags and "was-duplicate" in tags:
-				fPath = os.path.join(downloadPath, fileName)
-				if os.path.exists(fPath):
-					changed = True
-					tags.remove("deleted")
-					tags.remove("was-duplicate")
-					removed += ' was-duplicate deleted'
-					self.log.info("File %s exists (%s)", fPath, dbId, )
-
-			if 'phash-thresh-3' in tags:
-				removed += ' phash-thresh-3'
-				tags.remove('phash-thresh-3')
-			if 'phash-thresh-reduced' in tags:
-				removed += ' phash-thresh-reduced'
-				tags.remove('phash-thresh-reduced')
-
-			if removed:
-				taglist = list(tags)
-				taglist.sort()
-				tagNew = " ".join(taglist)
-				self.log.info("Removed '%s', Updating tags to: '%s'", removed, tagNew)
-
-				cur.execute("UPDATE {tableName} SET tags=%s WHERE dbId=%s;".format(tableName=self.tableName), (tagNew, dbId))
-				changed += 1
-
-			if changed > 1000:
-				changed = 0
-				cur.execute("COMMIT;")
-				self.log.info("Doing a incremental commit")
-		cur.execute("COMMIT;")
-
-
-	def cleanTags(self):
-		'''
-		So I've accidentally been introducing duplicate tags into the h-tag database. Not totally sure where
-		(I added some protective {str}.lower() calls in a few places to see if it helps), but it's annoying.
-		Anyways, this extracts all the tags, consolidates and lower-cases them, and then reinserts the
-		fixed values.
-		'''
-		print("Fixing tags with case issues.")
-
-		with self.transaction() as cur:
-			cur.execute("""SELECT dbId, tags FROM {tableName} WHERE tags IS NOT NULL and tags != %s""".format(tableName=self.tableName), ('', ))
-			items = cur.fetchall()
-
-			for dbId, tags in items:
-				lcSet = set(tags.lower().split(" "))
-				if lcSet != set(tags.split(" ")):
-					fTags = " ".join(lcSet)
-					cur.execute("UPDATE {tableName} SET tags=%s WHERE dbid=%s".format(tableName=self.tableName), (fTags, dbId))
-					print(dbId, tags, set(tags.split(" ")))
-			print(len(items))
 
 	def __delete(self, cur, dbid, wanted):
 
@@ -764,485 +139,88 @@ class CleanerBase(MangaCMSOld.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBas
 						self.__delete(cur, dbId, wanted)
 
 				print(len(items))
+
+
 	def cleanYaoiOnly(self):
-		print("cleanJapaneseOnly")
+		print("cleanYaoiOnly")
 
-		bad_tags = [r'%males-only%', r'%guys-only%', r'%yaoi%']
+		bad_tags = [
+			'yaoi',
+			'male-yaoi',
+			'guys-only',
+			'males-only',
+			'male-males-only',
+			'male-guys-only',
+			'trap-yaoi',
+		]
 
-		wanted = [tmp.lower() for tmp in settings.tags_keep]
-
-
-
-		for bad in bad_tags:
-
-			with self.transaction() as cur:
-				print("Searching for tag %s" % bad)
-				cur.execute("""SELECT dbId, tags FROM {tableName} WHERE tags LIKE %s""".format(tableName=self.tableName), (bad, ))
-				items = cur.fetchall()
-				print("Processing %s results", len(items))
-
-				for dbId, tags in items:
-
-					lcSet = set(tags.lower().split(" "))
-
-					# if any([tmp in lcSet for tmp in settings.deleted_indicators]):
-					# 	print("Skipping:", tags)
-					# 	continue
-
-					match = [tag for tag in lcSet if any([item in tag for item in wanted])]
-					if not match:
-						self.__delete(cur, dbId, wanted)
-
-				print(len(items))
-
-	def __process_dupes(self, cur, downloadPath, fileName):
-
-		cur.execute("""
-			SELECT
-			    dbId,
-			    dlstate,
-			    sourceUrl,
-			    tags
-			FROM
-			    {tableName}
-			WHERE
-				downloadPath = %s
-			AND
-				fileName = %s
-			""".format(tableName=self.tableName),
-			(downloadPath, fileName))
-		items = cur.fetchall()
-		if len(items) < 2:
-			print("Missing sufficent database entries!")
-			print(downloadPath, fileName)
-			raise RuntimeError("How did this happen?")
+		releases = set()
+		with self.db.session_context() as sess:
+			bad = sess.query(self.db.HentaiTags) \
+				.filter(or_(
+						*(self.db.HentaiTags.tag.like(tag) for tag in bad_tags)
+					)).all()
 
 
+			self.log.info("Found %s tags to process", len(bad))
 
-		minid = min([row[0] for row in items])
+			for row in tqdm.tqdm(bad):
+				for release in tqdm.tqdm(row.hentai_releases.all()):
+					if release.id not in releases:
+						releases.add(release.id)
 
-		crosslink_tag = 'crosslink-%s' % minid
-
-		self.log.info("	Expected tag: %s", crosslink_tag)
-
-		tag_sum = ' '.join([tmp[3] for tmp in items if tmp[3]])
-		tag_sum = [tmp for tmp in tag_sum.split(" ")]
-		tag_sum = [tmp for tmp in tag_sum if not tmp.startswith("crosslink")]
-		tag_sum = [tmp for tmp in tag_sum if not tmp.startswith("deleted")]
-		tag_sum = [tmp for tmp in tag_sum if not tmp.startswith("was-duplicate")]
-		tag_sum = [tmp for tmp in tag_sum if not tmp.startswith("phash-duplicate")]
-		tag_sum = set(tag_sum)
-
-		# print("Sumarized tag_sum: '%s'" % tag_sum)
-
-		for rowid, dlstate, sourceUrl, tags in items:
-			if tags is None:
-				tags = ""
-			tagsl = tags.split(" ")
-			tagsl = [tmp for tmp in tagsl if tmp.strip()]
-			bad = [tmp for tmp in tagsl if "crosslink" in tmp]
-			if crosslink_tag in bad:
-				bad.remove(crosslink_tag)
-
-			if rowid == minid:
-				remove_tags = "deleted was-duplicate " + " ".join(bad)
-				add_tags    = crosslink_tag
-			else:
-				remove_tags = " ".join(bad)
-				add_tags    = crosslink_tag + " deleted was-duplicate"
+		self.log.info("")
+		self.log.info("Found %s items to examine", len(releases))
 
 
-			newtags = set([tmp for tmp in (add_tags + " " + remove_tags).split(" ") if tmp])
-			oldtags = set(tagsl)
+		for relid in tqdm.tqdm(releases):
+			with self.row_sess_context(dbid=relid, limit_by_plugin=False) as (row, sess):
 
-			newtags = newtags | tag_sum
-			all_tags = " ".join(newtags) + " " + add_tags
-
-			# if len(oldtags) <= 3:
-			# 	if dlstate == 2:
-			# 		self.log.info("	Resetting DL state to fetch tags")
-			# 		self.updateDbEntry(sourceUrl, dlState=0, cur=cur)
-			# 	else:
-			# 		self.log.info("	DL state already reset")
-
-
-
-			if oldtags == newtags:
-				self.log.info("	Skipping tag update as tags have not changed")
-			else:
-				self.log.info("	Removing tags from %s -> '%s'" % (rowid, remove_tags))
-				self.log.info("	Adding tags to %s -> '%s'" % (rowid, all_tags))
-				self.removeTags(dbId=rowid, limitByKey=False, tags=remove_tags, commit=False, cur=cur)
-
-				# Indexed values cannot be larger then 1/3 a buffer page, and IIRC, postgres pages
-				# are 8K
-				if len(all_tags) > 8192 // 3:
-					self.log.warning("Huge tag string, cannot add!")
-					self.addTags(dbId=rowid, limitByKey=False, tags=add_tags, commit=False, cur=cur)
-				else:
-					self.addTags(dbId=rowid, limitByKey=False, tags=all_tags, commit=False, cur=cur)
-				cur.execute("commit")
-
-	def __clear_crosslinks(self):
-
-		with self.transaction() as cur:
-			self.log.info("Searching for items tagged crosslinked")
-			cur.execute("""
-				SELECT
-				    dbid,
-				    tags
-				FROM
-				    {tableName}
-				WHERE
-				    tags LIKE '%crosslink%'
-				ORDER BY
-				    dbId DESC
-				""".format(tableName=self.tableName))
-			cross_link = list(cur.fetchall())
-
-			self.log.info("Searching for items tagged deleted")
-			cur.execute("""
-				SELECT
-				    dbid,
-				    tags
-				FROM
-				    {tableName}
-				WHERE
-				    tags LIKE '%deleted%'
-				ORDER BY
-				    dbId DESC
-				""".format(tableName=self.tableName))
-			deleted = list(cur.fetchall())
-
-			self.log.info("Searching for items tagged duplicate")
-			cur.execute("""
-				SELECT
-				    dbid,
-				    tags
-				FROM
-				    {tableName}
-				WHERE
-				    tags LIKE '%was-duplicate%'
-				ORDER BY
-				    dbId DESC
-				""".format(tableName=self.tableName))
-			duplicate = list(cur.fetchall())
-
-			self.log.info("Searching for items with count tags in row")
-			cur.execute("""
-				SELECT
-				    dbid,
-				    tags
-				FROM
-				    {tableName}
-				WHERE
-				    tags LIKE '%-(%'
-				ORDER BY
-				    dbId DESC
-				""".format(tableName=self.tableName))
-			bad_parenthesis = list(cur.fetchall())
-
-		self.log.info("Found %s rows with cross-link tags, %s with deleted tag, %s dup, %s parenthses.",
-			len(cross_link), len(deleted), len(duplicate), len(bad_parenthesis))
-
-		rows = []
-		rows.extend(deleted)
-		rows.extend(cross_link)
-		rows.extend(duplicate)
-		rows.extend(bad_parenthesis)
-
-		changes = 0
-
-		num_re = re.compile(r'\-\([\d\-,]+?\)')
-
-		with self.transaction() as cur:
-			for dbid, tags in rows:
-				tagl = tags.split(" ")
-
-				tagn = [num_re.split(tmp)[0] for tmp in tagl]
-				tagn = [tmp for tmp in tagn if
-						tmp != 'deleted'       and
-						tmp != 'was-duplicate' and
-						'crosslink' not in tmp
-					]
-				tagn.sort()
-
-				tags_clean = " ".join(tagn)
-				if tags != tags_clean:
-					self.updateDbEntryById(dbid, tags=tags_clean, cur=cur)
-				# else:
-				# 	print("No change? Wat?")
-				# 	print(tags)
-				# 	print(tags_clean)
-				# 	print('was-duplicate' in tagn, tagn)
-				# 	print()
-
-				print("\rRow: %s   " % str(dbid).rjust(10), end='', flush=True)
-
-				changes += 1
-
-				if changes > 5000:
-					changes = 0
-					print("Committing!")
-					cur.execute("Commit;")
-
-
-	def aggregateCrossLinks(self):
-		self.log.info("Removing crosslinks that exist")
-		self.__clear_crosslinks()
-		self.log.info("Aggregating CrossLinks")
-
-		with self.transaction() as cur:
-			self.log.info("Searching for cross-linked tags")
-			cur.execute("""
-				SELECT
-				    downloadPath,
-				    fileName,
-				    COUNT((downloadPath, fileName))
-				FROM
-				    {tableName}
-				GROUP BY
-				    (downloadPath, fileName)
-				HAVING
-				    COUNT((downloadPath, fileName)) > 1
-				ORDER BY
-				    min(dbId) DESC
-				""".format(tableName=self.tableName))
-			items = cur.fetchall()
-
-		for downloadPath, fileName, count in items:
-			with self.transaction() as cur:
-				if downloadPath is None:
-					self.log.info("Null path. Skipping")
+				if not row:
 					continue
-				self.log.info("Processing %s -> %s with %s items", downloadPath, fileName, count)
-				self.__process_dupes(cur, downloadPath, fileName)
+
+				tags = set(row.tags)
+				if not row.fileid:
+					if not self.wanted_from_tags(tags):
+						sess.delete(row)
+					continue
 
 
-	def fixSingleLetterTags(self):
-		print("fixSingleLetterTags")
+				ftags = set(row.file.hentai_tags)
+				atags = set() | ftags
+				for a_row in row.file.hentai_releases:
+					for tag in a_row.tags:
+						atags.add(tag)
 
-		with self.transaction() as cur:
-			print("Searching for cross-linked tags")
-			cur.execute("""
-				SELECT
-				    dbid,
-				    tags
-				FROM
-				    {tableName}
-				WHERE
-				    tags IS NOT NULL
-				""".format(tableName=self.tableName))
-			items = cur.fetchall()
-
-			for dbid, tags in items:
-				badtags = [tmp for tmp in tags.split(" ") if len(tmp) == 1]
-				if badtags:
-
-					self.removeTags(dbId=dbid, limitByKey=False, tags=badtags, commit=False, cur=cur)
-					print(badtags, tags)
-
-	def fixDlstateForPresentFiles(self):
-
-		self.log.info("Fix present files")
+				if not self.wanted_from_tags(atags):
+					self.log.info("Deleting %s series release rows with tags: %s", len(row.file.hentai_releases), atags)
+					for bad_rel in row.file.hentai_releases:
+						sess.delete(bad_rel)
+					sess.delete(row.file)
 
 
-		with self.transaction() as cur:
-			self.log.info("Searching for items with path")
-			cur.execute("""
-				SELECT
-				    downloadPath,
-				    fileName,
-				    dbid,
-				    dlstate,
-				    tags
-				FROM
-				    {tableName}
-				WHERE
-					dlstate <= 1
-				AND
-					downloadpath <> ''
-				""".format(tableName=self.tableName))
-
-			items = cur.fetchall()
-		self.log.info("Found %s items with non-complete dlstates and non-null downloadpath", len(items))
-
-		# with open("nullified_h_files-1513242849.0264378.json", "r") as fp1:
-		# 	dellog = json.load(fp1)
-		dellog = []
-		skipped = 0
-		try:
-			for downloadpath, filename, dbid, dlstate, tags in items:
-				fqpath = os.path.join(downloadpath, filename)
-				if os.path.exists(fqpath):
-					print((downloadpath, filename, dbid, dlstate ))
-					self.updateDbEntryById(dbId=dbid, dlstate=2)
-					skipped += 1
-				else:
-					print("\r{} / {} ({})\r".format(len(dellog), len(items) - len(dellog), skipped), end="", flush=True)
-					dellog.append((downloadpath, filename, dbid, dlstate, tags))
-					row_old = self.getRowByValue(dbId=dbid, limitByKey=False)
-					self.updateDbEntryById(dbId=dbid, filename='', downloadpath='', tags='')
-					row_new = self.getRowByValue(dbId=dbid, limitByKey=False)
-					print("Row: %s, %s", dbid, row_old)
-					print("Row: %s, %s", dbid, row_new)
-
-				if dellog and len(dellog) % 1000 == 0:
-					print("syncing to JSON file")
-					with open("nullified_{}_files-{}.json".format(self.tableName, time.time()), "w") as fp:
-						json.dump(dellog, fp)
-
-
-					cur.execute("""
-						SELECT
-						    count(*)
-						FROM
-						    {tableName}
-						WHERE
-							dlstate <= 1
-						AND
-							downloadpath IS NOT NULL
-						""".format(tableName=self.tableName))
-
-					icnt = cur.fetchall()
-					print("Remaining: %s" % icnt)
-
-		finally:
-			with open("nullified_h_files-{}.json".format(time.time()), "w") as fp:
-				json.dump(dellog, fp)
-
-
-	def deleteNullRows(self):
-
-
-		with self.transaction() as cur:
-			self.log.info("Searching for items without files")
-			cur.execute("""
-				DELETE
-				FROM
-				    {tableName}
-				WHERE
-					dlstate <= 1
-				AND
-					(downloadpath = '' or downloadpath IS NULL)
-				""".format(tableName=self.tableName))
-			self.log.info("Changed %s rows", cur.rowcount)
-
-	def reprocess_damanged(self):
-		print("Reprocessing damaged files")
-
-		with self.transaction() as cur:
-			print("Searching for files marked damaged")
-			cur.execute("""SELECT dbId, downloadPath, fileName, tags FROM {tableName} WHERE tags LIKE %s""".format(tableName=self.tableName), ("%damaged%", ))
-			items = cur.fetchall()
-
-		# print("Items: ", items)
-		print("Len: ", len(items))
-
-		for dbid, dlp, fn, itemtags in items:
-			fqp = os.path.join(dlp, fn)
-			print(os.path.exists(fqp), fqp)
-			dedupState = MangaCMSOld.cleaner.processDownload.processDownload("imported", fqp, pron=True, deleteDups=True)
-
-
-			tags = dedupState + ' ' + ' '.join(itemtags)
-			tags = tags.strip()
-			if dedupState:
-				self.addTags(dbId=dbid, tags=tags, limitByKey=False)
-
-
-			# 	SELECT
-			# 	    downloadPath,
-			# 	    fileName,
-			# 	    COUNT((downloadPath, fileName))
-			# 	FROM
-			# 	    {tableName}
-			# 	GROUP BY
-			# 	    (downloadPath, fileName)
-			# 	HAVING
-			# 	    COUNT((downloadPath, fileName)) > 1
-			# 	ORDER BY
-			# 	    min(dbId) DESC
-			# 	""".format(tableName=self.tableName))
-			# items = cur.fetchall()
-
-			# for downloadPath, fileName, count in items:
-			# 	if downloadPath is None:
-			# 		print("Null path. Skipping")
-			# 		continue
-			# 	self.log.info("Processing %s -> %s with %s items", downloadPath, fileName, count)
-			# 	self.__process_dupes(cur, downloadPath, fileName)
 
 	# # STFU, abstract base class
 	def go(self):
 		pass
 
 class MCleaner(CleanerBase):
-	loggerPath = "Main.Mc"
+	logger_path = "Main.Mc"
 	tableName  = "MangaItems"
-	pluginName = "None"
-	tableKey   = "None"
-	pluginType = 'Utility'
+	is_manga   = True
+	plugin_name = "None"
+	plugin_key   = "None"
+	plugin_type = 'Utility'
 
 
 class HCleaner(CleanerBase):
-	loggerPath = "Main.Hc"
-	tableName  = "HentaiItems"
-	pluginName = "None"
-	tableKey   = "None"
-	pluginType = 'Utility'
-	shouldCanonize = False
+	logger_path = "Main.Hc"
+	is_manga   = False
+	plugin_name = "None"
+	plugin_key   = "None"
+	plugin_type = 'Utility'
 
-
-	def __process_raw_row(self, row_raw):
-
-		row = row_raw.decode("utf-8")
-		rowitems = row.split("\t")
-
-		if len(rowitems) == 21:
-			# ExHentaiArch item.
-			dbid, dlstate, sourceurl, retreivaltime, lastupdate, sourceid, seriesname, filename, originname, \
-				downloadpath, flags, tags, note, lastchanged, filesize, numcontents, rawname, fetcherrors, \
-				rating, gpcost, updatestate = rowitems
-			try:
-				self.addTags(sourceUrl=sourceurl, tags=tags)
-				print("Updated for ExArch URL: ", sourceurl)
-			except ValueError:
-				print("Skipping row")
-
-		elif len(rowitems) == 14:
-			# ExHentaiArch item.
-			dbid, sourcesite, dlstate, sourceurl, retreivaltime, lastupdate, sourceid, seriesname, filename, \
-				originname, downloadpath, flags, tags, note = rowitems
-			try:
-				self.addTags(sourceUrl=sourceurl, tags=tags)
-				print("Updated for History URL: ", sourceurl)
-			except ValueError:
-				print("Skipping row")
-
-		elif len(rowitems) == 17:
-			pass
-
-		else:
-			print("row_raw", row_raw)
-			print("rowitems", rowitems)
-
-
-
-	def reprocess_from_db_bak(self, bakfile):
-		self.log.info("Opening file %s", bakfile)
-		zfile = gzip.open(bakfile, mode='r')
-		self.log.info("File open")
-		lineproc = 0
-		for line in zfile:
-			lineproc += 1
-			if b'/H/MangaCMS/' in line:
-				tabs = line.count(b'\t')
-				if tabs != 9:
-					self.__process_raw_row(line)
-			if lineproc % 250000 == 0:
-				self.log.info("Processed %s lines", lineproc)
 
 if __name__ == "__main__":
-	import MangaCMSOld.lib.logSetup
-	MangaCMSOld.lib.logSetup.initLogging()
+	import MangaCMS.lib.logSetup
+	MangaCMS.lib.logSetup.initLogging()
