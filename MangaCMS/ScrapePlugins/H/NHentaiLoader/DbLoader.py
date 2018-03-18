@@ -88,6 +88,10 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 			self.log.info("Yaoi item. Skipping.")
 			return None
 
+
+		if not self.wanted_from_tags(ret['tags']):
+			return None
+
 		titleTd = containerDiv.find("div", class_='caption')
 		ret['origin_name'] = titleTd.get_text().strip()
 

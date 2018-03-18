@@ -153,6 +153,9 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 		series_meta = self.getInfo(soup)
 
+		if not self.wanted_from_tags(series_meta['tags']):
+			return None
+
 		chap_list = soup.find("ul", class_='nav-chapters')
 
 		if not chap_list:

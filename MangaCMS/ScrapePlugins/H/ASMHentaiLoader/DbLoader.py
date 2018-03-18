@@ -144,7 +144,8 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 		if "yaoi" in ret["tags"]:
 			self.log.info("Yaoi item. Skipping.")
 			return None
-
+		if not self.wanted_from_tags(ret['tags']):
+			return None
 		return ret
 
 

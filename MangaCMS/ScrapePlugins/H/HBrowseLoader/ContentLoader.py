@@ -137,6 +137,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		title, category, tags = self.getCategoryTags(soup)
 
 
+		if not self.wanted_from_tags(tags):
+			raise MangaCMS.ScrapePlugins.RetreivalBase.UnwantedContentError()
+
 		with self.row_context(dbid=link_row_id) as row:
 			self.update_tags(tags, row=row)
 

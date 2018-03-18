@@ -124,7 +124,6 @@ class MangaScraperDbMixin(MangaCMS.lib.LogMixin.LoggerMixin):
 
 class MangaScraperBase(MangaScraperDbMixin, MangaCMS.lib.LogMixin.LoggerMixin, MangaCMS.lib.MonitorMixin.MonitorMixin):
 
-
 	def wanted_from_tags(self, tags):
 
 		# Skip anything containing a skip tag and not also one of the

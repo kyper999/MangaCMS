@@ -24,8 +24,6 @@ import WebRequest
 import MangaCMS.cleaner.processDownload
 import MangaCMS.ScrapePlugins.RetreivalBase
 
-class UnwantedContentError(RuntimeError):
-	pass
 class PageContentError(RuntimeError):
 	pass
 
@@ -122,12 +120,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		except Exception:
 			import pdb; pdb.set_trace()
 
-		for skipTag in settings.skipTags:
-			if skipTag in tagStr:
-				errtxt = "Skipped tag '%s' in tags '%s'. Do not want." % (skipTag, tagStr)
-				self.log.info(errtxt)
-				raise UnwantedContentError(errtxt)
 
+		if not self.wanted_from_tags(ret['tags']):
+			raise MangaCMS.ScrapePlugins.RetreivalBase.UnwantedContentError()
 
 		ret = {
 			'artist'        : artist,
@@ -225,13 +220,6 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		except WebRequest.WebGetException:
 			self.log.info("WebRequest.WebGetException for item ID: %s", link_row_id)
-			with self.row_context(dbid=link_row_id) as row:
-				row.state = 'error'
-				row.err_str = traceback.format_exc()
-			return False
-
-		except UnwantedContentError:
-			self.log.info("UnwantedContentError for item ID: %s", link_row_id)
 			with self.row_context(dbid=link_row_id) as row:
 				row.state = 'error'
 				row.err_str = traceback.format_exc()

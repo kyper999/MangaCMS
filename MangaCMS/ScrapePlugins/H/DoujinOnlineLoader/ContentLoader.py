@@ -144,12 +144,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		ret['title']    = self.getFileName(infoSection)
 		ret['tags']     = []
 
-
-		if tags:
-			self.log.info("Adding tag info %s", tags)
-			ret['tags'] = tags
-
-
+		if not self.wanted_from_tags(ret['tags']):
+			raise MangaCMS.ScrapePlugins.RetreivalBase.UnwantedContentError()
 
 
 		return ret
