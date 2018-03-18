@@ -18,7 +18,7 @@ import runStatus
 import nameTools as nt
 
 import MangaCMS.cleaner.processDownload
-import MangaCMS.ScrapePlugins.MangaScraperDbBase
+import MangaCMS.ScrapePlugins.MangaScraperBase
 import MangaCMS.ScrapePlugins.ScrapeExceptions as ScrapeExceptions
 
 def hash_file(filepath):
@@ -90,7 +90,7 @@ def prep_check_fq_filename(fqfilename):
 	return fqfilename
 
 
-class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
+class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 
 	# Abstract class (must be subclassed)
 	__metaclass__ = abc.ABCMeta

@@ -22,8 +22,7 @@ import MangaCMS.db as mdb
 import MangaCMS.lib.LogMixin
 import MangaCMS.lib.MonitorMixin
 
-
-class MangaScraperDbBase(MangaCMS.lib.LogMixin.LoggerMixin, MangaCMS.lib.MonitorMixin.MonitorMixin):
+class MangaScraperDbMixin(MangaCMS.lib.LogMixin.LoggerMixin):
 
 
 	@abc.abstractmethod
@@ -120,6 +119,25 @@ class MangaScraperDbBase(MangaCMS.lib.LogMixin.LoggerMixin, MangaCMS.lib.Monitor
 	# ---------------------------------------------------------------------------------------------------------------------------------------------------------
 	# DB Tools
 	# ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+class MangaScraperBase(MangaScraperDbMixin, MangaCMS.lib.LogMixin.LoggerMixin, MangaCMS.lib.MonitorMixin.MonitorMixin):
+
+
+	def wanted_from_tags(self, tags):
+
+		# Skip anything containing a skip tag and not also one of the
+		# keep tags.
+		if any([skip_tag in tags for skip_tag in settings.skipTags]) and \
+				not any([keep_tags in tags for keep_tags in settings.tags_keep]):
+
+			self.log.info("Masked item tag (%s). Skipping.", [skip_tag for skip_tag in settings.skipTags if skip_tag in tags])
+			return False
+
+		return True
+
+
 
 
 if __name__ == "__main__":

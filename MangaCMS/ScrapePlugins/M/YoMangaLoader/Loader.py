@@ -66,7 +66,7 @@ class Loader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase,
 
 		target_dir, new_dir = self.locateOrCreateDirectoryForSeries(seriesName)
 		with self.row_context(url=dlurl) as row:
-			row.dirstate = 'new_dir' if new_dir else 'had_dir'
+			row.dirstate = 'created_dir' if new_dir else 'had_dir'
 			row.origin_name = fname
 
 

@@ -7,7 +7,7 @@ import hashlib
 import settings
 import runStatus
 import deduplicator.archChecker
-import MangaCMS.ScrapePlugins.MangaScraperDbBase
+import MangaCMS.ScrapePlugins.MangaScraperBase
 import MangaCMS.cleaner.archCleaner as ac
 import UploadPlugins.Madokami.uploader as up
 
@@ -21,7 +21,7 @@ NEGATIVE_KEYWORDS = [
 ]
 
 
-class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
+class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 
 	plugin_name = 'Download Processor'
 

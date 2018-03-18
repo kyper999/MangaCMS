@@ -8,10 +8,10 @@ import WebRequest
 
 import settings
 import nameTools as nt
-import MangaCMS.ScrapePlugins.MangaScraperDbBase
+import MangaCMS.ScrapePlugins.MangaScraperBase
 
 
-class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
+class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 
 	@abc.abstractmethod
 	def get_feed(self):
@@ -104,19 +104,6 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperDbBase.MangaScraperDbBase):
 		self.log.info( "Done (%s new items, %s total)", newItems, len(linksDicts))
 
 		return newItems
-
-	def wanted_from_tags(self, tags):
-
-		# Skip anything containing a skip tag and not also one of the
-		# keep tags.
-		if any([skip_tag in tags for skip_tag in settings.skipTags]) and \
-				not any([keep_tags in tags for keep_tags in settings.tags_keep]):
-
-			self.log.info("Masked item tag (%s). Skipping.", [skip_tag for skip_tag in settings.skipTags if skip_tag in tags])
-			return False
-
-		return True
-
 
 	def do_fetch_feeds(self, *args, **kwargs):
 		self._resetStuckItems()

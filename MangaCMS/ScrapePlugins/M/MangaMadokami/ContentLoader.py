@@ -81,7 +81,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		target_dir, new_dir = self.locateOrCreateDirectoryForSeries(seriesName)
 		with self.row_context(dbid=link_row_id) as row:
-			row.dirstate = 'new_dir' if new_dir else 'had_dir'
+			row.dirstate = 'created_dir' if new_dir else 'had_dir'
 
 		sourceUrl, originFileName = source_url, originName
 
