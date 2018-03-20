@@ -239,6 +239,9 @@ def clean_japanese_only():
 def clean_yaoi_only():
 	cleaner = utilities.cleanDb.HCleaner('None')
 	cleaner.cleanYaoiOnly()
+def sync_h_file_tags():
+	cleaner = utilities.cleanDb.HCleaner('None')
+	cleaner.syncHFileTags()
 def aggregate_crosslinks():
 	cleaner = utilities.cleanDb.HCleaner('None')
 	cleaner.aggregateCrossLinks()
@@ -437,6 +440,7 @@ single_arg_funcs = {
 	"reprocess_damaged"       : reprocess_damaged,
 	"fix_present_files"       : fix_present_files,
 	"delete_null_rows"        : delete_null_rows,
+	"sync_h_file_tags"        : sync_h_file_tags,
 
 }
 

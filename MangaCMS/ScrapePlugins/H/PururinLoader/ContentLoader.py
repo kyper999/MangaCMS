@@ -175,7 +175,6 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		if not self.wanted_from_tags(tags):
 			raise MangaCMS.ScrapePlugins.RetreivalBase.UnwantedContentError()
 
-
 		with self.row_context(dbid=row_id) as row:
 			if tags:
 				self.update_tags(tags, row=row)

@@ -85,6 +85,21 @@ class MangaScraperDbMixin(MangaCMS.lib.LogMixin.LoggerMixin):
 
 			yield (row_q.scalar(), sess)
 
+	@contextlib.contextmanager
+	def file_row_context(self, *args, **kwargs):
+		with self.file_row_sess_context(*args, **kwargs) as row_tup:
+			row, _ = row_tup
+			yield row
+
+	@contextlib.contextmanager
+	def file_row_sess_context(self, dbid, commit=True):
+
+		with self.db.session_context(commit=commit) as sess:
+			row_q = sess.query(self.db.ReleaseFile).filter(self.db.ReleaseFile.id == dbid)
+
+
+			yield (row_q.scalar(), sess)
+
 	def update_tags(self, tags, row=None, dbid=None, url=None):
 		assert isinstance(tags, (list, tuple)), "Tags must be a list or tuple"
 
@@ -130,11 +145,60 @@ class MangaScraperBase(MangaScraperDbMixin, MangaCMS.lib.LogMixin.LoggerMixin, M
 
 		# Skip anything containing a skip tag and not also one of the
 		# keep tags.
-		if any([skip_tag in str(tags) for skip_tag in settings.skipTags]) and \
-				not any([keep_tags in str(tags) for keep_tags in settings.tags_keep]):
+		have_keep_tags = any(
+				[
+						    keep_tags in tag
+						and tag != 'female-none'
+						and tag != 'schoolgirl'
+						and tag != 'tomgirl'
+						and tag != 'position-cowgirl'
+						and tag != 'schoolgirl-uniform'
+						and not tag.lower().startswith('artist-')
+						and not tag.lower().startswith('fetish-')
+						and not tag.lower().startswith('male-')
+						and not tag.lower().startswith("parody-")
+					for
+						tag
+					in
+						tags
+					for
+						keep_tags
+					in
+						settings.tags_keep
+				]
+			)
+		have_skip_tags = any([skip_tag in str(tags) for skip_tag in settings.skipTags])
 
-			self.log.info("Masked item tag (%s).", [skip_tag for skip_tag in settings.skipTags if skip_tag in tags])
+		if have_skip_tags and not have_keep_tags:
+			self.log.warning("Masked item tag (%s).", [skip_tag for skip_tag in settings.skipTags if skip_tag in tags])
+			self.log.warning("All item tag (%s).", [skip_tag for skip_tag in settings.skipTags])
 			return False
+
+		# print()
+		# self.log.info("Masked from tags: %s", [skip_tag for skip_tag in settings.skipTags if skip_tag in tags])
+		# self.log.info("Keep tags: %s", [
+		# 				tag
+		# 			for
+		# 				tag
+		# 			in
+		# 				tags
+		# 			for
+		# 				keep_tags
+		# 			in
+		# 				settings.tags_keep
+		# 			if
+		# 				    keep_tags in tag
+		# 				and tag != 'female-none'
+		# 				and tag != 'schoolgirl'
+		# 				and tag != 'tomgirl'
+		# 				and tag != 'position-cowgirl'
+		# 				and tag != 'schoolgirl-uniform'
+		# 				and not tag.lower().startswith('artist-')
+		# 				and not tag.lower().startswith('fetish-')
+		# 				and not tag.lower().startswith('male-')
+		# 				and not tag.lower().startswith("parody-")
+		# 	])
+		# self.log.info("All tags: %s", tags)
 
 		return True
 

@@ -6,6 +6,7 @@ import sys
 import tqdm
 import gzip
 import json
+import datetime
 import time
 
 import MangaCMS.lib.logSetup
@@ -24,6 +25,7 @@ import settings
 import hashlib
 
 from sqlalchemy import or_
+from sqlalchemy.orm import joinedload
 
 import MangaCMS.cleaner.processDownload
 import MangaCMS.ScrapePlugins.MangaScraperBase
@@ -172,18 +174,17 @@ class CleanerBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 		self.log.info("")
 		self.log.info("Found %s items to examine", len(releases))
 
+		releases = list(releases)
+		releases.sort(reverse=True)
 
 		for relid in tqdm.tqdm(releases):
 			with self.row_sess_context(dbid=relid, limit_by_plugin=False) as (row, sess):
 
 				if not row:
 					continue
-
-				tags = set(row.tags)
-				if not row.fileid:
-					if not self.wanted_from_tags(tags):
-						sess.delete(row)
+				if row.last_checked < datetime.datetime.now() - datetime.timedelta(days=7):
 					continue
+
 
 
 				ftags = set(row.file.hentai_tags)
@@ -192,11 +193,46 @@ class CleanerBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 					for tag in a_row.tags:
 						atags.add(tag)
 
+
 				if not self.wanted_from_tags(atags):
 					self.log.info("Deleting %s series release rows with tags: %s", len(row.file.hentai_releases), atags)
 					for bad_rel in row.file.hentai_releases:
 						sess.delete(bad_rel)
 					sess.delete(row.file)
+
+					fqp = os.path.join(row.file.dirpath, row.file.filename)
+					self.log.info("Deleting file: '%s'", fqp)
+					os.unlink(fqp)
+
+	def syncHFileTags(self):
+		with self.db.session_context() as sess:
+			file_rows = sess.query(self.db.ReleaseFile.id).all()
+
+		file_rows.sort(reverse=True)
+
+		for relid, in tqdm.tqdm(file_rows):
+
+			with self.db.session_context(commit=True) as sess:
+				row_q = sess.query(self.db.ReleaseFile)     \
+					.options(joinedload("hentai_releases")) \
+					.filter(self.db.ReleaseFile.id == relid)
+
+				row = row_q.one()
+
+
+				atags = set()
+				for a_row in row.hentai_releases:
+					for tag in a_row.tags:
+						atags.add(tag)
+
+				missing = set()
+				for tag in atags:
+					if tag not in row.hentai_tags:
+						row.hentai_tags.add(tag)
+						missing.add(tag)
+
+				if missing:
+					self.log.info("Missing tags from row %s -> %s", row.id, missing)
 
 
 
