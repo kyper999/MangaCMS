@@ -90,9 +90,6 @@ def prep_check_fq_filename(fqfilename):
 	return fqfilename
 
 
-class UnwantedContentError(RuntimeError):
-	pass
-
 class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 
 	# Abstract class (must be subclassed)
@@ -248,8 +245,8 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 				row.state = 'new'
 			raise
 
-		except UnwantedContentError:
-			self.log.info("Row is unwanted? Deleting")
+		except ScrapeExceptions.UnwantedContentError:
+			self.log.info("Row is unwanted! Deleting")
 			with self.row_sess_context(dbid=link_row_id) as row_tup:
 				row, sess = row_tup
 				sess.delete(row)

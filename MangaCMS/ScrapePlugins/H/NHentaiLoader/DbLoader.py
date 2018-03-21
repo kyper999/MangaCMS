@@ -77,17 +77,10 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 			if row and not retag:
 				return
 
-
 		ret = {
 			'source_id' : item_url
 		}
 		ret.update(self.getInfo(item_url))
-
-		# Yaoi isn't something I'm that in to.
-		if "guys-only" in ret["tags"] or "males-only" in ret['tags']:
-			self.log.info("Yaoi item. Skipping.")
-			return None
-
 
 		if not self.wanted_from_tags(ret['tags']):
 			return None

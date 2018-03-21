@@ -115,11 +115,6 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		artist = ",".join(aList)
 
-
-
-		if not self.wanted_from_tags(tagList):
-			raise MangaCMS.ScrapePlugins.RetreivalBase.UnwantedContentError()
-
 		ret = {
 			'artist'        : artist,
 			'dirPath'       : dirPath,

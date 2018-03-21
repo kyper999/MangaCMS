@@ -156,11 +156,6 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		category, tags, artist = self.getCategoryTags(gal_section)
 
-
-		if not self.wanted_from_tags(tags):
-			raise MangaCMS.ScrapePlugins.RetreivalBase.UnwantedContentError()
-
-
 		ret = {}
 
 		ret['artist']       = artist

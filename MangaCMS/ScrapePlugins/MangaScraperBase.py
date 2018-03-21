@@ -21,6 +21,7 @@ import nameTools as nt
 import MangaCMS.db as mdb
 import MangaCMS.lib.LogMixin
 import MangaCMS.lib.MonitorMixin
+import MangaCMS.ScrapePlugins.ScrapeExceptions
 
 class MangaScraperDbMixin(MangaCMS.lib.LogMixin.LoggerMixin):
 
@@ -100,21 +101,6 @@ class MangaScraperDbMixin(MangaCMS.lib.LogMixin.LoggerMixin):
 
 			yield (row_q.scalar(), sess)
 
-	def update_tags(self, tags, row=None, dbid=None, url=None):
-		assert isinstance(tags, (list, tuple)), "Tags must be a list or tuple"
-
-		assert all([len(tag) >= 2 for tag in tags]), "All tags must be at least one character long. Bad tags: %s" % [tag for tag in tags if len(tag) < 2]
-		assert all([len(tag) < 90 for tag in tags]), "All tags must be less then 90 characters long. Bad tags: %s" % [(tag, len(tag)) for tag in tags if len(tag) >= 90]
-		if row:
-			for tag in tags:
-				row.tags.add(tag)
-		elif dbid or url:
-			with self.row_context(dbid=dbid, url=url) as row_c:
-				for tag in tags:
-					if not tag in row.tags:
-						row_c.tags.add(tag)
-		else:
-			raise RuntimeError("You need to pass a filter parameter (row, dbid, url) to update_tags()")
 
 
 	def _resetStuckItems(self):
@@ -140,6 +126,28 @@ class MangaScraperDbMixin(MangaCMS.lib.LogMixin.LoggerMixin):
 
 
 class MangaScraperBase(MangaScraperDbMixin, MangaCMS.lib.LogMixin.LoggerMixin, MangaCMS.lib.MonitorMixin.MonitorMixin):
+
+	def update_tags(self, tags, row=None, dbid=None, url=None):
+		assert isinstance(tags, (list, tuple)), "Tags must be a list or tuple"
+
+		assert all([len(tag) >= 2 for tag in tags]), "All tags must be at least one character long. Bad tags: %s" % [tag for tag in tags if len(tag) < 2]
+		assert all([len(tag) < 90 for tag in tags]), "All tags must be less then 90 characters long. Bad tags: %s" % [(tag, len(tag)) for tag in tags if len(tag) >= 90]
+		if row:
+			for tag in tags:
+				row.tags.add(tag)
+			row_tags = list(row.tags)
+		elif dbid or url:
+			with self.row_context(dbid=dbid, url=url) as row_c:
+				for tag in tags:
+					if not tag in row.tags:
+						row_c.tags.add(tag)
+				row_tags = list(row_c.tags)
+		else:
+			raise RuntimeError("You need to pass a filter parameter (row, dbid, url) to update_tags()")
+
+		# Filter against tags.
+		if not self.wanted_from_tags(row_tags):
+			raise MangaCMS.ScrapePlugins.ScrapeExceptions.UnwantedContentError()
 
 	def wanted_from_tags(self, tags):
 

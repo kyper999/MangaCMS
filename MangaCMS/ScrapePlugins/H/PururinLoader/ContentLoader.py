@@ -172,8 +172,6 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		ret["s_page"] = spage
 
-		if not self.wanted_from_tags(tags):
-			raise MangaCMS.ScrapePlugins.RetreivalBase.UnwantedContentError()
 
 		with self.row_context(dbid=row_id) as row:
 			if tags:

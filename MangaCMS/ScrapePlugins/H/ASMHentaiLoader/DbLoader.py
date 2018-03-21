@@ -140,12 +140,9 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 		ret.update(self.getInfo(ret['source_id']))
 
-		# Yaoi isn't something I'm that in to.
-		if "yaoi" in ret["tags"]:
-			self.log.info("Yaoi item. Skipping.")
-			return None
 		if not self.wanted_from_tags(ret['tags']):
 			return None
+
 		return ret
 
 
