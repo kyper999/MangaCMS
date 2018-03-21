@@ -217,22 +217,23 @@ class CleanerBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 					.options(joinedload("hentai_releases")) \
 					.filter(self.db.ReleaseFile.id == relid)
 
-				row = row_q.one()
+				row = row_q.scalar()
+				if row:
 
 
-				atags = set()
-				for a_row in row.hentai_releases:
-					for tag in a_row.tags:
-						atags.add(tag)
+					atags = set()
+					for a_row in row.hentai_releases:
+						for tag in a_row.tags:
+							atags.add(tag)
 
-				missing = set()
-				for tag in atags:
-					if tag not in row.hentai_tags:
-						row.hentai_tags.add(tag)
-						missing.add(tag)
+					missing = set()
+					for tag in atags:
+						if tag not in row.hentai_tags:
+							row.hentai_tags.add(tag)
+							missing.add(tag)
 
-				if missing:
-					self.log.info("Missing tags from row %s -> %s", row.id, missing)
+					if missing:
+						self.log.info("Missing tags from row %s -> %s", row.id, missing)
 
 
 

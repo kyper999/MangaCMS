@@ -115,13 +115,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		artist = ",".join(aList)
 
-		try:
-			tagStr = " ".join(tagList)
-		except Exception:
-			import pdb; pdb.set_trace()
 
 
-		if not self.wanted_from_tags(ret['tags']):
+		if not self.wanted_from_tags(tagList):
 			raise MangaCMS.ScrapePlugins.RetreivalBase.UnwantedContentError()
 
 		ret = {
