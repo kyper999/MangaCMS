@@ -118,7 +118,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		ret = []
 
 		for td in linkTds:
-			ret.append(td.a['href'])
+			url = urllib.parse.urljoin(self.urlBase, td.a['href'])
+			ret.append(url)
 
 		return ret
 
@@ -172,8 +173,6 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			# get a random dict element where downloadstate = 0
 			thisPage = list(toFetch.keys())[list(toFetch.values()).index(0)]
 
-			thisPage = urllib.parse.urljoin(self.urlBase, thisPage)
-
 			soup = self.wg.getSoup(thisPage, addlHeaders={'Referer': linkDict["sourceUrl"]})
 
 			imageTd = soup.find('td', class_='pageImage')
@@ -196,6 +195,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 			nextPageLink = imageTd.a['href']
 
+			nextPageLink = urllib.parse.urljoin(self.urlBase, nextPageLink)
+
 
 			# Block any cases where the next page url is higher then
 			# the baseURLs, so that we don't fetch links back up the
@@ -204,6 +205,10 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 				if not nextPageLink in toFetch:
 					toFetch[nextPageLink] = 0
+				else:
+					print("Already fetched %s" % nextPageLink)
+			else:
+				print("Not adding %s to fetch queue" % nextPageLink)
 
 			if nextPageLink in visited:
 				bad += 1
@@ -230,6 +235,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			with self.row_context(dbid=link_row_id) as row:
 				row.state = 'error'
 			return False
+
+		assert len(images) > 2
 
 		with self.row_sess_context(dbid=link_row_id) as row_tup:
 			row, sess = row_tup
