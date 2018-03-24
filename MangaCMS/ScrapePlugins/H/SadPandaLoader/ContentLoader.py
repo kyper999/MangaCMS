@@ -20,6 +20,7 @@ random.seed()
 from . import LoginMixin
 import MangaCMS.cleaner.processDownload
 import MangaCMS.ScrapePlugins.RetreivalBase
+import MangaCMS.ScrapePlugins.ScrapeExceptions as ScrapeExceptions
 
 class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase, LoginMixin.ExLoginMixin):
 
@@ -277,6 +278,14 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase, LoginMix
 
 			return True
 
+
+		except ScrapeExceptions.UnwantedContentError:
+			self.log.info("Row is unwanted! Deleting")
+			with self.row_sess_context(dbid=link_row_id) as row_tup:
+				row, sess = row_tup
+				sess.delete(row)
+			return False
+			
 		except WebRequest.WebGetException:
 
 			self.log.error("Failure retrieving content for link %s", link_row_id)
