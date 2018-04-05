@@ -25,6 +25,7 @@ import settings
 import hashlib
 
 from sqlalchemy import or_
+from sqlalchemy import desc
 from sqlalchemy.orm import joinedload
 
 import MangaCMS.cleaner.processDownload
@@ -234,6 +235,23 @@ class CleanerBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 
 					if missing:
 						self.log.info("Missing tags from row %s -> %s", row.id, missing)
+
+
+	def refetch_missing_tags(self):
+		with self.db.session_context() as sess:
+			self.log.info("Loading from DB with join")
+			file_rows = sess.query(self.db.HentaiReleases) \
+				.order_by(desc(self.db.HentaiReleases.id)) \
+				.options(joinedload('tags_rel')) \
+				.all()
+
+			self.log.info("Rows loaded. Processing.")
+
+			for row in tqdm.tqdm(file_rows):
+				if row.state != 'new' and not row.tags:
+					print(row, row.source_site, row.tags)
+					row.state = 'new'
+					sess.commit()
 
 
 

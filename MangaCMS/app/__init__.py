@@ -434,12 +434,12 @@ def merge_dicts(*args):
 
 def tag_tag(in_tag):
 
-	for want_str in settings.tagHighlight:
-		if want_str in in_tag:
-			return "<b>", "</b>"
 	for unwanted_str in settings.tagNegativeHighlight:
 		if unwanted_str in in_tag:
 			return "<strike>", "</strike>"
+	for want_str in settings.tagHighlight:
+		if want_str in in_tag:
+			return "<b>", "</b>"
 
 	return "", ""
 

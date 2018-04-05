@@ -9,6 +9,7 @@ import WebRequest
 import settings
 import nameTools as nt
 import MangaCMS.ScrapePlugins.MangaScraperBase
+import MangaCMS.ScrapePlugins.ScrapeExceptions as ScrapeExceptions
 
 
 class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
@@ -95,8 +96,11 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 					if newItems % 10000 == 0:
 						self.log.info("Added %s rows, doing incremental commit!", newItems)
 						sess.commit()
-
-				self.update_tags(tags=tags, row=have)
+				try:
+					self.update_tags(tags=tags, row=have)
+				except ScrapeExceptions.UnwantedContentError:
+					self.log.info("How does something have masked tags on insertion?")
+					sess.delete(have)
 
 		if self.mon_con:
 			self.mon_con.incr('new_links', newItems)

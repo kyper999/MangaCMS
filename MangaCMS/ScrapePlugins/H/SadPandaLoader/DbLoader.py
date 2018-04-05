@@ -46,6 +46,7 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase, LoginMixin.ExLoginM
 		if not pageOverride:
 			pageOverride = 0  # Pages start at zero. Yeah....
 		try:
+			# tag = tag.replace(" ", "+")
 			tag = urllib.parse.quote_plus(tag)
 			pageUrl = self.urlFeed.format(search=tag, num=pageOverride)
 			if includeExpunge:

@@ -488,15 +488,15 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 					fext = mimetypes.guess_extension(mtype)
 					if fext == '.jpe':
 						fext = ".jpg"
-					if fext == '.jpeg':
-						fext = ".jpg"
+					if ext == '.jpeg':
+						ext = ".jpg"
 
 					if not ext:
 						self.log.warning("Missing extension in archive file: %s", imageName)
 						self.log.warning("Appending guessed file-extension %s", fext)
 						imageName += fext
 					elif fext != ext:
-						self.log.warning("Archive file extension mismatches guessed extension: %s", (imageName, ext))
+						self.log.warning("Archive file extension %s mismatches guessed extension: %s", (imageName, ext), fext)
 						self.log.warning("Appending guessed file-extension %s", fext)
 						imageName += fext
 

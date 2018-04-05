@@ -242,6 +242,9 @@ def clean_yaoi_only():
 def sync_h_file_tags():
 	cleaner = utilities.cleanDb.HCleaner('None')
 	cleaner.syncHFileTags()
+def refetch_missing_tags():
+	cleaner = utilities.cleanDb.HCleaner('None')
+	cleaner.refetch_missing_tags()
 def aggregate_crosslinks():
 	cleaner = utilities.cleanDb.HCleaner('None')
 	cleaner.aggregateCrossLinks()
@@ -441,6 +444,7 @@ single_arg_funcs = {
 	"fix_present_files"       : fix_present_files,
 	"delete_null_rows"        : delete_null_rows,
 	"sync_h_file_tags"        : sync_h_file_tags,
+	"refetch_missing_tags"    : refetch_missing_tags,
 
 }
 

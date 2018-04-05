@@ -142,7 +142,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		ret['tags']     = tags
 		ret['artist']   = artist
 		ret['title']    = self.getFileName(infoSection)
-		ret['tags']     = []
+		ret['tags']     = tags
 
 		return ret
 
@@ -209,6 +209,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 			with self.row_context(dbid=link_row_id) as row:
+				assert dl_info['tags']
 				self.update_tags(dl_info['tags'], row=row)
 
 				row.series_name = dl_info['category']
