@@ -325,7 +325,15 @@ def generate_row_meta(row):
 	toolTip += "rowId: " + str(row.id) + "<br>"
 	toolTip += "sourceUrl: " + row.source_id + "<br>"
 	toolTip += "dlState: " + str(row.state) + "<br>"
-	toolTip += "Flags: " + str([row.deleted, row.was_duplicate, row.phash_duplicate, row.uploaded, row.dirstate]) + "<br>"
+	toolTip += "Flags: " + str(
+			{
+				'deleted'         : row.deleted,
+				'was_duplicate'   : row.was_duplicate,
+				'phash_duplicate' : row.phash_duplicate,
+				'uploaded'        : row.uploaded,
+				'dirstate'        : row.dirstate
+			}
+		) + "<br>"
 	toolTip += "item tags: " + str([tag for tag in row.tags]) + "<br>"
 	if row.file:
 		toolTip += "file manga tags: " + str([tag for tag in row.file.manga_tags]) + "<br>"
@@ -361,6 +369,13 @@ def generate_hentai_meta(row):
 	category_name = row.series_name if row.series_name else ""
 
 
+	# print("Listing sources")
+	# source_sites = [row.source_site for row in row.file.hentai_releases]
+	# for other_src in row.file.hentai_releases:
+	# 	print("Other src:", other_src)
+
+	ret['other_rows'] = [row for row in row.file.hentai_releases]
+	ret['unique_series'] = list(set([tmp.series_name for tmp in ret['other_rows']]))
 	if row.state == 'complete':
 		ret['statusColour'] = colours["Done"]
 	elif row.state == 'fetching' or row.state == 'processing':
@@ -394,16 +409,24 @@ def generate_hentai_meta(row):
 		ret['file-tags'] = []
 
 	toolTip  = filePath.replace('"', "") + "<br>"
-	toolTip += "Origin Name: " + row.origin_name.replace('"', "") + "<br>"
-	toolTip += "Category Name: " + category_name.replace('"', "") + "<br>"
-	toolTip += "rowId: " + str(row.id) + "<br>"
-	toolTip += "sourceUrl: " + row.source_id + "<br>"
-	toolTip += "dlState: " + str(row.state) + "<br>"
-	toolTip += "Flags: " + str([row.deleted, row.was_duplicate, row.phash_duplicate, row.uploaded, row.dirstate]) + "<br>"
+	toolTip += "Origin Name: " + ", ".join([srow.origin_name.replace('"', "") for srow in ret['other_rows']]) + "<br>"
+	toolTip += "Category Name: " + ", ".join([(srow.series_name if srow.series_name else "").replace('"', "") for srow in ret['other_rows']]) + "<br>"
+	toolTip += "rowId: " + str([srow.id for srow in ret['other_rows']]) + "<br>"
+	toolTip += "sourceUrl: " + str([srow.source_id for srow in ret['other_rows']]) + "<br>"
+	toolTip += "dlState: " + str([srow.state for srow in ret['other_rows']]) + "<br>"
+	toolTip += "Flags: " + str(
+			{
+				'deleted'         : row.deleted,
+				'was_duplicate'   : row.was_duplicate,
+				'phash_duplicate' : row.phash_duplicate,
+				'uploaded'        : row.uploaded,
+				'dirstate'        : row.dirstate
+			}
+		) + "<br>"
 	toolTip += "item tags: " + str(ret['item-tags']) + "<br>"
 	if row.file:
 		toolTip += "file hentai tags: " + str(ret['file-tags']) + "<br>"
-	toolTip += "Source: " + str(row.source_site) + "<br>"
+	toolTip += "Source: " + str([row.source_site for row in ret['other_rows']]) + "<br>"
 
 	ret['cellId'] = None
 	if filePath and path_is_valid:

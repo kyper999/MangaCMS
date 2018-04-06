@@ -27,6 +27,7 @@ import hashlib
 from sqlalchemy import or_
 from sqlalchemy import desc
 from sqlalchemy.orm import joinedload
+import sqlalchemy.exc
 
 import MangaCMS.cleaner.processDownload
 import MangaCMS.ScrapePlugins.MangaScraperBase
@@ -248,11 +249,23 @@ class CleanerBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 			self.log.info("Rows loaded. Processing.")
 
 			for row in tqdm.tqdm(file_rows):
-				if row.state != 'new' and not row.tags:
-					print(row, row.source_site, row.tags)
-					row.state = 'new'
-					sess.commit()
+				try:
+					if row.state != 'new' and not row.tags:
+						print(row, row.source_site, row.tags)
+						row.state = 'new'
+						sess.commit()
 
+				except sqlalchemy.exc.InvalidRequestError:
+					print("InvalidRequest error!")
+					sess.rollback()
+					traceback.print_exc()
+				except sqlalchemy.exc.OperationalError:
+					print("InvalidRequest error!")
+					sess.rollback()
+				except sqlalchemy.exc.IntegrityError:
+					print("[upsertRssItems] -> Integrity error!")
+					traceback.print_exc()
+					sess.rollback()
 
 
 	# # STFU, abstract base class

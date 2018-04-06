@@ -1,26 +1,53 @@
 
+{% macro render_pagination(pagination, url_for_param=None) %}
 
-{%- macro render_pagination(pagination, url_for_param=None) -%}
 	{%- set agg_dict = merge_dicts(request.args, kwargs) -%}
 
-	<div class=pagination>
-	{%- for page in pagination.iter_pages() -%}
-		{%- if page -%}
-			{% if page != pagination.page %}
-				{% if url_for_param %}
-					<a href="{{ url_for(url_for_param, page=page, **agg_dict) }}">{{ page }}</a>
-				{% else %}
-					<a href="{{ page }}">{{ page }}</a>
-				{% endif %}
+	<div class="text-center">
+		<ul class="pagination pagination-lg">
+
+			{% if pagination.has_prev %}
+				<li>
+					<a href="{{ url_for(request.endpoint, page=pagination.prev_num, **agg_dict) }}">&laquo;</a>
+				</li>
 			{% else %}
-				<strong>{{ page }}</strong>
+				  <li class="disabled"><a href="#">«</a></li>
 			{% endif %}
-		{%- else -%}
-			<span class=ellipsis>…</span>
-		{%- endif -%}
-	{%- endfor -%}
+
+			{%- for page in pagination.iter_pages() %}
+				{% if page %}
+					{% if page != pagination.page %}
+						<li>
+							{% if url_for_param %}
+								<a href="{{ url_for(url_for_param, page=page, **agg_dict) }}">{{ page }}</a>
+							{% else %}
+								<a href="{{ page }}">{{ page }}</a>
+							{% endif %}
+						</li>
+					{% else %}
+						<li class="disabled">
+							<span class="disabled"><strong>{{ page }}</strong></span>
+						</li>
+					{% endif %}
+				{% else %}
+					<li class="disabled">
+						<span class=ellipsis>…</span>
+					</li>
+				{% endif %}
+			{%- endfor %}
+
+			{% if pagination.has_next %}
+				<li>
+					<a href="{{ url_for(request.endpoint, page=pagination.next_num, **agg_dict) }}">&raquo;</a>
+					</li>
+			{% else %}
+				<li class="disabled"><a href="#">&raquo;</a></li>
+			{% endif %}
+
+		</ul>
 	</div>
-{%- endmacro -%}
+{% endmacro %}
+
 
 {%- macro createReaderLink(itemName, itemInfo) -%}
 	{%- if itemInfo == None or itemInfo["item"] == None -%}

@@ -4,6 +4,7 @@ from flask import render_template
 from flask import make_response
 from flask import request
 
+from sqlalchemy import or_
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.functions import max as sql_max
 from sqlalchemy.sql.expression import desc as sql_desc
@@ -63,19 +64,24 @@ def parse_table_args(**kwargs):
 
 	return filter_params
 
-def get_tag_id_for_tag(tag_table, tag_str):
-	have = g.session.query(tag_table).filter(tag_table.tag == tag_str).scalar()
-	if have:
-		return have.id
+def get_tags_for_tag_str(tag_table, tag_str):
+	have_tags = g.session.query(tag_table).filter(tag_table.tag.like("%{}%".format(tag_str))).all()
+	if have_tags:
+		return have_tags
 	else:
-		return -1
+		return [-1]
 
 
 def select_from_table(main_table, tag_table, link_table, page, site=False, filter_tags=None, filter_category=None):
 	params = parse_table_args(limit_by_source=site, filter_tags=filter_tags, filter_category=filter_category)
 
 	query = g.session.query(main_table) \
-				.options(joinedload("file"), joinedload("file.hentai_tags_rel"), joinedload("tags_rel"), )
+				.options(
+						joinedload("file"),
+						joinedload("file.hentai_tags_rel"),
+						joinedload("tags_rel"),
+						joinedload("file.hentai_releases"),
+					)
 
 	# query = query.join(tag_table)
 	query = query.join(db.ReleaseFile)
@@ -95,12 +101,18 @@ def select_from_table(main_table, tag_table, link_table, page, site=False, filte
 
 	if params['filter-tags']:
 		# query.join(tag_table, link_table.c.releases_id == main_table.id)
+		filters = []
+		params['resolved-filter-tags'] = []
 		for filter_tag in params['filter-tags']:
-			tag_id = get_tag_id_for_tag(tag_table, filter_tag)
-			print("Adding filter:", tag_table, tag_table.tag, filter_tag, tag_table.tag == filter_tag, tag_id)
-			query = query.filter(main_table.id.in_(
-					g.session.query(link_table.c.releases_id).filter(link_table.c.tags_id == tag_id)
-				))
+			tag_rows = get_tags_for_tag_str(tag_table, filter_tag)
+			print("Adding filter:", tag_table, tag_table.tag, filter_tag, tag_table.tag == filter_tag, tag_rows)
+			for tag_row in tag_rows:
+				filt = main_table.id.in_(
+						g.session.query(link_table.c.releases_id).filter(link_table.c.tags_id == tag_row.id)
+					)
+				filters.append(filt)
+			params['resolved-filter-tags'].append([tmp.tag for tmp in tag_rows])
+		query = query.filter(or_(*filters))
 
 	if params['distinct']:
 		query = query.distinct(main_table.series_name)             \

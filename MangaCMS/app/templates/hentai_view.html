@@ -61,11 +61,12 @@
 		</td>
 		<td bgcolor={{row_meta['locationColour']}} class="showHT" mouseovertext="{{row_meta['toolTip']}}"></td>
 		<td>
-			{%- if row.series_name != None  -%}
-				<a href="{{url_for('hentai_category_view', category=row.series_name, page=1) if row.series_name else "None"}}">{{row.series_name}}</a>
-			{%- else -%}
-				None
-			{%- endif -%}
+			{%- for category_name in row_meta['unique_series'] -%}
+				{%- if category_name != None  -%}
+					<a href="{{url_for('hentai_category_view', category=category_name, page=1)}}">{{category_name}}</a>
+					{{ "," if not loop.last }}
+				{%- endif -%}
+			{%- endfor -%}
 		</td>
 		<td>
 
