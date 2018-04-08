@@ -75,15 +75,18 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 	def getChaptersFromSeriesPage(self, soup):
 		sname = soup.find("h3", class_='panel-title').get_text(strip=True)
-		table = soup.find('div', id='chapters')
 
 		# import pdb
 		# pdb.set_trace()
 
 		items = []
-		for row in table.find_all("tr"):
+		for row in soup.find_all("tr"):
 			if not row.a:
 				continue  # Skip the table header row
+
+			# And any other rows
+			if not "chapter_" in row.get("id", ""):
+				continue
 
 			tds = row.find_all("td")
 			if len(tds) != 7:
@@ -164,10 +167,12 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 		while have_spages:
 			soup = self.wg.getSoup("https://mangadex.com/titles/{idx}".format(idx=idx))
 			idx += 100
-			main_div = soup.find("div", class_='table-responsive')
+			main_div = soup.find("div", class_='row')
 			tmp_list = []
 			if main_div:
-				for row in main_div.find_all("tr"):
+				divs = main_div.find_all("div", class_='col-sm-6')
+				self.log.info("Found %s series links")
+				for row in divs:
 					if row.a:
 						surl = urllib.parse.urljoin(self.urlBase, row.a['href'])
 						tmp_list.append(surl)
