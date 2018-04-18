@@ -26,12 +26,16 @@ def before_request():
 	g.session = database.session()
 
 
+# @app.teardown_appcontext
 @app.teardown_request
 def teardown_request(response):
+	print("Cloding request!")
 	try:
 		g.session.commit()
 	except Exception:
 		g.session.rollback()
+
+	g.session.close()
 
 	database.session.remove()
 

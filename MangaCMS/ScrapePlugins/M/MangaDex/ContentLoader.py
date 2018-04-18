@@ -23,7 +23,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	is_manga    = True
 
 
-	retreivalThreads = 4
+	retreivalThreads = 1
 	urlBase    = "https://mangadex.com/"
 
 

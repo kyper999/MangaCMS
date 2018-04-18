@@ -5,6 +5,7 @@ from flask import make_response
 from flask import request
 
 from sqlalchemy import or_
+from sqlalchemy import and_
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.functions import max as sql_max
 from sqlalchemy.sql.expression import desc as sql_desc
@@ -100,10 +101,12 @@ def select_from_table(main_table, tag_table, link_table, page, site=False, filte
 	print("params['filter-tags']", params['filter-tags'])
 
 	if params['filter-tags']:
+		all_filters = []
+	
 		# query.join(tag_table, link_table.c.releases_id == main_table.id)
-		filters = []
 		params['resolved-filter-tags'] = []
 		for filter_tag in params['filter-tags']:
+			filters = []
 			tag_rows = get_tags_for_tag_str(tag_table, filter_tag)
 			print("Adding filter:", tag_table, tag_table.tag, filter_tag, tag_table.tag == filter_tag, tag_rows)
 			for tag_row in tag_rows:
@@ -112,7 +115,8 @@ def select_from_table(main_table, tag_table, link_table, page, site=False, filte
 					)
 				filters.append(filt)
 			params['resolved-filter-tags'].append([tmp.tag for tmp in tag_rows])
-		query = query.filter(or_(*filters))
+			all_filters.append(or_(*filters))
+		query = query.filter(and_(*all_filters))
 
 	if params['distinct']:
 		query = query.distinct(main_table.series_name)             \
@@ -122,9 +126,9 @@ def select_from_table(main_table, tag_table, link_table, page, site=False, filte
 
 	# print("Query:")
 	# print(query)
-	# print("Executing")
+	print("Executing")
 	ret = params, paginate(query, page=page)
-	# print("Query complete")
+	print("Query complete")
 	return ret
 
 
