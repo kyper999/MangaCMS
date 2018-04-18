@@ -89,12 +89,12 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 				continue
 
 			tds = row.find_all("td")
-			if len(tds) != 7:
+			if len(tds) != 8:
 				self.log.warning("Invalid number of table entries: %s", len(tds))
 				self.log.warning("Row: %s", row)
 				continue
 
-			dummy_something, chapter_name, lang, group, dummy_uploader, dummy_views, ultime = tds
+			dummy_something, chapter_name, dummy_discussion, lang, group, dummy_uploader, dummy_views, ultime = tds
 
 			lang = lang.img['title']
 			if lang != DOWNLOAD_ONLY_LANGUAGE:
