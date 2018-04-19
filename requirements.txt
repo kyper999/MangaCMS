@@ -8,7 +8,7 @@ sqlalchemy_jsonfield==0.7.0
 flask==0.12.2
 alembic==0.9.9
 flask-wtf==0.14.2
-cherrypy==14.0.1
+cherrypy==14.1.0
 pyramid==1.9.1
 beautifulsoup4==4.6.0
 flask_sqlalchemy==2.3.2
