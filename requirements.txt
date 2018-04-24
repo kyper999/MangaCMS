@@ -9,7 +9,7 @@ flask==0.12.2
 alembic==0.9.9
 flask-wtf==0.14.2
 cherrypy==14.2.0
-pyramid==1.9.1
+pyramid==1.9.2
 beautifulsoup4==4.6.0
 flask_sqlalchemy==2.3.2
 flask-debugtoolbar==0.10.1
