@@ -125,7 +125,14 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase
 
 	def _crossLink(self, delItem, dupItem, isPhash=False):
 		self.log.warning("Duplicate found! Cross-referencing file")
-		self._create_or_update_file_entry_path(delItem, dupItem, setDeleted=True, setPhash=isPhash)
+		for x in range(5):
+			try:
+				self._create_or_update_file_entry_path(delItem, dupItem, setDeleted=True, setPhash=isPhash)
+				return
+			except Exception:
+				self.log.warning("Retrying file link operation")
+				if x > 2:
+					raise
 
 
 	def processDownload(self,
@@ -165,7 +172,7 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase
 			try:
 				retTags, archivePath_updated = archCleaner.processNewArchive(archivePath, **kwargs)
 				if archivePath_updated != archivePath:
-					self._create_or_update_file_entry_path(archivePath, archivePath_updated)
+					self._crossLink(archivePath, archivePath_updated)
 					archivePath = archivePath_updated
 
 			except Exception:
