@@ -50,6 +50,9 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 		self.log.info("Found %s series", len(ret))
 
+		if 'https://mangadex.org/manga/47/test' in ret:
+			ret.remove("https://mangadex.org/manga/47/test")
+
 		return ret
 
 
@@ -71,6 +74,8 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 		# Should probably extract tagging info here. Laaaaazy
 		# MangaUpdates interface does a better job anyways.
 		titleA = soup.find("h3", class_='panel-title')
+		if not titleA:
+			return None
 		return {"series_name": titleA.get_text(strip=True)}
 
 	def getChaptersFromSeriesPage(self, soup):
@@ -130,6 +135,8 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 		soup = self.wg.getSoup(seriesUrl)
 
 		seriesInfo = self.getSeriesInfoFromSoup(soup)
+		if not seriesInfo:
+			return ret
 
 		chapters = self.getChaptersFromSeriesPage(soup)
 		for chapter in chapters:

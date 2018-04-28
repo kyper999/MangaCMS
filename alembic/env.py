@@ -7,6 +7,7 @@ from logging.config import fileConfig
 # Path hackery
 import os.path
 import sys
+print("Adding to path: ", os.path.abspath(os.getcwd()))
 sys.path.append(os.path.abspath(os.getcwd()))
 
 # this will overwrite the ini-file sqlalchemy.url path
