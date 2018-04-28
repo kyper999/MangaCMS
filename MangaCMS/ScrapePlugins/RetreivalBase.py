@@ -145,6 +145,7 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 
 			res = [(tmp.id, tmp.posted_at) for tmp in res]
 
+			self.log.info("Query returned %s items", len(res))
 		self.log.info( "Done")
 
 		items = []

@@ -22,7 +22,6 @@ import MangaCMSOld.ScrapePlugins.M.MangaBox.Run
 import MangaCMSOld.ScrapePlugins.M.MangaHere.Run
 import MangaCMSOld.ScrapePlugins.M.McLoader.Run
 import MangaCMSOld.ScrapePlugins.M.MerakiScans.Run
-import MangaCMSOld.ScrapePlugins.M.MangaZuki.Run
 import MangaCMSOld.ScrapePlugins.M.WebtoonLoader.Run            # Yeah. There is webtoon.com. and WebtoonsReader.com. Confusing much?
 import MangaCMSOld.ScrapePlugins.M.ZenonLoader.Run
 
@@ -45,6 +44,7 @@ import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.VortexRun
 import MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run
 import MangaCMS.ScrapePlugins.M.DynastyLoader.Run
 import MangaCMS.ScrapePlugins.M.MangaDex.Run
+import MangaCMS.ScrapePlugins.M.MangaZuki.Run
 
 import MangaCMS.ScrapePlugins.M.YoMangaLoader.Run
 import MangaCMS.ScrapePlugins.M.MangaMadokami.Run
@@ -83,7 +83,7 @@ scrapePlugins = {
 	# 15  : (MangaCMSOld.ScrapePlugins.M.IrcGrabber.BotRunner,                hours( 1)),  # Irc bot never returns. It runs while the app is live. Rerun interval doesn't matter, as a result.
 	16  : (MangaCMSOld.ScrapePlugins.M.MangaHere.Run,                       hours(12)),
 	17  : (MangaCMSOld.ScrapePlugins.M.WebtoonLoader.Run,                   hours( 8)),
-	18  : (MangaCMSOld.ScrapePlugins.M.DynastyLoader.Run,                   hours( 8)),
+	18  : (MangaCMS.ScrapePlugins.M.DynastyLoader.Run,                      hours( 8)),
 	# 19  : (MangaCMSOld.ScrapePlugins.M.KissLoader.Run,                      hours( 1)),
 	20  : (MangaCMSOld.ScrapePlugins.M.Crunchyroll.Run,                     hours( 4)),
 	22  : (MangaCMSOld.ScrapePlugins.M.Kawaii.Run,                          hours(12)),
@@ -91,7 +91,7 @@ scrapePlugins = {
 	24  : (MangaCMSOld.ScrapePlugins.M.MangaBox.Run,                        hours(12)),
 	26  : (MangaCMSOld.ScrapePlugins.M.GameOfScanlationLoader.Run,          hours(12)),
 	27  : (MangaCMSOld.ScrapePlugins.M.MerakiScans.Run,                     hours(12)),
-	28  : (MangaCMSOld.ScrapePlugins.M.MangaZuki.Run,                       hours(12)),
+	28  : (MangaCMS.ScrapePlugins.M.MangaZuki.Run,                          hours(12)),
 
 
 	# FoolSlide modules
@@ -195,7 +195,7 @@ if __name__ == "__main__":
 				# MangaCMS.ScrapePlugins.M.MangaMadokami.Run,
 
 				# MangaCMSOld.ScrapePlugins.M.Crunchyroll.Run,
-				# MangaCMSOld.ScrapePlugins.M.DynastyLoader.Run,
+				# MangaCMS.ScrapePlugins.M.DynastyLoader.Run,
 				# MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.CanisMajorRun,
 				# MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.ChibiMangaRun,
 				# MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.DokiRun,
@@ -214,7 +214,7 @@ if __name__ == "__main__":
 				# MangaCMS.ScrapePlugins.M.MangaDex.Run,
 				# MangaCMSOld.ScrapePlugins.M.MangaHere.Run,
 				# MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run,
-				# MangaCMSOld.ScrapePlugins.M.MangaZuki.Run,
+				# MangaCMS.ScrapePlugins.M.MangaZuki.Run,
 				# MangaCMSOld.ScrapePlugins.M.McLoader.Run,
 				# MangaCMSOld.ScrapePlugins.M.MerakiScans.Run,
 				# MangaCMSOld.ScrapePlugins.M.WebtoonLoader.Run,

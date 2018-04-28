@@ -6,26 +6,25 @@ runStatus.preloadDicts = False
 
 import urllib.parse
 import time
+import datetime
 import calendar
 import parsedatetime
 import settings
 
-import MangaCMSOld.ScrapePlugins.LoaderBase
+import MangaCMS.ScrapePlugins.LoaderBase
 
 # Only downlad items in language specified.
 # Set to None to disable filtering (e.g. fetch ALL THE FILES).
 DOWNLOAD_ONLY_LANGUAGE = "English"
 
-class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
+class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
 
-	loggerPath = "Main.Manga.Mzk.Fl"
-	pluginName = "MangaZuki Link Retreiver"
-	tableKey = "mzk"
-
-
-	tableName = "MangaItems"
+	logger_path  = "Main.Manga.Mzk.Fl"
+	plugin_name  = "MangaZuki Link Retreiver"
+	plugin_key   = "mzk"
+	is_manga     = True
 
 	urlBase    = "https://mangazuki.co/"
 	seriesBase = "https://mangazuki.co/manga-list"
@@ -67,7 +66,12 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 				continue  # Skip the table header row
 
 			chapter = row.find("h3", class_='chapter-title-rtl')
+			ul_date = row.find("div", class_='date-chapter-title-rtl')
 			dl_link    = row.find("div", class_='action')
+
+			timestr = ul_date.get_text(strip=True)
+			itemDate, status = parsedatetime.Calendar().parse(timestr)
+
 
 
 			item = {}
@@ -79,10 +83,16 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 			while "  " in name:
 				name = name.replace("  ", " ")
 
-			item["seriesName"] = series_name
-			item["originName"] = name
-			item["sourceUrl"]  = urllib.parse.urljoin(self.urlBase, dl_link.a['href'])
-			item['retreivalTime'] = time.time()
+			item["series_name"]    = series_name
+			item["origin_name"]    = name
+			item["source_id"]     = urllib.parse.urljoin(self.urlBase, dl_link.a['href'])
+
+			if status >= 1:
+				item['posted_at'] = datetime.datetime(*itemDate[:6])
+			else:
+				self.log.warning("Parsing relative date '%s' failed (%s). Using current timestamp.", timestr, status)
+				item['posted_at'] = datetime.datetime.now()
+
 
 			items.append(item)
 
@@ -104,7 +114,7 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 
 		return ret
 
-	def getFeed(self):
+	def get_feed(self):
 		toScan = self.getSeriesListing()
 
 		ret = []
