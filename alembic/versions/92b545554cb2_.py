@@ -96,8 +96,6 @@ def upgrade():
 	if "testing" in sys.argv:
 		return
 
-	thread_barrier = threading.Barrier(2)
-
 	def go(mode):
 		bind = op.get_bind()
 		sess = Session(bind=bind)
@@ -324,7 +322,6 @@ def upgrade():
 			items = old_cur.fetchall()
 			print("Loaded %s %s rows" % (len(items), mode))
 
-			thread_barrier.wait()
 			print("Barrier released!")
 			new = 0
 			for item in tqdm.tqdm(items, desc="Processing %s" % mode, position=1 if mode == "hentai" else 0):
