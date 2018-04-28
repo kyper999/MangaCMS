@@ -161,6 +161,7 @@ def upgrade():
 			source_site         = Column(Text, nullable=False, index=True)  # Actual source site
 			source_id           = Column(Text, nullable=False, index=True)  # ID On source site. Usually (but not always) the item URL
 
+			first_seen          = Column(DateTime, nullable=False)
 			posted_at           = Column(DateTime, nullable=False, default=datetime.datetime.min)
 			downloaded_at       = Column(DateTime, nullable=False, default=datetime.datetime.min)
 			last_checked        = Column(DateTime, nullable=False, default=datetime.datetime.min)
@@ -181,15 +182,16 @@ def upgrade():
 			file                = relationship('ReleaseFile', backref='manga_releases')
 
 			tags_rel       = relationship('MangaTags',
-												secondary=manga_releases_tags_link,
-												backref=backref("hentai_releases", lazy='dynamic'),
-												collection_class=set)
+												secondary        = manga_releases_tags_link,
+												backref          = backref("manga_releases", lazy='dynamic'),
+												collection_class = set)
 			tags           = association_proxy('tags_rel', 'tag', creator=MangaTags.get_or_create)
 
 			__table_args__ = (
-				UniqueConstraint('source_site', 'source_id'),
-				Index('manga_releases_source_site_id_idx', 'source_site', 'source_id')
+					UniqueConstraint('source_site', 'source_id'),
+					Index('manga_releases_source_site_id_idx', 'source_site', 'source_id')
 				)
+
 
 
 
@@ -369,6 +371,8 @@ def upgrade():
 					additional_metadata['note'] = note
 					# print("Note:", note)
 
+				dl_at     = datetime.datetime.utcfromtimestamp(lastupdate)
+				posted_at = datetime.datetime.utcfromtimestamp(retreivaltime)
 
 				row = MangaReleases(
 						state               = state_val,
@@ -376,8 +380,9 @@ def upgrade():
 						source_site         = sourcesite,
 						series_name         = seriesname,
 						source_id           = sourceurl,
-						posted_at           = datetime.datetime.utcfromtimestamp(lastupdate),
-						downloaded_at       = datetime.datetime.utcfromtimestamp(retreivaltime),
+						first_seen          = dl_at if dl_at > posted_at else posted_at,
+						posted_at           = dl_at,
+						downloaded_at       = posted_at,
 						phash_duplicate     = "phash-duplicate" in tags,
 						was_duplicate       = "was-duplicate" in tags,
 						uploaded            = "uploaded" in tags,

@@ -118,5 +118,5 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 		self._process_links_into_db(dat)
 
 
-	def go(self):
+	def go(self, *args, **kwargs):
 		raise RuntimeError("I think you meant to call 'do_fetch_feeds()'")

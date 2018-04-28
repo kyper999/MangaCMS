@@ -1,9 +1,9 @@
 
 
-import MangaCMSOld.lib.logSetup
+import MangaCMS.lib.logSetup
 import runStatus
 if __name__ == "__main__":
-	MangaCMSOld.lib.logSetup.initLogging()
+	MangaCMS.lib.logSetup.initLogging()
 	runStatus.preloadDicts = False
 
 
@@ -16,24 +16,21 @@ import runStatus
 import settings
 import datetime
 
-import MangaCMSOld.ScrapePlugins.LoaderBase
+import MangaCMS.ScrapePlugins.LoaderBase
 import nameTools as nt
 
 # Only downlad items in language specified.
 # Set to None to disable filtering (e.g. fetch ALL THE FILES).
 DOWNLOAD_ONLY_LANGUAGE = "English"
 
-class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
+class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
 
-	loggerPath = "Main.Manga.Dy.Fl"
-	pluginName = "Dynasty Scans Link Retreiver"
-	tableKey = "dy"
-	dbName = settings.DATABASE_DB_NAME
-
-
-	tableName = "MangaItems"
+	logger_path  = "Main.Manga.Dy.Fl"
+	plugin_name  = "Dynasty Scans Link Retreiver"
+	plugin_key   = "dy"
+	is_manga     = True
 
 	urlBase    = "http://dynasty-scans.com/"
 	seriesBase = "http://dynasty-scans.com/?page={num}"
@@ -43,10 +40,7 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 		ret = {}
 
 		titleH = soup.find("h3", class_='subj')
-
-		# titleDiv = soup.find("h1", class_="ttl")
 		ret["title"] = titleH.get_text().strip()
-
 		return ret
 
 
@@ -63,18 +57,17 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 			raise ValueError("Could not find item container?")
 
 
-
 		curDate = None
 		for child in mainDiv.find_all(True, recursive=False):  # Iterate over only tag children
 
 			if child.name == 'h4':
 				curDate = dateutil.parser.parse(child.string.strip())
 			elif child.name == 'a':
-
 				item = {}
 
-				item["sourceUrl"] = urllib.parse.urljoin(self.urlBase, child['href'])
-				item["retreivalTime"] = calendar.timegm(curDate.timetuple())
+				item["source_id"]     = urllib.parse.urljoin(self.urlBase, child['href'])
+				item["posted_at"]     = curDate
+				item["last_checked"]  = datetime.datetime.now()
 
 				titleDiv = child.find("div", class_='title')
 
@@ -82,15 +75,13 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 				if titleDiv.small:
 					title += ' {%s}' % titleDiv.small.text.strip()
 
-				item["originName"] = title
+				item["origin_name"] = title
 
 				tagDiv = child.find('div', class_='tags')
 				if tagDiv:
 					tags = tagDiv.find_all("span")
 					tags = [tag.get_text().replace(" ", "-").replace(":", "").lower() for tag in tags]
-					tags = ' '.join(tags)
 					item["tags"] = tags
-
 
 				ret.append(item)
 
@@ -104,7 +95,7 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 		return ret
 
 
-	def getFeed(self, historical=False):
+	def get_feed(self, historical=False):
 		# for item in items:
 		# 	self.log.info( item)
 		#
@@ -114,7 +105,6 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 		ret = []
 		cnt = 1
 		while 1:
-
 
 
 			pages = self.getItems(self.seriesBase.format(num=cnt))
@@ -141,7 +131,8 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 if __name__ == '__main__':
 	fl = FeedLoader()
 	print("fl", fl)
-	fl.go(historical=True)
+	fl.do_fetch_feeds()
+	# fl.do_fetch_feeds(historical=True)
 	# fl.getSeriesUrls()
 	# fl.getAllItems()
 	# items = fl.getItemPages('http://www.webtoons.com/episodeList?titleNo=78')

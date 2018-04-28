@@ -13,7 +13,6 @@ import MangaCMSOld.ScrapePlugins.M.BuMonitor.Rescan
 
 import MangaCMSOld.ScrapePlugins.M.Crunchyroll.Run
 import MangaCMSOld.ScrapePlugins.M.CxLoader.Run
-import MangaCMSOld.ScrapePlugins.M.DynastyLoader.Run
 import MangaCMSOld.ScrapePlugins.M.GameOfScanlationLoader.Run
 import MangaCMSOld.ScrapePlugins.M.IrcGrabber.BotRunner
 import MangaCMSOld.ScrapePlugins.M.IrcGrabber.IrcEnqueueRun
@@ -44,6 +43,7 @@ import MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.VortexRun
 
 
 import MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run
+import MangaCMS.ScrapePlugins.M.DynastyLoader.Run
 import MangaCMS.ScrapePlugins.M.MangaDex.Run
 
 import MangaCMS.ScrapePlugins.M.YoMangaLoader.Run

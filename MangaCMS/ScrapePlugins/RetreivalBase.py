@@ -471,6 +471,11 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 			try:
 				arch = zipfile.ZipFile(fqfilename, "w")
 
+
+				self.log.info("Saving %s images to archive %s", len(image_list), fqfilename)
+				for imageName, imageContent in image_list:
+					self.log.info("	Image: %s (%s bytes)", imageName, len(imageContent))
+
 				#Write all downloaded files to the archive.
 				for imageName, imageContent in image_list:
 					assert isinstance(imageName, str)
