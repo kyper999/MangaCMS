@@ -530,14 +530,14 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 				fqfilename = insertCountIfFilenameExists(fqfilename)
 
 
-	def save_manga_image_set(self, row_id, series_name, chapter_name, image_list):
+	def save_manga_image_set(self, row_id, series_name, chapter_name, image_list, source_name=None):
 			dlPath, newDir = self.locateOrCreateDirectoryForSeries(series_name)
 
 			with self.row_context(dbid=row_id) as row:
 				row.state = 'processing'
 				row.dirstate = 'created_dir' if newDir else "had_dir"
 
-			fqFName = os.path.join(dlPath, chapter_name+".zip")
+			fqFName = os.path.join(dlPath, chapter_name + (" [%s]" % source_name if source_name else "") + ".zip")
 
 			with self.row_sess_context(dbid=row_id) as row_tup:
 				row, sess = row_tup
