@@ -29,15 +29,13 @@ import MangaCMS.cleaner.processDownload
 
 class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
-
-
 	logger_path = "Main.Manga.Dy.Cl"
 	plugin_name = "Dynasty Scans Content Retreiver"
 	plugin_key  = "dy"
 	is_manga    = True
 
 
-	retreivalThreads = 1
+	retreivalThreads = 2
 
 	urlBase = "https://dynasty-scans.com/"
 

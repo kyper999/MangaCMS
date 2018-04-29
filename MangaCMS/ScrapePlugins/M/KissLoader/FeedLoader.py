@@ -1,32 +1,26 @@
 
-import runStatus
-runStatus.preloadDicts = False
-
-
 
 import urllib.parse
-import time
-import calendar
-import dateutil.parser
+import datetime
 import settings
 import urllib.error
-import MangaCMSOld.ScrapePlugins.LoaderBase
+import dateutil.parser
+
+import runStatus
+import MangaCMS.ScrapePlugins.LoaderBase
 
 # Only downlad items in language specified.
 # Set to None to disable filtering (e.g. fetch ALL THE FILES).
 DOWNLOAD_ONLY_LANGUAGE = "English"
 
-class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
+class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
 
-	loggerPath = "Main.Manga.Ki.Fl"
-	pluginName = "Kiss Manga Link Retreiver"
-	tableKey = "ki"
-	dbName = settings.DATABASE_DB_NAME
-
-
-	tableName = "MangaItems"
+	logger_path = "Main.Manga.Ki.Fl"
+	plugin_name = "Kiss Manga Link Retreiver"
+	plugin_key  = "ki"
+	is_manga    = True
 
 	urlBase    = "http://kissmanga.com/"
 	seriesBase = "http://kissmanga.com/MangaList/LatestUpdate?page={num}"
@@ -129,7 +123,7 @@ Not found
 		# MangaUpdates interface does a better job anyways.
 
 		titleA = soup.find("a", class_='bigChar')
-		return {"seriesName": titleA.get_text()}
+		return {"series_name": titleA.get_text()}
 
 	def getChaptersFromSeriesPage(self, soup):
 		table = soup.find('table', class_='listing')
@@ -141,10 +135,10 @@ Not found
 
 			chapter, date = row.find_all("td")
 			item = {}
-			item["originName"] = chapter.get_text().strip()
-			item["sourceUrl"]  = urllib.parse.urljoin(self.urlBase, chapter.a['href'])
-			itemDate = dateutil.parser.parse(date.get_text().strip())
-			item['retreivalTime'] = calendar.timegm(itemDate.timetuple())
+			item["origin_name"]  = chapter.get_text().strip()
+			item["source_id"]    = urllib.parse.urljoin(self.urlBase, chapter.a['href'])
+			item['posted_at']    = dateutil.parser.parse(date.get_text().strip())
+			item["last_checked"] = datetime.datetime.now()
 
 			items.append(item)
 
@@ -169,11 +163,11 @@ Not found
 
 			ret.append(chapter)
 
-		self.log.info("Found %s items on page for series '%s'", len(ret), seriesInfo['seriesName'])
+		self.log.info("Found %s items on page for series '%s'", len(ret), seriesInfo['series_name'])
 
 		return ret
 
-	def getFeed(self, historical=False):
+	def get_feed(self, historical=False):
 		toScan = self.getUpdatedSeriesPages(historical)
 
 		ret = []
@@ -187,6 +181,8 @@ Not found
 						# raise ValueError("Duplicate items in ret?")
 					else:
 						ret.append(item)
+				self._process_links_into_db(ret)
+				ret = []
 			except urllib.error.URLError:
 				pass
 
@@ -205,7 +201,9 @@ if __name__ == '__main__':
 
 	with tb.testSetup(load=False):
 		fl = FeedLoader()
-		# fl.do_fetch_feeds(historical=False)
+		# fl.setup()
+		# fl.getChapterLinkFromSeriesPage("http://kissmanga.com/Manga/Kuro-senpai-to-Kuroyashiki-no-Yami-ni-Mayowanai")
+		fl.do_fetch_feeds(historical=False)
 		# fl.go(historical=True)
 		# fl.getSeriesUrls()
 

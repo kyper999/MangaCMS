@@ -15,7 +15,6 @@ import MangaCMSOld.ScrapePlugins.M.Crunchyroll.Run
 import MangaCMSOld.ScrapePlugins.M.IrcGrabber.BotRunner
 import MangaCMSOld.ScrapePlugins.M.IrcGrabber.IrcEnqueueRun
 import MangaCMSOld.ScrapePlugins.M.Kawaii.Run
-import MangaCMSOld.ScrapePlugins.M.KissLoader.Run
 import MangaCMSOld.ScrapePlugins.M.MangaBox.Run
 import MangaCMSOld.ScrapePlugins.M.MangaHere.Run
 import MangaCMSOld.ScrapePlugins.M.MerakiScans.Run
@@ -43,6 +42,7 @@ import MangaCMS.ScrapePlugins.M.DynastyLoader.Run
 import MangaCMS.ScrapePlugins.M.MangaDex.Run
 import MangaCMS.ScrapePlugins.M.MangaZuki.Run
 import MangaCMS.ScrapePlugins.M.McLoader.Run
+import MangaCMS.ScrapePlugins.M.KissLoader.Run
 
 import MangaCMS.ScrapePlugins.M.YoMangaLoader.Run
 import MangaCMS.ScrapePlugins.M.MangaMadokami.Run
@@ -81,7 +81,7 @@ scrapePlugins = {
 	16  : (MangaCMSOld.ScrapePlugins.M.MangaHere.Run,                       hours(12)),
 	17  : (MangaCMSOld.ScrapePlugins.M.WebtoonLoader.Run,                   hours( 8)),
 	18  : (MangaCMS.ScrapePlugins.M.DynastyLoader.Run,                      hours( 8)),
-	# 19  : (MangaCMSOld.ScrapePlugins.M.KissLoader.Run,                      hours( 1)),
+	19  : (MangaCMS.ScrapePlugins.M.KissLoader.Run,                      hours( 1)),
 	20  : (MangaCMSOld.ScrapePlugins.M.Crunchyroll.Run,                     hours( 4)),
 	22  : (MangaCMSOld.ScrapePlugins.M.Kawaii.Run,                          hours(12)),
 	23  : (MangaCMSOld.ScrapePlugins.M.ZenonLoader.Run,                     hours(24)),

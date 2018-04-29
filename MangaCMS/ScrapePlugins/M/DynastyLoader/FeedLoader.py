@@ -25,8 +25,6 @@ DOWNLOAD_ONLY_LANGUAGE = "English"
 
 class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
-
-
 	logger_path  = "Main.Manga.Dy.Fl"
 	plugin_name  = "Dynasty Scans Link Retreiver"
 	plugin_key   = "dy"

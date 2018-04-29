@@ -1,17 +1,17 @@
 
 
-import MangaCMSOld.lib.logSetup
+import MangaCMS.lib.logSetup
 import runStatus
 if __name__ == "__main__":
 	runStatus.preloadDicts = False
 
 
 import WebRequest
+import datetime
 import settings
 import os
 import os.path
 
-import nameTools as nt
 
 import time
 import sys
@@ -23,28 +23,27 @@ import traceback
 import bs4
 import re
 import json
-import MangaCMSOld.ScrapePlugins.RetreivalBase
 from mimetypes import guess_extension
 from concurrent.futures import ThreadPoolExecutor
-import MangaCMSOld.ScrapePlugins.ScrapeExceptions as ScrapeExceptions
 
-import MangaCMSOld.cleaner.processDownload
 import magic
-
 import threading
+import nameTools as nt
 
-class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
-
-
-
-	loggerPath = "Main.Manga.Ki.Cl"
-	pluginName = "Kiss Manga Content Retreiver"
-	tableKey = "ki"
-	dbName = settings.DATABASE_DB_NAME
-	tableName = "MangaItems"
+import MangaCMS.cleaner.processDownload
+import MangaCMS.ScrapePlugins.RetreivalBase
+import MangaCMS.ScrapePlugins.ScrapeExceptions as ScrapeExceptions
 
 
-	retreivalThreads = 3
+class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
+
+	logger_path = "Main.Manga.Ki.Cl"
+	plugin_name = "Kiss Manga Content Retreiver"
+	plugin_key  = "ki"
+	is_manga    = True
+
+
+	retreivalThreads = 1
 
 	itemLimit = 500
 
@@ -107,11 +106,11 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 		# response = s.post(url, payload, proxies=proxy)
 
 
-	def getImage(self, imageUrl, referrer):
+	def getImage(self, imageUrl):
 
-		content, handle = self.wg.getpage(imageUrl, returnMultiple=True, addlHeaders={'Referer': referrer})
+		content, handle = self.wg.getpage(imageUrl, returnMultiple=True)
 		if not content or not handle:
-			raise ValueError("Failed to retreive image from page '%s'!" % referrer)
+			raise ValueError("Failed to retreive image from page '%s'!" % imageUrl)
 
 		fileN = urllib.parse.unquote(urllib.parse.urlparse(handle.geturl())[2].split("/")[-1])
 		fileN = bs4.UnicodeDammit(fileN).unicode_markup
@@ -140,19 +139,13 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 		return fileN, content
 
 
-
-	def getImageUrls(self, baseUrl):
-
+	def getImages(self, baseUrl):
 
 		with self.wg.chromiumContext() as cr:
-			print("ChromiumContext:", cr)
+
 			resp = cr.blocking_navigate_and_get_source(baseUrl)
-
 			pgctnt = self.check_recaptcha(pgurl=baseUrl, markup=resp['content'])
-
-
 			linkRe = re.compile(r'lstImages\.push\((wrapKA\(".+?"\))\);')
-
 			links = linkRe.findall(pgctnt)
 
 			pages = []
@@ -168,96 +161,68 @@ class ContentLoader(MangaCMSOld.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 			self.log.info("Found %s pages", len(pages))
 
+			self.wg._syncOutOfChromium(cr)
 
-		return pages
+			images = []
+			for imgUrl in pages:
+				imageName, imageContent = self.getImage(imgUrl)
+				images.append((imageName, imageContent))
+		return images
 
 	# Don't download items for 12 hours after relase,
 	# so that other, (better) sources can potentially host
 	# the items first.
 	def checkDelay(self, inTime):
-		return inTime < (time.time() - 60*60*12)
+		return inTime < (datetime.datetime.now() - datetime.timedelta(seconds=60*60*12))
 
 
 
-	def getLink(self, link):
-		sourceUrl  = link["sourceUrl"]
-		seriesName = link['seriesName']
+	# def getLink(self, link):
+
+	def get_link(self, link_row_id):
+
+		with self.row_context(dbid=link_row_id) as row:
+			series_name = row.series_name
+			chapter_name = row.origin_name
+			source_url = row.source_id
+			row.state = 'fetching'
 
 
-		try:
-			self.log.info( "Should retreive url - %s", sourceUrl)
-			self.updateDbEntry(sourceUrl, dlState=1)
 
-			imageUrls = self.getImageUrls(sourceUrl)
-			if not imageUrls:
-				self.log.critical("Failure on retrieving content at %s", sourceUrl)
-				self.log.critical("Page not found - 404")
-				self.updateDbEntry(sourceUrl, dlState=-1)
+		self.log.info( "Should retreive url - %s", source_url)
+
+		images = self.getImages(source_url)
+		if not images:
+			self.log.critical("Failure on retrieving content at %s", source_url)
+			self.log.critical("Page not found - 404")
+			with self.row_context(dbid=link_row_id) as row:
+				row.state = 'error'
+				row.err_str = "error-404"
+				return
+
+		imgCnt = 1
+		for imageName, imageContent in images:
+
+			imageName = "{num:03.0f} - {srcName}".format(num=imgCnt, srcName=imageName)
+			imgCnt += 1
+			images.append([imageName, imageContent])
+
+			if not runStatus.run:
+				self.log.info( "Breaking due to exit flag being set")
+			with self.row_context(dbid=link_row_id) as row:
+				row.state = 'new'
 				return
 
 
-
-			self.log.info("Downloading = '%s', '%s' ('%s images)", seriesName, link["originName"], len(imageUrls))
-			dlPath, newDir = self.locateOrCreateDirectoryForSeries(seriesName)
-
-			if link["flags"] == None:
-				link["flags"] = ""
-
-			if newDir:
-				self.updateDbEntry(sourceUrl, flags=" ".join([link["flags"], "haddir"]))
-
-			chapterName = nt.makeFilenameSafe(link["originName"])
-
-			fqFName = os.path.join(dlPath, chapterName+" [KissManga].zip")
-
-			loop = 1
-			prefix, ext = os.path.splitext(fqFName)
-			while os.path.exists(fqFName):
-				fqFName = "%s (%d)%s" % (prefix, loop,  ext)
-				loop += 1
-			self.log.info("Saving to archive = %s", fqFName)
-
-			images = []
-			imgCnt = 1
-			for imgUrl in imageUrls:
-				imageName, imageContent = self.getImage(imgUrl, sourceUrl)
-				imageName = "{num:03.0f} - {srcName}".format(num=imgCnt, srcName=imageName)
-				imgCnt += 1
-				images.append([imageName, imageContent])
-
-				if not runStatus.run:
-					self.log.info( "Breaking due to exit flag being set")
-					self.updateDbEntry(sourceUrl, dlState=0)
-					return
-
-			self.log.info("Creating archive with %s images", len(images))
-
-			if not images:
-				self.updateDbEntry(sourceUrl, dlState=-1, tags="error-404")
+		if not images:
+			with self.row_context(dbid=link_row_id) as row:
+				row.state = 'error'
+				row.err_str = "error-404"
 				return
 
-			#Write all downloaded files to the archive.
-			arch = zipfile.ZipFile(fqFName, "w")
-			for imageName, imageContent in images:
-				arch.writestr(imageName, imageContent)
-			arch.close()
 
+		self.save_manga_image_set(link_row_id, series_name, chapter_name, images, source_name='KissManga')
 
-			dedupState = MangaCMSOld.cleaner.processDownload.processDownload(seriesName, fqFName, deleteDups=True, includePHash=True, rowId=link['dbId'])
-			self.log.info( "Done")
-
-			filePath, fileName = os.path.split(fqFName)
-			self.updateDbEntry(sourceUrl, dlState=2, downloadPath=filePath, fileName=fileName, tags=dedupState)
-			return
-
-		except SystemExit:
-			print("SystemExit!")
-			raise
-
-		except Exception:
-			self.log.critical("Failure on retrieving content at %s", sourceUrl)
-			self.log.critical("Traceback = %s", traceback.format_exc())
-			self.updateDbEntry(sourceUrl, dlState=-1)
 
 
 	def setup(self):
