@@ -12,7 +12,6 @@ import MangaCMSOld.ScrapePlugins.M.BuMonitor.Rescan
 
 
 import MangaCMSOld.ScrapePlugins.M.Crunchyroll.Run
-import MangaCMSOld.ScrapePlugins.M.CxLoader.Run
 import MangaCMSOld.ScrapePlugins.M.IrcGrabber.BotRunner
 import MangaCMSOld.ScrapePlugins.M.IrcGrabber.IrcEnqueueRun
 import MangaCMSOld.ScrapePlugins.M.Kawaii.Run
@@ -77,7 +76,6 @@ scrapePlugins = {
 	3   : (MangaCMSOld.ScrapePlugins.M.BuMonitor.Rescan,                    days(  7)),
 
 	11  : (MangaCMS.ScrapePlugins.M.McLoader.Run,                        hours(12)),  # every 12 hours, it's just a single scanlator site.
-	# 13  : (MangaCMSOld.ScrapePlugins.M.CxLoader.Run,                        hours(12)),  # every 12 hours, it's just a single scanlator site.
 	# 12  : (MangaCMSOld.ScrapePlugins.M.IrcGrabber.IrcEnqueueRun,            hours(12)),  # Queue up new items from IRC bots.
 	# 15  : (MangaCMSOld.ScrapePlugins.M.IrcGrabber.BotRunner,                hours( 1)),  # Irc bot never returns. It runs while the app is live. Rerun interval doesn't matter, as a result.
 	16  : (MangaCMSOld.ScrapePlugins.M.MangaHere.Run,                       hours(12)),

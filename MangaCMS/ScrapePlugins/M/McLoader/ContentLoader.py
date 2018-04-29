@@ -28,7 +28,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	plugin_key   = "mc"
 	is_manga     = True
 
-	retreivalThreads = 1
+	retreivalThreads = 2
 
 
 	def getImage(self, imageUrl, referrer):
