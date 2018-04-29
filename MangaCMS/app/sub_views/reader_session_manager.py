@@ -84,6 +84,10 @@ class ViewerSession(object):
 		itemContent = self.archHandle.open(internalPath)
 		return itemContent, internalPath
 
+	def getItemByInternalPath(self, internalPath):
+		itemContent = self.archHandle.open(internalPath)
+		return itemContent, internalPath
+
 
 	def __del__(self):
 		if self.archHandle:
