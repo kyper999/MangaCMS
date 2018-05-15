@@ -164,8 +164,7 @@ class BuWatchMonitor(MangaCMSOld.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 
 	def updateUserListNamed(self, listName, listURL):
 
-		pageCtnt = self.wg.getpage(listURL)
-		soup = bs4.BeautifulSoup(pageCtnt, "lxml")
+		soup = self.wg.getSoup(listURL)
 		itemTable = soup.find("table", id="list_table")
 
 
@@ -183,8 +182,6 @@ class BuWatchMonitor(MangaCMSOld.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 			self.log.error("Invalid list reported length! Items from page: %d, found items %d", listTotalNo, itemCount)
 		self.log.info("Properly processed all items in list!")
 
-
-	#
 
 	def scanRecentlyUpdated(self):
 		ONE_DAY = 60*60*24

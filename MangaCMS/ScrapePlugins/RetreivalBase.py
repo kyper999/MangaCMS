@@ -496,6 +496,8 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 						fext = ".jpg"
 					if ext == '.jpeg':
 						ext = ".jpg"
+					if fext == '.jpeg':
+						fext = ".jpg"
 
 					if not ext:
 						self.log.warning("Missing extension in archive file: %s", imageName)

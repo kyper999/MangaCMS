@@ -36,7 +36,9 @@ def teardown_request(response):
 		g.session.rollback()
 
 	g.session.close()
+	del g.session
 
+	database.session.expunge_all()
 	database.session.remove()
 
 
