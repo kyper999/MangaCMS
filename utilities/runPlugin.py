@@ -2,9 +2,10 @@
 import sys
 
 import os.path
+import signal
+import traceback
 import runStatus
 from utilities.dedupDir import DirDeduper
-import signal
 import MangaCMS.activePlugins
 
 
@@ -41,12 +42,32 @@ def listPlugins():
 	print("Hentai Scrapers:")
 	print_plgs(hk, plgs)
 
-def runPlugin(plug):
-	install_signal_handler()
+
+def run_all():
 
 	plgs = MangaCMS.activePlugins.PLUGIN_MAP
+
+	import nameTools as nt
+	nt.dirNameProxy.startDirObservers()
+
+	for plg_name, plugin in plgs.items():
+		try:
+			runner = plugin['runner']()
+			runner.go()
+		except Exception:
+			with open("Error in plugin %s.txt" % plg_name, "w") as fp:
+				exc = traceback.format_exc()
+				fp.write("Plugin %s had error!\n" % plg_name)
+				fp.write(exc)
+				print("Plugin %s had error!\n" % plg_name)
+				print(exc)
+
+def run_specific(plug):
+
+	plgs = MangaCMS.activePlugins.PLUGIN_MAP
+
 	if not plug in plgs:
-		print("Key {} not in available plugins!".format(plug))
+		print("Key '{}' not in available plugins!".format(plug))
 		for key, plgd in plgs.items():
 			print("	Plugin {} -> {}!".format(key, plgd['name']))
 		return
@@ -59,6 +80,14 @@ def runPlugin(plug):
 	runner.go()
 
 
+
+def runPlugin(plug):
+	install_signal_handler()
+	print("Specified plugin: '%s'" % plug)
+	if plug == "all":
+		run_all()
+	else:
+		run_specific(plug)
 def retagPlugin(plug):
 	install_signal_handler()
 

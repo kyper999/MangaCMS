@@ -32,6 +32,8 @@ help_strings = [
 	"	run {plug_key}",
 	"		Execute plugin {plug_key}.",
 	"		If plugin is not specified, print the available plugins",
+	"		The special meta-plugin value of 'all' will run all plugins",
+	"		in sequence",
 	"",
 	"	retag {plug_key}",
 	"		Retag items for {plug_key}.",
