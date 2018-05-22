@@ -204,6 +204,8 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 					self.log.warning("Muliple fetch attemps for the same entry (%s) in plugin %s!", link_row_id, self.plugin_name)
 					return
 
+			self.log.info("Fetching content for release with ID: %s", link_row_id)
+
 			status = self.get_link(link_row_id=link_row_id)
 
 			self.sync_file_tags(link_row_id=link_row_id)
@@ -217,7 +219,7 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 			# We /always/ send the "fetched_items" count entry.
 			# However, the deduped result is only send if the item is actually deduped.
 			ret2 = self.mon_con.incr('fetched_items', 1)
-			self.log.info("Retreival complete. Sending log results:")
+			self.log.info("Retreival of release complete. Sending log results:")
 			if ret1:
 				self.log.info("	-> %s", ret1)
 			self.log.info("	-> %s", ret2)
@@ -539,18 +541,24 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 				row.state = 'processing'
 				row.dirstate = 'created_dir' if newDir else "had_dir"
 
+
+
 			fqFName = os.path.join(dlPath, chapter_name + (" [%s]" % source_name if source_name else "") + ".zip")
+
+			self.log.info("Saving item to path: %s", fqFName)
 
 			with self.row_sess_context(dbid=row_id) as row_tup:
 				row, sess = row_tup
 				fqFName = self.save_image_set(row, sess, fqFName, image_list)
 
+			self.log.info("Processing download")
 			self.processDownload(seriesName = series_name, archivePath = fqFName, doUpload = self.is_manga)
 
 			with self.row_context(dbid=row_id) as row:
 				row.state         = 'complete'
 				row.downloaded_at = datetime.datetime.now()
 				row.last_checked  = datetime.datetime.now()
+			self.log.info("Download complete!")
 
 	def do_fetch_content(self):
 		if hasattr(self, 'setup'):

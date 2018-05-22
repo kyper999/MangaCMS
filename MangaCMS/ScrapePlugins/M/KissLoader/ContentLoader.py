@@ -177,8 +177,6 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 
-	# def getLink(self, link):
-
 	def get_link(self, link_row_id):
 
 		with self.row_context(dbid=link_row_id) as row:
@@ -209,9 +207,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 			if not runStatus.run:
 				self.log.info( "Breaking due to exit flag being set")
-			with self.row_context(dbid=link_row_id) as row:
-				row.state = 'new'
-				return
+				with self.row_context(dbid=link_row_id) as row:
+					row.state = 'new'
+					return
 
 
 		if not images:
