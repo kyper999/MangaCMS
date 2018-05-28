@@ -4,6 +4,7 @@
 import abc
 import datetime
 
+import tqdm
 import WebRequest
 
 import settings
@@ -67,7 +68,7 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 
 		newItems = 0
 		with self.db.session_context() as sess:
-			for link in linksDicts:
+			for link in tqdm.tqdm(linksDicts):
 
 				self._check_keys(link)
 
@@ -96,6 +97,9 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 					if newItems % 10000 == 0:
 						self.log.info("Added %s rows, doing incremental commit!", newItems)
 						sess.commit()
+						sess.close()
+						del sess
+						sess = self.db.new_session()
 				try:
 					self.update_tags(tags=tags, row=have)
 				except ScrapeExceptions.UnwantedContentError:

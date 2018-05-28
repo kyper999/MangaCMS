@@ -542,8 +542,9 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 				row.dirstate = 'created_dir' if newDir else "had_dir"
 
 
-
-			fqFName = os.path.join(dlPath, chapter_name + (" [%s]" % source_name if source_name else "") + ".zip")
+			chapName = chapter_name + (" [%s]" % source_name if source_name else "") + ".zip"
+			chapName = chapName.replace("/", " ").replace("\\", " ")
+			fqFName = os.path.join(dlPath, chapName)
 
 			self.log.info("Saving item to path: %s", fqFName)
 

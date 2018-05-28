@@ -81,7 +81,7 @@ scrapePlugins = {
 	16  : (MangaCMS.ScrapePlugins.M.MangaHere.Run,                       hours(12)),
 	17  : (MangaCMSOld.ScrapePlugins.M.WebtoonLoader.Run,                   hours( 8)),
 	18  : (MangaCMS.ScrapePlugins.M.DynastyLoader.Run,                      hours( 8)),
-	19  : (MangaCMS.ScrapePlugins.M.KissLoader.Run,                      hours( 1)),
+	#19  : (MangaCMS.ScrapePlugins.M.KissLoader.Run,                      hours( 1)),
 	20  : (MangaCMSOld.ScrapePlugins.M.Crunchyroll.Run,                     hours( 4)),
 	22  : (MangaCMSOld.ScrapePlugins.M.Kawaii.Run,                          hours(12)),
 	23  : (MangaCMSOld.ScrapePlugins.M.ZenonLoader.Run,                     hours(24)),

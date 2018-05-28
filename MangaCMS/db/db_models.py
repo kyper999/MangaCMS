@@ -28,7 +28,7 @@ import citext
 ischema_names['citext'] = citext.CIText
 
 
-from .db_engine import session
+from .db_engine import __session_factory
 from .db_base import Base
 from .db_types import file_type
 from .db_types import dir_type
@@ -62,18 +62,18 @@ class MangaTags(Base):
 
 	@classmethod
 	def get_or_create(cls, tag):
-		tmp = session.query(cls)    \
+		tmp = __session_factory.query(cls)    \
 			.filter(cls.tag == tag) \
 			.scalar()
 		if tmp:
-			session.expunge(tmp)
+			__session_factory.expunge(tmp)
 			return tmp
 
 		# print("manga_tag_creator", tag)
 		tmp = cls(tag=tag)
-		session.add(tmp)
-		session.commit()
-		session.expunge(tmp)
+		__session_factory.add(tmp)
+		__session_factory.commit()
+		__session_factory.expunge(tmp)
 		return tmp
 
 ########################################################################################
@@ -103,18 +103,18 @@ class HentaiTags(Base):
 
 	@classmethod
 	def get_or_create(cls, tag):
-		tmp = session.query(cls)    \
+		tmp = __session_factory.query(cls)    \
 			.filter(cls.tag == tag) \
 			.scalar()
 		if tmp:
-			session.expunge(tmp)
+			__session_factory.expunge(tmp)
 			return tmp
 
 		# print("hentai_tag_creator", tag)
 		tmp = cls(tag=tag)
-		session.add(tmp)
-		session.commit()
-		session.expunge(tmp)
+		__session_factory.add(tmp)
+		__session_factory.commit()
+		__session_factory.expunge(tmp)
 		return tmp
 
 

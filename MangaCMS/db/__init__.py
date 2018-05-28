@@ -26,7 +26,7 @@ from .db_base import Base
 # from .db_engine import release_session
 # from .db_engine import get_db_session
 # from .db_engine import delete_db_session
-from .db_engine import session
+from .db_engine import new_session
 from .db_engine import session_context
 
 import sqlalchemy as sa
