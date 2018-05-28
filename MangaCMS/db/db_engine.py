@@ -62,11 +62,8 @@ def session_context(commit=True, reuse_sess=None):
 			context_logger.error("Error in transaction!")
 			for line in traceback.format_exc().split("\n"):
 				context_logger.error(line)
-			if commit:
-				context_logger.warning("Rolling back.")
-				sess.rollback()
-			else:
-				context_logger.warning("NOT Rolling back.")
+			context_logger.warning("Rolling back.")
+			sess.rollback()
 			sess.close()
 			__session_factory.remove()
 			raise e
