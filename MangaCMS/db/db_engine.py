@@ -34,12 +34,16 @@ else:
 engine = create_engine(SQLALCHEMY_DATABASE_URI, pool_size = MAX_DB_SESSIONS, isolation_level='REPEATABLE_READ')
 
 SessionFactory = sessionmaker(bind=engine, autoflush=False, autocommit=False)
-__session_factory = scoped_session(SessionFactory)
+_session_factory = scoped_session(SessionFactory)
 
 context_logger = logging.getLogger("Main.SessionContext")
 
 def new_session():
-	return __session_factory()
+	return _session_factory()
+
+def delete_db_session(sess):
+	sess.close()
+	_session_factory.remove()
 
 
 @contextlib.contextmanager
@@ -53,7 +57,7 @@ def session_context(commit=True, reuse_sess=None):
 
 	else:
 
-		sess = __session_factory()
+		sess = _session_factory()
 
 		try:
 			yield sess
@@ -65,12 +69,12 @@ def session_context(commit=True, reuse_sess=None):
 			context_logger.warning("Rolling back.")
 			sess.rollback()
 			sess.close()
-			__session_factory.remove()
+			_session_factory.remove()
 			raise e
 
 		finally:
 			if commit:
 				sess.commit()
 			sess.close()
-			__session_factory.remove()
+			_session_factory.remove()
 

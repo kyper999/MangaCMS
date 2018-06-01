@@ -132,15 +132,17 @@ class MangaScraperBase(MangaScraperDbMixin, MangaCMS.lib.LogMixin.LoggerMixin, M
 
 		assert all([len(tag) >= 2 for tag in tags]), "All tags must be at least one character long. Bad tags: %s" % [tag for tag in tags if len(tag) < 2]
 		assert all([len(tag) < 90 for tag in tags]), "All tags must be less then 90 characters long. Bad tags: %s" % [(tag, len(tag)) for tag in tags if len(tag) >= 90]
+		assert all([type(tmp) == str for tmp in tags]), "All tags must be a string! Bad tags: %s" % [(tag, type(tag)) for tag in tags if type(tag) != str]
 		if row:
 			for tag in tags:
 				row.tags.add(tag)
 			row_tags = list(row.tags)
 		elif dbid or url:
-			with self.row_context(dbid=dbid, url=url) as row_c:
+			with self.row_sess_context(dbid=dbid, url=url) as (sess_c, row_c):
 				for tag in tags:
-					if not tag in row.tags:
-						row_c.tags.add(tag)
+					tag_f = sess_c.merge(tag)
+					if not tag_f in row.tags:
+						row_c.tags.add(tag_f)
 				row_tags = list(row_c.tags)
 		else:
 			raise RuntimeError("You need to pass a filter parameter (row, dbid, url) to update_tags()")

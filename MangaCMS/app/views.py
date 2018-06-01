@@ -23,7 +23,7 @@ from MangaCMS import db as database
 @app.before_request
 def before_request():
 	g.locale = 'en'
-	g.session = database.session()
+	g.session = database.new_session()
 
 
 # @app.teardown_appcontext
@@ -36,10 +36,10 @@ def teardown_request(response):
 		g.session.rollback()
 
 	g.session.close()
+	g.session.expunge_all()
+	database.delete_db_session(g.session)
 	del g.session
 
-	database.session.expunge_all()
-	database.session.remove()
 
 
 @app.errorhandler(404)

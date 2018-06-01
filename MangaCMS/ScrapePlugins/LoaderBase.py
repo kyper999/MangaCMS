@@ -94,12 +94,9 @@ class LoaderBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 
 					sess.add(have)
 
-					if newItems % 10000 == 0:
+					if newItems % 1000 == 0:
 						self.log.info("Added %s rows, doing incremental commit!", newItems)
 						sess.commit()
-						sess.close()
-						del sess
-						sess = self.db.new_session()
 				try:
 					self.update_tags(tags=tags, row=have)
 				except ScrapeExceptions.UnwantedContentError:
