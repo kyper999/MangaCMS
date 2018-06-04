@@ -1,5 +1,5 @@
 #!/bin/bash
 
 while true; do
-	python3 mainScrape.py
+	python3 -m utilities run all
 done
