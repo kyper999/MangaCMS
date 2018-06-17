@@ -25,12 +25,12 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	is_manga     = True
 
 
-	urlBase    = "https://mangadex.com/"
-	seriesBase = "https://mangadex.com/1"
+	urlBase    = "https://mangadex.org/"
+	seriesBase = "https://mangadex.org/1"
 
 	def setup(self):
 		now = int(time.time() * 1000)
-		self.wg.getpage("https://mangadex.com/ajax/actions.ajax.php?function=hentai_toggle&mode=1&_={}".format(now))
+		self.wg.getpage("https://mangadex.org/ajax/actions.ajax.php?function=hentai_toggle&mode=1&_={}".format(now))
 
 	def getUpdatedSeries(self, url):
 		ret = set()
@@ -172,7 +172,7 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 		have_spages = True
 
 		while have_spages:
-			soup = self.wg.getSoup("https://mangadex.com/titles/{idx}".format(idx=idx))
+			soup = self.wg.getSoup("https://mangadex.org/titles/{idx}".format(idx=idx))
 			idx += 100
 			main_div = soup.find("div", class_='row')
 			tmp_list = []
@@ -216,9 +216,9 @@ if __name__ == '__main__':
 		# print(fl.getUpdatedSeriesPages())
 		# print(fl.getAllItems())
 		# fl.resetStuckItems()
-		# cl = fl.getChapterLinkFromSeriesPage("https://mangadex.com/manga/8246")
-		# cl = fl.getChapterLinkFromSeriesPage("https://mangadex.com/manga/19969")
-		# cl = fl.getChapterLinkFromSeriesPage("https://mangadex.com/manga/9134")
+		# cl = fl.getChapterLinkFromSeriesPage("https://mangadex.org/manga/8246")
+		# cl = fl.getChapterLinkFromSeriesPage("https://mangadex.org/manga/19969")
+		# cl = fl.getChapterLinkFromSeriesPage("https://mangadex.org/manga/9134")
 		# print(cl)
 		# fl.getSeriesUrls()
 

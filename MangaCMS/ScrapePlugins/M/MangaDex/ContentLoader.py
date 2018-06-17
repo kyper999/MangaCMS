@@ -24,7 +24,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 	retreivalThreads = 1
-	urlBase    = "https://mangadex.com/"
+	urlBase    = "https://mangadex.org/"
 
 
 
@@ -129,7 +129,7 @@ if __name__ == '__main__':
 		# 		{
 		# 		    'originName': 'D-Frag! - Ch. 69 Thank you very much! [MangaDex, Hot Chocolate Scans]',
 		# 		    'downloadPath': None,
-		# 		    'sourceUrl': 'https://mangadex.com/chapter/19083',
+		# 		    'sourceUrl': 'https://mangadex.org/chapter/19083',
 		# 		    'sourceId': None,
 		# 		    # 'retreivalTime': time.struct_time(tm_year = 2018, tm_mon = 1, tm_mday = 28, tm_hour = 5, tm_min = 29, tm_sec = 31, tm_wday = 6, tm_yday = 28, tm_isdst = 0),
 		# 		    'dbId': 2943680,
@@ -146,7 +146,7 @@ if __name__ == '__main__':
 		# 		{
 		# 		    'originName': "Mousou Telepathy - Ch. 166 That's Where He's Different [MangaDex, Helvetica Scans]",
 		# 		    'downloadPath': None,
-		# 		    'sourceUrl': 'https://mangadex.com/chapter/19131',
+		# 		    'sourceUrl': 'https://mangadex.org/chapter/19131',
 		# 		    'sourceId': None,
 		# 		    # 'retreivalTime': time.struct_time(tm_year = 2018, tm_mon = 1, tm_mday = 28, tm_hour = 5, tm_min = 48, tm_sec = 7, tm_wday = 6, tm_yday = 28, tm_isdst = 0),
 		# 		    'dbId': 2943321,
@@ -161,7 +161,7 @@ if __name__ == '__main__':
 		# 	)
 		# cl.getLink(
 		# 		{
-		# 		    'sourceUrl': 'https://mangadex.com/chapter/19151',
+		# 		    'sourceUrl': 'https://mangadex.org/chapter/19151',
 		# 		    'lastUpdate': 0.0,
 		# 		    'dbId': 2943493,
 		# 		    # 'retreivalTime': time.struct_time(tm_year = 2018, tm_mon = 1, tm_mday = 28, tm_hour = 6, tm_min = 25, tm_sec = 24, tm_wday = 6, tm_yday = 28, tm_isdst = 0),
