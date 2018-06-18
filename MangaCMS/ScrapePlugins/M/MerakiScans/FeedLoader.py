@@ -11,22 +11,21 @@ import runStatus
 import settings
 import datetime
 
-import MangaCMSOld.ScrapePlugins.LoaderBase
+import MangaCMS.ScrapePlugins.LoaderBase
 import nameTools as nt
 
 # Only downlad items in language specified.
 # Set to None to disable filtering (e.g. fetch ALL THE FILES).
 DOWNLOAD_ONLY_LANGUAGE = "English"
 
-class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
+class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
 
-	loggerPath = "Main.Manga.Meraki.Fl"
-	pluginName = "MerakiScans Link Retreiver"
-	tableKey = "meraki"
-	dbName = settings.DATABASE_DB_NAME
-	tableName = "MangaItems"
+	logger_path = "Main.Manga.Meraki.Fl"
+	plugin_name = "MerakiScans Link Retreiver"
+	plugin_key = "meraki"
+	is_manga     = True
 
 	urlBase = "http://merakiscans.com/"
 	feedUrl = "http://merakiscans.com/manga-list/"
@@ -36,7 +35,7 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 
 		ret = {}
 		container = soup.find("div", class_="mng_ifo")
-		infoDiv = container.find("div", class_="det")
+		infoDiv = container.find("div", class_="col-md-8")
 
 		titleDiv = soup.find("h1", class_='ttl')
 		ret["title"] = titleDiv.get_text()
@@ -57,8 +56,8 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 			if what == "Category":
 				tags = [tag_link.get_text() for tag_link in item.find_all("a")]
 
-				tags = [tag.lower().strip().replace(" ", "-") for tag in tags]
-				ret["tags"] = " ".join(tags)
+				ret["tags"] = [tag.lower().strip().replace(" ", "-") for tag in tags]
+
 
 		return ret
 
@@ -80,12 +79,12 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 
 			date = dateutil.parser.parse(chapDate.get_text(), fuzzy=True)
 
-			item["originName"]     = "{series} - {file}".format(series=baseInfo["title"], file=chapTitle)
-			item["sourceUrl"]      = url
-			item["seriesName"]     = baseInfo["title"]
-			item["tags"]           = baseInfo["tags"]
-			item["note"]           = baseInfo["note"]
-			item["retreivalTime"]  = calendar.timegm(date.timetuple())
+			item["origin_name"]         = "{series} - {file}".format(series=baseInfo["title"], file=chapTitle)
+			item["source_id"]           = url
+			item["series_name"]         = baseInfo["title"]
+			item["tags"]                = baseInfo["tags"]
+			item["additional_metadata"] = {'note' : baseInfo["note"]}
+			item["posted_at"]           = date
 
 			ret.append(item)
 
@@ -104,7 +103,7 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 
 		return ret
 
-	def getFeed(self):
+	def get_feed(self):
 		# for item in items:
 		# 	self.log.info( item)
 		#

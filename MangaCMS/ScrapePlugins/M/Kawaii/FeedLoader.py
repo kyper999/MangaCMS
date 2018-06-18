@@ -1,35 +1,23 @@
 
-import bs4
-import re
-
-import urllib.parse
-import time
-import dateutil.parser
-import runStatus
-import settings
 import datetime
 
-import MangaCMSOld.ScrapePlugins.LoaderBase
-import nameTools as nt
+import runStatus
+import MangaCMS.ScrapePlugins.LoaderBase
 
 # Only downlad items in language specified.
 # Set to None to disable filtering (e.g. fetch ALL THE FILES).
 DOWNLOAD_ONLY_LANGUAGE = "English"
 
-class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
+class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
 
-	loggerPath = "Main.Manga.Kw.Fl"
-	pluginName = "Kawaii-Scans Link Retreiver"
-	tableKey = "kw"
-	dbName = settings.DATABASE_DB_NAME
-
-
-	tableName = "MangaItems"
+	logger_path = "Main.Manga.Kw.Fl"
+	plugin_name = "Kawaii-Scans Link Retreiver"
+	plugin_key  = "kw"
+	is_manga    = True
 
 	urlBase = "http://kawaii.ca/"
-
 	feedUrl = "http://kawaii.ca/reader/"
 
 	def getItemPages(self, url, title):
@@ -57,12 +45,12 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 			chapTitle = option.get_text()
 
 
-			item["originName"]     = "{series} - {file}".format(series=title, file=chapTitle)
-			item["sourceUrl"]      = chapUrl
-			item["seriesName"]     = title
+			item["origin_name"] = "{series} - {file}".format(series=title, file=chapTitle)
+			item["source_id"]   = chapUrl
+			item["series_name"] = title
 
 			# There is no upload date information
-			item["retreivalTime"]  = time.time()
+			item["posted_at"] = datetime.datetime.now()
 
 
 			ret.append(item)
@@ -84,7 +72,7 @@ class FeedLoader(MangaCMSOld.ScrapePlugins.LoaderBase.LoaderBase):
 
 		return ret
 
-	def getFeed(self):
+	def get_feed(self):
 
 		self.log.info( "Loading Mc Items")
 
@@ -113,7 +101,6 @@ if __name__ == "__main__":
 
 	import utilities.testBase as tb
 
-	with tb.testSetup():
+	with tb.testSetup(load=False):
 		cl = FeedLoader()
-
-		cl.go()
+		cl.do_fetch_feeds()

@@ -19,6 +19,7 @@ import utilities.cleanDb
 import utilities.bookClean
 import utilities.cleanFiles
 import deduplicator.remoteInterface
+import MangaCMS.lib.statusManager
 import UploadPlugins.Madokami.uploader
 
 help_strings = [
@@ -270,6 +271,10 @@ def delete_null_rows():
 	mcleaner.deleteNullRows()
 
 
+def reset_run_states():
+	MangaCMS.lib.statusManager.resetAllRunningFlags()
+
+
 # Double arg (funcs take one parameter):
 def two_arg_import(val):
 	if not os.path.exists(val):
@@ -447,6 +452,7 @@ single_arg_funcs = {
 	"delete_null_rows"        : delete_null_rows,
 	"sync_h_file_tags"        : sync_h_file_tags,
 	"refetch_missing_tags"    : refetch_missing_tags,
+	"reset_run_states"        : reset_run_states,
 
 }
 

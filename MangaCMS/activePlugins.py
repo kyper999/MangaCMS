@@ -14,10 +14,10 @@ import MangaCMSOld.ScrapePlugins.M.BuMonitor.Rescan
 import MangaCMSOld.ScrapePlugins.M.Crunchyroll.Run
 import MangaCMSOld.ScrapePlugins.M.IrcGrabber.BotRunner
 import MangaCMSOld.ScrapePlugins.M.IrcGrabber.IrcEnqueueRun
-import MangaCMSOld.ScrapePlugins.M.Kawaii.Run
+import MangaCMS.ScrapePlugins.M.Kawaii.Run
 import MangaCMSOld.ScrapePlugins.M.MangaBox.Run
 import MangaCMS.ScrapePlugins.M.MangaHere.Run
-import MangaCMSOld.ScrapePlugins.M.MerakiScans.Run
+import MangaCMS.ScrapePlugins.M.MerakiScans.Run
 import MangaCMSOld.ScrapePlugins.M.WebtoonLoader.Run            # Yeah. There is webtoon.com. and WebtoonsReader.com. Confusing much?
 import MangaCMSOld.ScrapePlugins.M.ZenonLoader.Run
 
@@ -83,10 +83,10 @@ scrapePlugins = {
 	18  : (MangaCMS.ScrapePlugins.M.DynastyLoader.Run,                      hours( 8)),
 	#19  : (MangaCMS.ScrapePlugins.M.KissLoader.Run,                      hours( 1)),
 	20  : (MangaCMSOld.ScrapePlugins.M.Crunchyroll.Run,                     hours( 4)),
-	22  : (MangaCMSOld.ScrapePlugins.M.Kawaii.Run,                          hours(12)),
+	22  : (MangaCMS.ScrapePlugins.M.Kawaii.Run,                          hours(12)),
 	23  : (MangaCMSOld.ScrapePlugins.M.ZenonLoader.Run,                     hours(24)),
 	24  : (MangaCMSOld.ScrapePlugins.M.MangaBox.Run,                        hours(12)),
-	27  : (MangaCMSOld.ScrapePlugins.M.MerakiScans.Run,                     hours(12)),
+	27  : (MangaCMS.ScrapePlugins.M.MerakiScans.Run,                     hours(12)),
 	28  : (MangaCMS.ScrapePlugins.M.MangaZuki.Run,                          hours(12)),
 
 
@@ -204,14 +204,14 @@ if __name__ == "__main__":
 				# MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.TripleSevenRun,
 				# MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.TwistedHelRun,
 				# MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.VortexRun,
-				# MangaCMSOld.ScrapePlugins.M.Kawaii.Run,
+				# MangaCMS.ScrapePlugins.M.Kawaii.Run,
 				# MangaCMSOld.ScrapePlugins.M.MangaBox.Run,
 				# MangaCMS.ScrapePlugins.M.MangaDex.Run,
 				# MangaCMS.ScrapePlugins.M.MangaHere.Run,
 				# MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run,
 				# MangaCMS.ScrapePlugins.M.MangaZuki.Run,
 				# MangaCMS.ScrapePlugins.M.McLoader.Run,
-				# MangaCMSOld.ScrapePlugins.M.MerakiScans.Run,
+				# MangaCMS.ScrapePlugins.M.MerakiScans.Run,
 				# MangaCMSOld.ScrapePlugins.M.WebtoonLoader.Run,
 				# MangaCMS.ScrapePlugins.M.YoMangaLoader.Run,
 				# MangaCMSOld.ScrapePlugins.M.ZenonLoader.Run,
