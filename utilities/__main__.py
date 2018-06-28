@@ -239,6 +239,9 @@ def fix_h_tags_case():
 def clean_japanese_only():
 	cleaner = utilities.cleanDb.HCleaner('None')
 	cleaner.cleanJapaneseOnly()
+def clean_cg_only():
+	cleaner = utilities.cleanDb.HCleaner('None')
+	cleaner.cleanCgOnly()
 def clean_yaoi_only():
 	cleaner = utilities.cleanDb.HCleaner('None')
 	cleaner.cleanYaoiOnly()
@@ -443,6 +446,7 @@ single_arg_funcs = {
 	"fix_bad_series"          : fix_bad_series,
 	"fix_djm"                 : fix_djm,
 	"fix_h_tags_case"         : fix_h_tags_case,
+	"clean_cg_only"           : clean_cg_only,
 	"clean_japanese_only"     : clean_japanese_only,
 	"clean_yaoi_only"         : clean_yaoi_only,
 	"aggregate_crosslinks"    : aggregate_crosslinks,

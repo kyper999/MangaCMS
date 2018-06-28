@@ -52,6 +52,8 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 		ret = {}
 
+		lang = "Unknown"
+
 		for row in linkdiv.find_all("tr"):
 			if not len(row("td")) == 2:
 				continue
@@ -68,15 +70,22 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 				if val.lower() not in ['english', "n/a"]:
 					self.log.info("Skipping item due to language being %s.", val)
 					return None
+				lang = val.lower()
 
 			if param.lower() == "type":
 				ret['series_name']  = val.title()
+
+
 
 			# Judge me
 			if param.lower() == "tags":
 				if "males only" in val.lower() and not "females only" in val.lower():
 					self.log.info("Skipping item due to tag 'males only' (%s).", val.replace("\n", " "))
 					return None
+
+		if 'series_name' in ret and ret['series_name'] == 'artist CG':
+			if 'lang' == 'n/a':
+				return None
 
 		ret["origin_name"] = linkdiv.h1.get_text().strip()
 		ret["source_id"] = urllib.parse.urljoin(self.urlBase, linkdiv.h1.a["href"])

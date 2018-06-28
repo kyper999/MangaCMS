@@ -42,107 +42,97 @@ class CleanerBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 		super().__init__()
 
 
-	def __delete(self, cur, dbid, wanted):
+	def __delete(self, sess, frow, wanted):
 
-		cur.execute("""
-			SELECT
-				dbId, sourceSite, dlState, sourceUrl, retreivalTime, lastUpdate, sourceId, seriesName, fileName, originName, downloadPath, flags, tags, note
-			FROM
-				{tableName}
-			WHERE dbid = %s""".format(tableName=self.tableName), (dbid, ))
-		have = cur.fetchone()
-		if not have:
-			return
 
-		dbId, sourceSite, dlState, sourceUrl, retreivalTime, lastUpdate, sourceId, seriesName, fileName, originName, downloadPath, flags, tags, note = have
 
-		fqpath = os.path.join(downloadPath, fileName)
+		fqpath = os.path.join(frow.dirpath, frow.filename)
 
 		if not os.path.exists(fqpath):
-			print("Deleting row for missing item")
-			cur.execute("""DELETE FROM {tableName} WHERE dbid = %s""".format(tableName=self.tableName), (dbid, ))
+			self.log.info("Deleting row for missing item")
+			sess.delete(frow)
+			sess.commit()
 
 
-		cur.execute("""
-			SELECT
-				dbId, tags
-			FROM
-				{tableName}
-			WHERE
-				downloadPath = %s
-			AND
-				fileName = %s
+		all_tags = [tag for tag in frow.hentai_tags] + [tag for tag in frow.manga_tags]
+		for release in frow.hentai_releases:
+			reltags = release.tags
+			all_tags += reltags
 
-				""".format(tableName=self.tableName), (downloadPath, fileName))
+		all_tags = set(all_tags)
+		self.log.info("All tags: %s", all_tags)
 
-		matches = cur.fetchall()
 
-		ids = [(tmp[0], ) for tmp in matches]
 
-		tagagg = [tmp[1] for tmp in matches if tmp[1]]
-		tagagg = " ".join([tmp if tmp else "" for tmp in tagagg])
+		tagagg = " ".join([tmp if tmp else "" for tmp in all_tags])
 		lcSet = set(tagagg.lower().split(" "))
 
 		keep_tags = [tag for tag in lcSet if any([item in tag for item in wanted])]
 
-
-		if "language-english" in tagagg:
+		if keep_tags:
+			self.log.error("Item had keeptags! Wat?")
+			self.log.error("Keeptags: %s (all: %s)", keep_tags, lcSet)
 			return
 
-		if ids == [(dbId, )] and dbId == dbid:
-			print("row", os.path.exists(fqpath), downloadPath, fileName)
-			print("Tags", tags)
+		self.log.info("Deleting rows!")
 
-			if os.path.exists(fqpath):
-				os.remove(fqpath)
+		for relrow in frow.hentai_releases:
+			sess.delete(relrow)
 
-			cur.execute("""DELETE FROM {tableName} WHERE dbid = %s""".format(tableName=self.tableName), (dbid, ))
-		elif not keep_tags:
-			print("Have multiple rows for item!")
-			print(keep_tags)
-			print(fqpath)
-			print(matches)
+		sess.delete(frow)
+		self.log.info("Committing!")
+		sess.commit()
 
-			for item_id in ids:
-				cur.execute("""DELETE FROM {tableName} WHERE dbid = %s""".format(tableName=self.tableName), (item_id, ))
+		if os.path.exists(fqpath):
+			self.log.info("Deleting file %s.", fqpath)
+			os.remove(fqpath)
 
-			if os.path.exists(fqpath):
-				os.remove(fqpath)
-
-		else:
-			print("Keeeping")
-			print(keep_tags)
-			print(fqpath)
 
 	def cleanJapaneseOnly(self):
 		print("cleanJapaneseOnly")
 
-		bad_tags = [r'%language-japanese%', r'%language-日本語%', r'%language-chinese%',]
+	def cleanCgOnly(self):
+		print("cleanCgOnly")
+
+		bad_tags = [r'%language-japanese%', r'%language-日本語%', r'%language-chinese%', r'%language-n/a%',]
 
 		wanted = [tmp.lower() for tmp in settings.tags_keep]
 
+		with self.db.session_context() as sess:
+			likes = [self.db.HentaiTags.tag.like(tag) for tag in bad_tags]
+
+			self.log.info("Querying...")
+			bad_tags = sess.query(self.db.HentaiTags).filter(or_(*likes)).all()
+			self.log.info("Results:")
 
 
-		for bad in bad_tags:
+			for tag in bad_tags:
+				self.log.info("Fetching files for tag %s", tag.tag)
 
-			with self.transaction() as cur:
-				print("Searching for tag %s" % bad)
-				cur.execute("""SELECT dbId, tags FROM {tableName} WHERE tags LIKE %s""".format(tableName=self.tableName), (bad, ))
-				items = cur.fetchall()
-				print("Processing %s results", len(items))
+				files = tag.release_files.all()
+				self.log.info("Found %s files", len(files))
 
-				for dbId, tags in items:
+				for file_row in files:
+					stags = str(file_row.hentai_tags)
+					self.log.info("------------------------------------------------------------------------------")
+					keeps = [tmp for tmp in wanted if tmp in stags]
 
-					lcSet = set(tags.lower().split(" "))
+					self.log.info("File row: %s", file_row.filename)
+					self.log.info("Tags: %s", file_row.hentai_tags)
+					self.log.info("Cat: %s", [row.series_name for row in file_row.hentai_releases])
+					self.log.info("Sources: %s", [row.source_site for row in file_row.hentai_releases])
+					self.log.info("Extra: %s, %s, %s",
+							[row.origin_name         for row in file_row.hentai_releases],
+							[row.series_name         for row in file_row.hentai_releases],
+							[row.additional_metadata for row in file_row.hentai_releases],
+							)
+					would_keep = len(keeps)
+					if would_keep:
+						self.log.info("Would keep: %s (keeps: %s)", would_keep, keeps)
+					else:
+						self.log.warning("Would keep: %s", would_keep)
+						self.__delete(sess, file_row, wanted)
 
-					# if any([tmp in lcSet for tmp in settings.deleted_indicators]):
-					# 	continue
-
-					match = [tag for tag in lcSet if any([item in tag for item in wanted])]
-					if not match:
-						self.__delete(cur, dbId, wanted)
-
-				print(len(items))
 
 
 	def cleanYaoiOnly(self):
