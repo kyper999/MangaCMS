@@ -98,6 +98,16 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase, LoginMixin.ExLoginM
 
 
 		ret['series_name'] = category.title()
+
+		if ret['series_name'].lower().startswith("artist - "):
+			return False
+		if ret['series_name'].lower().startswith("artist archives ::: "):
+			return False
+		if ret['series_name'].lower().startswith("artist galleries ::: "):
+			return False
+		if ret['series_name'].lower().startswith("artist: "):
+			return False
+
 		# If there is a torrent link, decompose it so the torrent link doesn't
 		# show up in our parsing of the content link.
 		if name.find("div", class_='it3'):

@@ -4,15 +4,18 @@
 <!DOCTYPE html>
 <html>
 	<head>
+
+		<!-- Base template header -->
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="csrf-token" content="{{ csrf_token() }}">
+		
 		{%- if title -%}
 			<title>MangoCMS - {{ title }}</title>
 		{%- else -%}
 			<title>MangoCMS</title>
 		{%- endif -%}
 
-		<!-- Base template header -->
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<meta name="csrf-token" content="{{ csrf_token() }}">
 		<!-- Sub template header -->
 		{%- block header -%}{%- endblock -%}
 		<!-- template header end -->
