@@ -21,6 +21,7 @@ import traceback
 import bs4
 import re
 import json
+import sqlalchemy.exc
 import MangaCMS.ScrapePlugins.RetreivalBase
 
 from concurrent.futures import ThreadPoolExecutor
@@ -98,9 +99,16 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			source_url = row.source_id
 			row.state = 'fetching'
 
-			if source_url.startswith("http://"):
-				source_url = source_url.replace("http://", "https://")
-				row.source_id = source_url
+		try:
+			with self.row_context(dbid=link_row_id) as row:
+				if source_url.startswith("http://"):
+					source_url = source_url.replace("http://", "https://")
+					row.source_id = source_url
+		except sqlalchemy.exc.InvalidRequestError:
+			self.log.error("Already fetched HTTPS version. ")
+			with self.row_sess_context(dbid=link_row_id) as (row, sess):
+				sess.delete(row)
+				return
 
 		try:
 			inMarkup = self.wg.getpage(source_url)
