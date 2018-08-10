@@ -1,6 +1,7 @@
 
 
 
+import sys
 import os
 import os.path
 import ast
@@ -31,42 +32,45 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	def getImageUrls(self, chapUrl):
 		soup = self.wg.getSoup(chapUrl)
 
+		meta_tags = soup.find_all("meta")
 
-		js_segments = soup.find_all("script", type="text/javascript")
+		name_tag = [
+					tmp
+				for
+					tmp
+				in
+					meta_tags
+				if
+						'name' in tmp.attrs
+					and
+						'data-chapter-id' in tmp.attrs
+					and
+						tmp.attrs['name'] == 'app'
+			]
 
-		# print(js_segments)
-		literal_regex = re.compile(r'(?<=var)(.+?)(?=;)', re.DOTALL)
+		if not (name_tag and len(name_tag) == 1):
+			self.log.error("Could not find meta tag on manga page: '%s'", chapUrl)
+			return []
 
+		series_id = name_tag[0]['data-chapter-id']
 
-		js_vars = {}
-		for js_segment in js_segments:
-			matches = literal_regex.findall(str(js_segment))
-			for match in matches:
-				key, val = match.split("=", 1)
-				key = key.strip()
-				val = val.strip()
-				try:
-					js_vars[key] = ast.literal_eval(val)
-				except Exception as e:
-					# print("Wat", val, e)
-					pass
+		js_vars = self.wg.getJson('https://mangadex.org/api/chapter/%s?' % series_id)
 
-		expect_keys = ['page_array', 'server', 'dataurl']
+		expect_keys = ['page_array', 'server', 'hash']
 		if not all([key in js_vars for key in expect_keys]):
 			self.log.error("Missing content variables from manga page: '%s'", chapUrl)
+			self.log.error("JS Data: %s", js_vars)
 			return []
 
 		image_urls = []
 		for img_file in js_vars['page_array']:
-			img_url = js_vars['server'] + js_vars['dataurl'] + "/" + img_file
+			img_url = js_vars['server'] + js_vars['hash'] + "/" + img_file
 			img_url = urllib.parse.urljoin(self.urlBase, img_url)
 			image_urls.append((img_url, chapUrl))
-
 
 		self.log.info("Found %s images", len(image_urls))
 
 		return image_urls
-
 
 
 	def getImages(self, source_url):
@@ -105,7 +109,6 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 					row.state = 'error'
 					row.err_str = "error-404"
 					return
-
 
 			self.save_manga_image_set(link_row_id, series_name, chapter_name, images)
 

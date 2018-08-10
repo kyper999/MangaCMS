@@ -1,5 +1,6 @@
 
 import runStatus
+import json
 runStatus.preloadDicts = False
 
 
@@ -26,7 +27,7 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
 	urlBase    = "https://mangadex.org/"
-	seriesBase = "https://mangadex.org/1"
+	seriesBase = "https://mangadex.org/updates"
 
 	def setup(self):
 		now = int(time.time() * 1000)
@@ -73,33 +74,42 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	def getSeriesInfoFromSoup(self, soup):
 		# Should probably extract tagging info here. Laaaaazy
 		# MangaUpdates interface does a better job anyways.
-		titleA = soup.find("h3", class_='panel-title')
+		titleA = soup.find("h6", class_='card-header')
 		if not titleA:
 			return None
 		return {"series_name": titleA.get_text(strip=True)}
 
 	def getChaptersFromSeriesPage(self, soup):
-		sname = soup.find("h3", class_='panel-title').get_text(strip=True)
+		sname = soup.find("h6", class_='card-header').get_text(strip=True)
 
 		# import pdb
 		# pdb.set_trace()
 
+		print("getChaptersFromSeriesPage")
+
 		items = []
-		for row in soup.find_all("tr"):
+		for row in soup.find_all("div", class_="chapter-row"):
 			if not row.a:
 				continue  # Skip the table header row
 
-			# And any other rows
-			if not "chapter_" in row.get("id", ""):
-				continue
 
-			tds = row.find_all("td")
-			if len(tds) != 8:
+			tds = row.find_all("div", recursive=False)
+			if len(tds) != 9:
 				self.log.warning("Invalid number of table entries: %s", len(tds))
 				self.log.warning("Row: %s", row)
+				self.log.warning("Subsections: %s", json.dumps([str(tmp) for tmp in tds]))
 				continue
 
-			dummy_something, chapter_name, dummy_discussion, lang, group, dummy_uploader, dummy_views, ultime = tds
+			dummy_something,      \
+				chapter_name,     \
+				dummy_discussion, \
+				ultime,           \
+				dummy_nfi,        \
+				lang,             \
+				group,            \
+				dummy_uploader,   \
+				dummy_views,      \
+					= tds
 
 			lang = lang.img['title']
 			if lang != DOWNLOAD_ONLY_LANGUAGE:
@@ -119,12 +129,25 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 			item["origin_name"] = name
 			item["source_id"]  = urllib.parse.urljoin(self.urlBase, chapter_name.a['href'])
-			dateStr = ultime['title'].strip()
+			dateStr = ultime.get_text(strip=True)
+
+			# No idea how this was happening.
+			dateStr = dateStr.replace("minago",  "minutes ago")
+			dateStr = dateStr.replace("minsago", "minutes ago")
+			dateStr = dateStr.replace("hrago",   "hours ago")
+			dateStr = dateStr.replace("hrsago",  "hours ago")
+			dateStr = dateStr.replace("dayago",  "days ago")
+			dateStr = dateStr.replace("daysago", "days ago")
+			dateStr = dateStr.replace("moago",   "months ago")
+			dateStr = dateStr.replace("mosago",  "months ago")
+
 			itemDate, status = parsedatetime.Calendar().parse(dateStr)
 			if status < 1:
+				self.log.error("Failed to parse date '%s': %s->%s", dateStr, status, itemDate)
 				continue
 
 			item['posted_at'] = datetime.datetime(*itemDate[:6])
+
 			items.append(item)
 
 
@@ -136,6 +159,7 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 		seriesInfo = self.getSeriesInfoFromSoup(soup)
 		if not seriesInfo:
+			self.log.error("No series info on page '%s'", seriesUrl)
 			return ret
 
 		chapters = self.getChaptersFromSeriesPage(soup)
@@ -209,18 +233,19 @@ if __name__ == '__main__':
 
 	with tb.testSetup(load=False):
 		fl = FeedLoader()
-		fl.setup()
-		fl.get_history()
+		# fl.setup()
+		# fl.get_history()
 		# fl.get_feed()
-		# fl.do_fetch_feeds()
+		fl.do_fetch_feeds()
 		# print(fl.getUpdatedSeriesPages())
 		# print(fl.getAllItems())
 		# fl.resetStuckItems()
-		# cl = fl.getChapterLinkFromSeriesPage("https://mangadex.org/manga/8246")
+		# cl = fl.getChapterLinkFromSeriesPage("https://mangadex.org/manga/29247/dame-na-kanojo-wa-amaetai")
 		# cl = fl.getChapterLinkFromSeriesPage("https://mangadex.org/manga/19969")
 		# cl = fl.getChapterLinkFromSeriesPage("https://mangadex.org/manga/9134")
 		# print(cl)
 		# fl.getSeriesUrls()
 
+		# print("Links: ", cl)
 		# fl.getAllItems()
 
