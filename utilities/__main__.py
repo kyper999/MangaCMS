@@ -11,7 +11,7 @@ import signal
 import sys
 import os.path
 import utilities.dedupDir
-import utilities.runPlugin
+import MangaCMS.util.runPlugin
 import utilities.approxFileSorter
 import utilities.autoOrganize as autOrg
 import utilities.importer as autoImporter
@@ -292,7 +292,7 @@ def two_arg_organize(val):
 	autOrg.organizeFolder(val)
 
 def two_arg_run(val):
-	utilities.runPlugin.runPlugin(val)
+	MangaCMS.util.runPlugin.runPlugin(val)
 
 def two_arg_rename(val):
 	if not os.path.exists(val):
@@ -418,8 +418,8 @@ def three_arg_phash_clean(arg1, arg2):
 
 single_arg_funcs = {
 
-	"run"                     : utilities.runPlugin.listPlugins,
-	'retag'                   : utilities.runPlugin.listPlugins,
+	"run"                     : MangaCMS.util.runPlugin.listPlugins,
+	'retag'                   : MangaCMS.util.runPlugin.listPlugins,
 	"reload_tree"             : deduplicator.remoteInterface.treeReload,
 	"crosslink_books"         : utilities.bookClean.updateNetloc,
 	"clean_book_cache"        : utilities.bookClean.cleanBookContent,

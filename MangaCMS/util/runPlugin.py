@@ -83,8 +83,12 @@ def listPlugins():
 
 
 def run_all():
-
+	print("Loading plugins")
 	plgs = get_plugins()
+	print("Available plugins!")
+	for key, plgd in plgs.items():
+		print("	Plugin {} -> {}!".format(key, plgd['name']))
+
 
 	import nameTools as nt
 	nt.dirNameProxy.startDirObservers()

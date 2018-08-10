@@ -117,6 +117,16 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase, LoginMixin.ExLoginM
 		ret['origin_name'] = name.a.get_text().strip()
 		ret['posted_at']   = self.getUploadTime(pubDate.get_text())
 
+
+		if ret['origin_name'].lower().startswith("artist - "):
+			return False
+		if ret['origin_name'].lower().startswith("artist archives ::: "):
+			return False
+		if ret['origin_name'].lower().startswith("artist galleries ::: "):
+			return False
+		if ret['origin_name'].lower().startswith("artist: "):
+			return False
+
 		return ret
 
 	def get_feed(self, searchTag,
