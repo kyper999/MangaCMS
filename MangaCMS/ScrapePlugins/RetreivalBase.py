@@ -261,6 +261,11 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 			self.die = True
 			raise e
 
+
+		except ScrapeExceptions.ContentNotAvailableYetError as e:
+			self.log.info("Item seems to be missing content/not available. Deferring.")
+			return False
+
 		except KeyboardInterrupt:
 			self.log.critical("Keyboard Interrupt!")
 			self.log.critical(traceback.format_exc())

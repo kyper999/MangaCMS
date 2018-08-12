@@ -5,6 +5,7 @@ import sys
 import os
 import os.path
 import ast
+import magic
 import urllib.parse
 import traceback
 import re
@@ -13,6 +14,7 @@ import nameTools as nt
 
 import MangaCMS.ScrapePlugins.RetreivalBase
 import MangaCMS.ScrapePlugins.RunBase
+import MangaCMS.ScrapePlugins.ScrapeExceptions
 
 import MangaCMS.cleaner.processDownload
 
@@ -63,10 +65,13 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			return []
 
 		image_urls = []
-		for img_file in js_vars['page_array']:
+
+
+
+		for idx, img_file in enumerate(js_vars['page_array']):
 			img_url = js_vars['server'] + js_vars['hash'] + "/" + img_file
 			img_url = urllib.parse.urljoin(self.urlBase, img_url)
-			image_urls.append((img_url, chapUrl))
+			image_urls.append((img_url, chapUrl + "/%s" % (idx + 1, )))
 
 		self.log.info("Found %s images", len(image_urls))
 
@@ -87,6 +92,13 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			self.log.info("Found %s byte image named %s", len(imageContent), imageName)
 			images.append([imageName, imageContent])
 			image_counter += 1
+
+			fType = magic.from_buffer(imageContent, mime=True)
+
+			if not 'image' in fType:
+				raise MangaCMS.ScrapePlugins.ScrapeExceptions.ContentNotAvailableYetError(
+					"Empty/failed image return - File isn't an image? Detected type: %s" % fType)
+
 		return images
 
 
