@@ -1,18 +1,19 @@
 
 # -*- coding: utf-8 -*-
 
-import os
 import re
+import os
 import os.path
 import datetime
 
 import mimetypes
-import magic
 import zipfile
+
+import WebRequest
+import urllib.request, urllib.parse, urllib.error
 
 import nameTools as nt
 
-import urllib.request, urllib.parse, urllib.error
 import traceback
 
 import settings
@@ -55,12 +56,46 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		return ret
 
+
+	def handle_recaptcha(self, soup, containing_page, referrer_url):
+		self.log.warning("Hit recaptcha. Attempting to solve.")
+
+		key = settings.captcha_solvers['2captcha']['api_key']
+		solver = WebRequest.TwoCaptchaSolver(api_key=key, wg=self.wg)
+
+		args = {
+				tag['id'] : tag['value']
+			for
+				tag
+			in
+				soup.find_all('input', id=True)
+		}
+
+		captcha_key = soup.find("div", class_="g-recaptcha")['data-sitekey']
+
+		self.log.info("Captcha key: %s with input values: %s", captcha_key, args)
+
+		recaptcha_response = solver.solve_recaptcha(google_key=captcha_key, page_url=containing_page)
+
+		self.log.info("Captcha solved with response: %s", recaptcha_response)
+		args['g-recaptcha-response'] = recaptcha_response
+
+		solved_soup = self.wg.getSoup(
+				urllib.parse.urljoin(self.urlBase, "/Read/AuthProcess"),
+				postData    = args,
+				addlHeaders = {'Referer': 'http://www.tsumino.com/Read/Auth/{id}'.format(id=args['Id'])},
+			)
+
+		return solved_soup
+
+
 	def getDownloadInfo(self, link_row_id):
 		with self.row_context(dbid=link_row_id) as row:
 			source_url = row.source_id
 			row.state = 'fetching'
 
 		self.log.info("Retrieving item: %s", source_url)
+
 
 		try:
 			soup = self.wg.getSoup(source_url, addlHeaders={'Referer': self.urlBase})
@@ -75,6 +110,10 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		nav_to = urllib.parse.urljoin(self.urlBase, read_link['href'])
 		soup = self.wg.getSoup(nav_to, addlHeaders={'Referer': source_url})
 		if soup.find_all("div", class_="g-recaptcha"):
+			soup = self.handle_recaptcha(soup, nav_to, source_url)
+
+		if soup.find_all("div", class_="g-recaptcha"):
+			self.log.error("Failed after attempting to solve recaptcha!")
 			raise ScrapeExceptions.LimitedException
 
 		# This is probably brittle
@@ -126,7 +165,6 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		return filename, content
 
 
-
 	def fetchImages(self, image_urls):
 
 		images = []
@@ -136,7 +174,6 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			fidx += 1
 
 		return images
-
 
 
 	def doDownload(self, image_urls, link_row_id):
@@ -149,12 +186,10 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 				row.state = 'error'
 			return
 
-
-
 		with self.row_sess_context(dbid=link_row_id) as row_tup:
 			row, sess = row_tup
 
-			fileN = row.series_name + ".zip"
+			fileN = row.series_name + " - " + row.origin_name + ".zip"
 
 			container_dir = os.path.join(settings.tsSettings["dlDir"], nt.makeFilenameSafe(row.series_name))
 

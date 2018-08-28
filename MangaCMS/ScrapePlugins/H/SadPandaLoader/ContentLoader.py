@@ -68,13 +68,14 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase, LoginMix
 			else:
 				prefix = ''
 
-			for tag in tags.find_all('div'):
-				tag = '%s %s' % (prefix, tag.get_text())
-				while tag.find("  ") + 1:
-					tag = tag.replace("  ", " ")
-				tag = tag.strip()
-				tag = tag.replace(" ", "-")
-				tagList.append(tag.lower())
+			for tag_tag in tags.find_all('div'):
+				for tag in tag_tag.get_text(strip=True).split("|"):
+					tag = '%s %s' % (prefix, tag)
+					while tag.find("  ") + 1:
+						tag = tag.replace("  ", " ")
+					tag = tag.strip()
+					tag = tag.replace(" ", "-")
+					tagList.append(tag.lower())
 
 
 		for tag in settings.sadPanda['sadPandaExcludeTags']:
@@ -97,8 +98,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase, LoginMix
 					self.log.info("Item tags = '%s'", tagList)
 					self.log.info("Triggering tags: = '%s', '%s'", exclude, when)
 					return False
-
-		if not any([tmp in tagList for tmp in settings.tagHighlight]):
+					
+		tagstr = str(tagList)
+		if not any([tmp in tagstr for tmp in settings.tagHighlight]):
 			self.log.info("Missing any highlighted tag. Not fetching!")
 			self.log.info("Item tags = '%s'", tagList)
 			return False
@@ -267,7 +269,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase, LoginMix
 
 				sleeptime = random.randint(10,60*5)
 			else:
-				sleeptime = 5
+				sleeptime = 15
 
 			self.log.info("Sleeping %s seconds.", sleeptime)
 			for dummy_x in range(sleeptime):

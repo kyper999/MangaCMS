@@ -99,7 +99,10 @@ all_scrapers = []
 hentai_scrapers = []
 other_scrapers = []
 
-for plugin_name, plugin in MangaCMS.activePlugins.PLUGIN_MAP.items():
+items = list(MangaCMS.activePlugins.PLUGIN_MAP.items())
+items.sort()
+
+for plugin_name, plugin in items:
 	if 'is_h' in plugin:
 		if plugin["is_h"] == True:
 			plugin['type'] = "Hentai"
@@ -130,6 +133,7 @@ print(all_scrapers)
 
 for keyset in [manga_scrapers, hentai_scrapers, other_scrapers, all_scrapers]:
 	hues = linspace(0.0, 1.0, n=len(keyset)+1)
+	keyset.sort(key=lambda x: str(x['key']))
 	for item_dict in keyset:
 		h = hues.pop()
 		baseC  = (h,s_base,v_base)
