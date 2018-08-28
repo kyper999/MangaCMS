@@ -194,7 +194,13 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			container_dir = os.path.join(settings.tsSettings["dlDir"], nt.makeFilenameSafe(row.series_name))
 
 			wholePath = os.path.join(container_dir, fileN)
-			fqFName = self.save_image_set(row, sess, wholePath, images)
+
+			try:
+				fqFName = self.save_image_set(row, sess, wholePath, images)
+			except AssertionError:
+				with self.row_context(dbid=link_row_id) as row:
+					row.state = 'new'
+					return
 
 		with self.row_context(dbid=link_row_id) as row:
 			row.state = 'processing'
