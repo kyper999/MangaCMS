@@ -408,6 +408,9 @@ def generate_hentai_meta(row):
 	else:
 		ret['file-tags'] = []
 
+	ret['item-tags'].sort()
+	ret['file-tags'].sort()
+
 	toolTip  = filePath.replace('"', "") + "<br>"
 	toolTip += "Origin Name: " + ", ".join([srow.origin_name.replace('"', "") for srow in ret['other_rows']]) + "<br>"
 	toolTip += "Category Name: " + ", ".join([(srow.series_name if srow.series_name else "").replace('"', "") for srow in ret['other_rows']]) + "<br>"
