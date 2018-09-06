@@ -48,7 +48,6 @@ class BuDateUpdater(MangaCMSOld.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 	# goBigThreads = 1
 
 
-
 	# -----------------------------------------------------------------------------------
 	# Management Stuff
 	# -----------------------------------------------------------------------------------
@@ -66,7 +65,7 @@ class BuDateUpdater(MangaCMSOld.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 		self.log.info("Number of items to check: '%s'", len(items))
 
 		if items:
-			def iter_baskets_from(items, maxbaskets=3):
+			def iter_baskets_from(items, maxbaskets):
 				'''generates evenly balanced baskets from indexable iterable'''
 				item_count = len(items)
 				baskets = min(item_count, maxbaskets)
@@ -149,7 +148,7 @@ class BuDateUpdater(MangaCMSOld.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 
 	def getItemInfo(self, dbId, mId):
 
-		pageCtnt  = self.wg.getpage(self.itemURL.format(buId=mId))
+		pageCtnt  = bu_common.fetch_retrier(requestedUrl=self.itemURL.format(buId=mId), soup=False, wg=self.wg, log=self.log)
 
 		if "You specified an invalid series id." in pageCtnt:
 			self.log.warning("Invalid MU ID! ID: %s", mId)
@@ -238,7 +237,7 @@ class BuDateUpdater(MangaCMSOld.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 			return None
 		searchPage = item['href']
 
-		relPage = self.wg.getSoup(searchPage)
+		relPage = bu_common.fetch_retrier(requestedUrl=searchPage, wg=self.wg, log=self.log)
 
 		mainTd = relPage.find('td', id='main_content')
 
@@ -359,7 +358,7 @@ class BuDateUpdater(MangaCMSOld.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 																																	num2=int(random.random()*100000000),
 																																	num3=int(random.random()*100000000))
 
-		soup = self.wg.getSoup(tagAjaxUrl, addlHeaders={'Referer': self.itemURL.format(buId=mId)})
+		soup = bu_common.fetch_retrier(requestedUrl=tagAjaxUrl, addlHeaders={'Referer': self.itemURL.format(buId=mId)}, wg=self.wg, log=self.log)
 
 		tagsHeaderB = soup.find("div", id="cat_opts")
 

@@ -28,14 +28,19 @@ def parse_table_args(**kwargs):
 		'filter-category' : [],
 	}
 
+	print("Args:", request.args)
+	print("kwargs:", kwargs)
+
 	# Override the return parameters with the function
 	# params (if passed).
 	# Note: underscores are replaced with hyphens in the keys!
-	for key, val in request.args.items():
+	for key, val in request.args.items(multi=True):
+		print("args Key, val: ", key, val)
 		key = key.replace("_", "-")
 		if key in filter_params and val:
 			filter_params[key].append(val)
 	for key, val in kwargs.items():
+		print("kwargs Key, val: ", key, val)
 		key = key.replace("_", "-")
 		if key in filter_params and val:
 			filter_params[key].append(val)
@@ -102,7 +107,7 @@ def select_from_table(main_table, tag_table, link_table, page, site=False, filte
 
 	if params['filter-tags']:
 		all_filters = []
-	
+
 		# query.join(tag_table, link_table.c.releases_id == main_table.id)
 		params['resolved-filter-tags'] = []
 		for filter_tag in params['filter-tags']:
@@ -158,12 +163,15 @@ def manga_by_site_view(source_site, page=1):
 @app.route('/hentai/page/<int:page>', methods=['GET'])
 def hentai_only_view(page=1):
 	params, items = select_from_table(main_table=db.HentaiReleases, tag_table=db.HentaiTags, link_table=db.hentai_releases_tags_link, page=page)
-	return render_template('hentai_view.html',
+	print("Rendering")
+	ret = render_template('hentai_view.html',
 						   whole_page    = True,
 						   items         = items,
 						   params        = params,
 						   url_for_param = "hentai_only_view"
 						   )
+	print("Rendered")
+	return ret
 
 @app.route('/hentai/by-site/<source_site>/', methods=['GET'])
 @app.route('/hentai/by-site/<source_site>/<int:page>', methods=['GET'])

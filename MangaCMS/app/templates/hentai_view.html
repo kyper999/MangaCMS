@@ -145,10 +145,23 @@
 			<div id='hentai_block'>
 				<h3>Hentai</h3>
 				Filter Params: {{params}}.<br>
-				{%- if request.args.get('include-deleted') -%}
-					<a href="{{url_for(endpoint=url_for_param, tag=tag if tag else None, category=category if category else None, source_site=source_site if source_site else None, include_deleted=None)}}">Exclude Deleted</a>
+				{%- if request.args.get('include_deleted') -%}
+					<a href="{{url_for(
+								endpoint        = url_for_param,
+								tag             = tag if tag else None,
+								category        = category if category else None,
+								source_site     = source_site if source_site else None,
+								**request.args
+							)}}">Exclude Deleted</a>
 				{%- else -%}
-					<a href="{{url_for(endpoint=url_for_param, tag=tag if tag else None, category=category if category else None, source_site=source_site if source_site else None, include_deleted=True)}}">Include Deleted</a>
+					<a href="{{url_for(
+								endpoint        = url_for_param,
+								tag             = tag if tag else None,
+								category        = category if category else None,
+								source_site     = source_site if source_site else None,
+								include_deleted = True,
+								**request.args
+							)}}">Include Deleted</a>
 				{%- endif -%}
 				<span id="vp-size"></span>
 				{{hentai_block(items, params)}}

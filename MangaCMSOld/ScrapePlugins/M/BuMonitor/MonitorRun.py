@@ -9,6 +9,7 @@ import time
 import settings
 import psycopg2
 import dateutil.parser
+import WebRequest
 
 import MangaCMSOld.ScrapePlugins.MonitorDbBase
 # import TextScrape.NovelMixin
@@ -60,12 +61,14 @@ class BuWatchMonitor(MangaCMSOld.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 
 
 	def getListNames(self):
+		self.log.info("Fetching list names")
+
 		bu_common.checkLogin(self.log, self.wg)
 
 		listDict = {}
 		listDict["Reading"] = self.baseListURL  # The reading list is not specifically named.
 
-		soup = self.wg.getSoup(self.baseListURL)
+		soup = bu_common.fetch_retrier(requestedUrl=self.baseListURL, wg=self.wg, log=self.log)
 
 		add_seriesSegment = soup.find("div", id="add_series")
 		listList = add_seriesSegment.find_previous_sibling("p", class_="text")
@@ -76,7 +79,7 @@ class BuWatchMonitor(MangaCMSOld.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 		self.log.info("Retrieved %d lists", len(listDict))
 
 		for key, value in listDict.items():
-			self.log.debug("List name: %s, URL: %s", value, key)
+			self.log.info("List name: %s, URL: %s", value, key)
 
 		return listDict
 
@@ -164,7 +167,7 @@ class BuWatchMonitor(MangaCMSOld.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 
 	def updateUserListNamed(self, listName, listURL):
 
-		soup = self.wg.getSoup(listURL)
+		soup = bu_common.fetch_retrier(requestedUrl=listURL, wg=self.wg, log=self.log)
 		itemTable = soup.find("table", id="list_table")
 
 
@@ -185,8 +188,7 @@ class BuWatchMonitor(MangaCMSOld.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 
 	def scanRecentlyUpdated(self):
 		ONE_DAY = 60*60*24
-		releases = self.wg.getpage(self.baseReleasesURL)
-		soup = bs4.BeautifulSoup(releases, "lxml")
+		soup = bu_common.fetch_retrier(requestedUrl=self.baseReleasesURL, wg=self.wg, log=self.log)
 
 		content = soup.find("td", {"id": "main_content"})
 		titles = content.find_all("p", class_="titlesmall")
@@ -261,8 +263,8 @@ class BuWatchMonitor(MangaCMSOld.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 			url = urlFormat.format(page=run)
 
 			run += 1
+			soup = bu_common.fetch_retrier(requestedUrl=url, wg=self.wg, log=self.log)
 
-			soup = self.wg.getSoup(url)
 			series = self.getSeriesFromPage(soup)
 			if series:
 				self.log.info("Inserting %s items into name DB", len(series))
@@ -287,7 +289,7 @@ if __name__ == "__main__":
 
 		mon = BuWatchMonitor()
 		# mon.getListNames()
-		# mon.go()
+		mon.go()
 		# mon.scanRecentlyUpdated()
 		mon.getAllManga()
 
