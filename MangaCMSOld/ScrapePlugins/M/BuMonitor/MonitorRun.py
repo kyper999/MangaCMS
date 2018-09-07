@@ -291,5 +291,5 @@ if __name__ == "__main__":
 		# mon.getListNames()
 		mon.go()
 		# mon.scanRecentlyUpdated()
-		mon.getAllManga()
+		# mon.getAllManga()
 
