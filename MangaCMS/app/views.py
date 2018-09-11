@@ -25,6 +25,12 @@ def before_request():
 	g.locale = 'en'
 	g.session = database.new_session()
 
+@app.after_request
+def add_headers(response):
+	response.cache_control.public = True
+	response.cache_control.max_age = 300
+	return response
+
 
 # @app.teardown_appcontext
 @app.teardown_request
