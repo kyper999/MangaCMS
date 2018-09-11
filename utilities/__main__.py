@@ -169,7 +169,7 @@ help_strings = [
 	"	fix_bu_authors",
 	"		Fix authors from mangaupdates table where '[, Add, ]' got into the data due to incomplete parsing of the webpage",
 	"	",
-	"	fix_h_tags_case",
+	"	clean_h_tags",
 	"		Fix issues where mixed_case H tags were being duplicated.",
 	"	",
 	"	clean_japanese_only",
@@ -233,7 +233,7 @@ def fix_bad_series():
 def fix_djm():
 	pc = utilities.cleanDb.PathCleaner()
 	pc.fixDjMItems()
-def fix_h_tags_case():
+def clean_h_tags():
 	cleaner = utilities.cleanDb.HCleaner('None')
 	cleaner.cleanTags()
 def clean_japanese_only():
@@ -445,7 +445,7 @@ single_arg_funcs = {
 	"update_bu_lut"           : update_bu_lut,
 	"fix_bad_series"          : fix_bad_series,
 	"fix_djm"                 : fix_djm,
-	"fix_h_tags_case"         : fix_h_tags_case,
+	"clean_h_tags"            : clean_h_tags,
 	"clean_cg_only"           : clean_cg_only,
 	"clean_japanese_only"     : clean_japanese_only,
 	"clean_yaoi_only"         : clean_yaoi_only,

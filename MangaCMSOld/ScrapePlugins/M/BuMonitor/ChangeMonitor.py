@@ -481,15 +481,15 @@ class BuDateUpdater(MangaCMSOld.ScrapePlugins.MonitorDbBase.MonitorDbBase):
 if __name__ == "__main__":
 	import utilities.testBase as tb
 
-	with tb.testSetup():
+	with tb.testSetup(load=False):
 
 		run = BuDateUpdater()
-		run.checkLogin()
+		# run.checkLogin()
 		# ret1, ret2 = run.getItemInfo("81129")
 		# ret1, ret2 = run.getItemInfo("120125")
 		# print(ret1)
 		# print(ret2)
 		# run.updateItem(101, "45918")
-		# run.go()
-		run.gobig()
+		run.go()
+		# run.gobig()
 

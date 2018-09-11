@@ -375,7 +375,7 @@ def generate_hentai_meta(row):
 	# 	print("Other src:", other_src)
 
 	ret['other_rows'] = [row for row in row.file.hentai_releases]
-	ret['unique_series'] = list(set([tmp.series_name for tmp in ret['other_rows']]))
+	ret['unique_series'] = list(set([tmp.series_name.title() for tmp in ret['other_rows']]))
 	if row.state == 'complete':
 		ret['statusColour'] = colours["Done"]
 	elif row.state == 'fetching' or row.state == 'processing':

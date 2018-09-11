@@ -124,19 +124,22 @@ class MangaScraperDbMixin(MangaCMS.lib.LogMixin.LoggerMixin):
 	# ---------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-
 class MangaScraperBase(MangaScraperDbMixin, MangaCMS.lib.LogMixin.LoggerMixin, MangaCMS.lib.MonitorMixin.MonitorMixin):
 
 	def update_tags(self, tags, row=None, dbid=None, url=None):
 		assert isinstance(tags, (list, tuple)), "Tags must be a list or tuple"
 
-		assert all([len(tag) >= 2 for tag in tags]), "All tags must be at least one character long. Bad tags: %s" % [tag for tag in tags if len(tag) < 2]
-		assert all([len(tag) < 90 for tag in tags]), "All tags must be less then 90 characters long. Bad tags: %s" % [(tag, len(tag)) for tag in tags if len(tag) >= 90]
-		assert all([type(tmp) == str for tmp in tags]), "All tags must be a string! Bad tags: %s" % [(tag, type(tag)) for tag in tags if type(tag) != str]
+		assert all([len(tag) >= 2 for tag in tags]),    "All tags must be at least one character long. Bad tags: %s"  % [tag for tag in tags if len(tag) < 2]
+		assert all([len(tag) < 90 for tag in tags]),    "All tags must be less then 90 characters long. Bad tags: %s" % [(tag, len(tag)) for tag in tags if len(tag) >= 90]
+		assert all([type(tmp) == str for tmp in tags]), "All tags must be a string! Bad tags: %s"                     % [(tag, type(tag)) for tag in tags if type(tag) != str]
+
 		if row:
 			for tag in tags:
+				if (tmp.startswith("large_") or tmp.startswith("large-")) and 'insertions' not in tmp:
+					tag= tag.replace("large_", "big-").replace("large-", "big-")
 				row.tags.add(tag)
 			row_tags = list(row.tags)
+
 		elif dbid or url:
 			with self.row_sess_context(dbid=dbid, url=url) as (sess_c, row_c):
 				for tag in tags:

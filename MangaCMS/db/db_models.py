@@ -141,8 +141,8 @@ class MangaReleases(Base):
 
 	dirstate            = Column(dir_type, nullable=False, default="unknown")
 
-	origin_name         = Column(Text)
-	series_name         = Column(Text, index=True)
+	origin_name         = Column(citext.CIText())
+	series_name         = Column(citext.CIText(), index=True)
 
 	additional_metadata = Column(sqlalchemy_jsonfield.JSONField())
 
@@ -183,8 +183,8 @@ class HentaiReleases(Base):
 
 	dirstate            = Column(dir_type, nullable=False, default="unknown")
 
-	origin_name         = Column(Text)
-	series_name         = Column(Text, index=True)
+	origin_name         = Column(citext.CIText())
+	series_name         = Column(citext.CIText(), index=True)
 
 	additional_metadata = Column(sqlalchemy_jsonfield.JSONField())
 

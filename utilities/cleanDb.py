@@ -134,6 +134,50 @@ class CleanerBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 						self.__delete(sess, file_row, wanted)
 
 
+	def cleanTags(self):
+		print("cleanCgOnly")
+
+		with self.db.session_context() as sess:
+
+			self.log.info("Querying...")
+			bad_tags = sess.query(self.db.HentaiTags).filter(self.db.HentaiTags.tag.like('large_%')).all()
+			self.log.info("Results:")
+
+
+			for tag in bad_tags:
+				if 'insertions' in tag.tag:
+					continue
+				self.log.info("Fetching files for tag %s", tag.tag)
+
+				files = tag.release_files.all()
+				self.log.info("Found %s files", len(files))
+				releases = tag.hentai_releases.all()
+				self.log.info("Found %s releases", len(releases))
+				for release in tqdm.tqdm(releases):
+					bad = [tmp for tmp in release.tags if (tmp.startswith("large_") or tmp.startswith("large-")) and 'insertions' not in tmp]
+					rep = [tmp.replace("large_", "big-").replace("large-", "big-") for tmp in release.tags if (tmp.startswith("large_") or tmp.startswith("large-")) and 'insertions' not in tmp]
+					# print(release.tags)
+					if bad and rep:
+						for badt in bad:
+							release.tags.remove(badt)
+						for good in rep:
+							release.tags.add(good)
+
+
+				for release in tqdm.tqdm(files):
+					bad = [tmp for tmp in release.hentai_tags if (tmp.startswith("large_") or tmp.startswith("large-")) and 'insertions' not in tmp]
+					rep = [tmp.replace("large_", "big-").replace("large-", "big-") for tmp in release.hentai_tags if (tmp.startswith("large_") or tmp.startswith("large-")) and 'insertions' not in tmp]
+					# print(release.hentai_tags)
+					if bad and rep:
+						for badt in bad:
+							release.hentai_tags.remove(badt)
+						for good in rep:
+							release.hentai_tags.add(good)
+
+
+				self.log.info("Committing...")
+				sess.commit()
+
 
 	def cleanYaoiOnly(self):
 		print("cleanYaoiOnly")
