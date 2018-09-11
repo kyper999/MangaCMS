@@ -153,7 +153,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		if fext == '.a' or not fext or fext == ".jpe":
 			fext = ".jpg"
 
-		filename = "{orig} {counter}{ext}".format(
+		filename = "{counter} {orig}{ext}".format(
 				orig    = fname,
 				counter = str(fidx).zfill(4),
 				ext     = fext,

@@ -76,6 +76,9 @@ class ViewerSession(object):
 		except AttributeError:
 			raise ValueError("No Images in archive! \n Archive contents = %s" % "\n		".join(self.archHandle.getFileList()))
 
+	def getKeyNameMapping(self):
+		return [(key, self.items[key]) for key in self.items.keys()]
+
 	def getItemByKey(self, itemKey):
 		if not itemKey in self.items:
 			raise KeyError("Invalid key. Not in archive!")

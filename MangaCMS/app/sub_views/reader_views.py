@@ -30,6 +30,24 @@ def guessItemMimeType(itemName):
 	return "application/unknown"
 
 
+def fix_sort_djm(keys):
+	if not keys:
+		return []
+
+	id1, name1 = keys[0]
+	try:
+		maybe_num = int(name1.split(" ")[0].split(".")[0])
+		return [key[0] for key in keys]
+	except ValueError:
+		# Item has the old numbering, we have to use the second entry
+		# to do the sorting
+		pass
+
+	keys.sort(key=lambda x: x[1].split(" ")[-1].split(".")[0])
+
+	return [key[0] for key in keys]
+
+
 @app.route('/reader/h/<int:rid>', methods=['GET'])
 def view_h_by_id(rid):
 	session = g.session
@@ -38,6 +56,7 @@ def view_h_by_id(rid):
 		.filter(db.HentaiReleases.id == rid)  \
 		.scalar()
 
+	source = series_row.source_site
 
 	if not series_row:
 		flash('Series id %s not found!' % rid)
@@ -63,6 +82,10 @@ def view_h_by_id(rid):
 	except Exception:
 		flash('Error opening series file for id %s (%s)!' % (rid, item_path))
 		return redirect(url_for('hentai_only_view'))
+
+	if source == 'djm':
+		keys = fix_sort_djm(session_manager[("h", rid)].getKeyNameMapping())
+
 
 	filename = series_row.file.filename
 	image_urls = [
