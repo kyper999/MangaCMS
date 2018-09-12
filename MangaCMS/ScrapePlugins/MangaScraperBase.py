@@ -135,7 +135,7 @@ class MangaScraperBase(MangaScraperDbMixin, MangaCMS.lib.LogMixin.LoggerMixin, M
 
 		if row:
 			for tag in tags:
-				if (tmp.startswith("large_") or tmp.startswith("large-")) and 'insertions' not in tmp:
+				if (tag.startswith("large_") or tag.startswith("large-")) and 'insertions' not in tag:
 					tag= tag.replace("large_", "big-").replace("large-", "big-")
 				row.tags.add(tag)
 			row_tags = list(row.tags)
