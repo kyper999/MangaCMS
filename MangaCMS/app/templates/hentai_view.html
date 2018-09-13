@@ -147,20 +147,24 @@
 				Filter Params: {{params}}.<br>
 				{%- if request.args.get('include_deleted') -%}
 					<a href="{{url_for(
-								endpoint        = url_for_param,
-								tag             = tag if tag else None,
-								category        = category if category else None,
-								source_site     = source_site if source_site else None,
-								**request.args
+								**param_superset(
+									endpoint        = url_for_param,
+									tag             = tag if tag else None,
+									category        = category if category else None,
+									source_site     = source_site if source_site else None,
+									params          = request.args
+								)
 							)}}">Exclude Deleted</a>
 				{%- else -%}
 					<a href="{{url_for(
-								endpoint        = url_for_param,
-								tag             = tag if tag else None,
-								category        = category if category else None,
-								source_site     = source_site if source_site else None,
-								include_deleted = True,
-								**request.args
+								**param_superset(
+									endpoint        = url_for_param,
+									tag             = tag if tag else None,
+									category        = category if category else None,
+									source_site     = source_site if source_site else None,
+									include_deleted = True,
+									params          = request.args
+								)
 							)}}">Include Deleted</a>
 				{%- endif -%}
 				<span id="vp-size"></span>

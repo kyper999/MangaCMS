@@ -16,7 +16,7 @@ from flask import request
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_wtf.csrf import CSRFProtect
 from babel.dates import format_datetime
-
+from flask_caching import Cache
 import nameTools as nt
 
 
@@ -38,6 +38,7 @@ app.config.from_object('MangaCMS.app.config.BaseConfig')
 
 CSRFProtect(app)
 
+cache = Cache(app, config={'CACHE_TYPE': 'simple'})
 
 if not app.debug:
 	import logging
@@ -54,7 +55,6 @@ if not app.debug:
 
 from MangaCMS.app import all_scrapers_ever
 from MangaCMS.app import views
-from MangaCMS import activePlugins
 
 
 colours = {
@@ -375,7 +375,7 @@ def generate_hentai_meta(row):
 	# 	print("Other src:", other_src)
 
 	ret['other_rows'] = [row for row in row.file.hentai_releases]
-	ret['unique_series'] = list(set([tmp.series_name.title() for tmp in ret['other_rows']]))
+	ret['unique_series'] = list(set([tmp.series_name.title() for tmp in ret['other_rows'] if tmp.series_name]))
 	if row.state == 'complete':
 		ret['statusColour'] = colours["Done"]
 	elif row.state == 'fetching' or row.state == 'processing':
@@ -492,6 +492,13 @@ def plugin_key_for_name(name):
 def min_date():
 	return datetime.datetime.min
 
+def param_superset(params, **kwargs):
+	ret = {
+		key : val for key, val in params.items()
+	}
+	ret.update(kwargs)
+	return ret
+
 app.jinja_env.globals.update(
 		generate_row_meta     = generate_row_meta,
 		generate_hentai_meta  = generate_hentai_meta,
@@ -510,6 +517,7 @@ app.jinja_env.globals.update(
 		timeAgo               = timeAgo,
 		timeAhead             = timeAhead,
 		tag_tag               = tag_tag,
+		param_superset        = param_superset,
 		min_date              = min_date,
 		plugin_key_for_name   = plugin_key_for_name,
 	)
