@@ -17,6 +17,8 @@ from MangaCMS.app import all_scrapers_ever
 from MangaCMS.app.utilities import paginate
 import MangaCMS.db as db
 
+CACHE_LIFETIME = 10 * 60
+
 def parse_table_args(**kwargs):
 
 	print((request.args, kwargs))
@@ -140,31 +142,33 @@ def select_from_table(main_table, tag_table, link_table, page, site=False, filte
 
 @app.route('/manga/', methods=['GET'])
 @app.route('/manga/page/<int:page>', methods=['GET'])
-@cache.cached(timeout=60 * 5)
+@cache.cached(timeout=CACHE_LIFETIME, query_string=True)
 def manga_only_view(page=1):
 	params, items = select_from_table(main_table=db.MangaReleases, tag_table=db.MangaTags, link_table=db.manga_files_tags_link, page=page)
 	return render_template('manga_view.html',
 						   whole_page    = True,
 						   items         = items,
 						   params        = params,
+						   page          = page,
 						   url_for_param = "manga_only_view"
 						   )
 
 @app.route('/manga/by-site/<source_site>/', methods=['GET'])
 @app.route('/manga/by-site/<source_site>/<int:page>', methods=['GET'])
-@cache.cached(timeout=60 * 5)
+@cache.cached(timeout=CACHE_LIFETIME, query_string=True)
 def manga_by_site_view(source_site, page=1):
 	params, items = select_from_table(main_table=db.MangaReleases, tag_table=db.MangaTags, link_table=db.manga_files_tags_link, page=page, site=source_site)
 	return render_template('manga_view.html',
 						   whole_page    = True,
 						   items         = items,
 						   params        = params,
+						   page          = page,
 						   url_for_param = "manga_only_view"
 						   )
 
 @app.route('/hentai/', methods=['GET'])
 @app.route('/hentai/page/<int:page>', methods=['GET'])
-@cache.cached(timeout=60 * 5)
+@cache.cached(timeout=CACHE_LIFETIME, query_string=True)
 def hentai_only_view(page=1):
 	params, items = select_from_table(main_table=db.HentaiReleases, tag_table=db.HentaiTags, link_table=db.hentai_releases_tags_link, page=page)
 	print("Rendering")
@@ -172,6 +176,7 @@ def hentai_only_view(page=1):
 						   whole_page    = True,
 						   items         = items,
 						   params        = params,
+						   page          = page,
 						   url_for_param = "hentai_only_view"
 						   )
 	print("Rendered")
@@ -179,7 +184,7 @@ def hentai_only_view(page=1):
 
 @app.route('/hentai/by-site/<source_site>/', methods=['GET'])
 @app.route('/hentai/by-site/<source_site>/<int:page>', methods=['GET'])
-@cache.cached(timeout=60 * 5)
+@cache.cached(timeout=CACHE_LIFETIME, query_string=True)
 def hentai_by_site_view(source_site, page=1):
 	params, items = select_from_table(main_table=db.HentaiReleases, tag_table=db.HentaiTags, link_table=db.hentai_releases_tags_link, page=page, site=source_site)
 	return render_template('hentai_view.html',
@@ -187,12 +192,13 @@ def hentai_by_site_view(source_site, page=1):
 						   items         = items,
 						   params        = params,
 						   source_site   = source_site,
+						   page          = page,
 						   url_for_param = "hentai_by_site_view"
 						   )
 
 @app.route('/hentai/by-tag/<tag>/', methods=['GET'])
 @app.route('/hentai/by-tag/<tag>/<int:page>', methods=['GET'])
-@cache.cached(timeout=60 * 5)
+@cache.cached(timeout=CACHE_LIFETIME, query_string=True)
 def hentai_tag_view(tag, page=1):
 	params, items = select_from_table(main_table=db.HentaiReleases, tag_table=db.HentaiTags, link_table=db.hentai_releases_tags_link, page=page, filter_tags=tag)
 	return render_template('hentai_view.html',
@@ -200,12 +206,13 @@ def hentai_tag_view(tag, page=1):
 						   items         = items,
 						   params        = params,
 						   tag           = tag,
+						   page          = page,
 						   url_for_param = "hentai_tag_view"
 						   )
 
 @app.route('/hentai/by-category/<category>/', methods=['GET'])
 @app.route('/hentai/by-category/<category>/<int:page>', methods=['GET'])
-@cache.cached(timeout=60 * 5)
+@cache.cached(timeout=CACHE_LIFETIME, query_string=True)
 def hentai_category_view(category, page=1):
 	params, items = select_from_table(main_table=db.HentaiReleases, tag_table=db.HentaiTags, link_table=db.hentai_releases_tags_link, page=page, filter_category=category)
 	return render_template('hentai_view.html',
@@ -213,6 +220,7 @@ def hentai_category_view(category, page=1):
 						   items         = items,
 						   params        = params,
 						   category      = category,
+						   page          = page,
 						   url_for_param = "hentai_category_view"
 						   )
 

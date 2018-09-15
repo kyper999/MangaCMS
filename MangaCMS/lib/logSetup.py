@@ -90,6 +90,10 @@ class ColourHandler(logging.Handler):
 
 		self.logPaths = {}
 
+
+	def _write_stdout(self, msg):
+		print(msg)
+
 	def emit(self, record):
 
 		# print record.levelname
@@ -129,7 +133,7 @@ class ColourHandler(logging.Handler):
 			record.style = clr.Style.NORMAL
 
 		record.padding = ""
-		print((self.format(record)))
+		self._write_stdout(self.format(record))
 
 class RobustFileHandler(logging.FileHandler):
 	"""

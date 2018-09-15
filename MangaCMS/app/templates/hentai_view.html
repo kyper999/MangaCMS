@@ -152,6 +152,8 @@
 									tag             = tag if tag else None,
 									category        = category if category else None,
 									source_site     = source_site if source_site else None,
+									include_deleted = False,
+									page            = page,
 									params          = request.args
 								)
 							)}}">Exclude Deleted</a>
@@ -163,6 +165,7 @@
 									category        = category if category else None,
 									source_site     = source_site if source_site else None,
 									include_deleted = True,
+									page            = page,
 									params          = request.args
 								)
 							)}}">Include Deleted</a>
