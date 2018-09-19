@@ -33,6 +33,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	plugin_name = "MangaHere Content Retreiver"
 	plugin_key = "mh"
 	is_manga    = True
+	is_hentai   = False
+	is_book     = False
+
 
 
 	retreivalThreads = 1

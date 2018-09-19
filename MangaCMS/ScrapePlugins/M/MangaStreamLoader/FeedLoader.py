@@ -27,7 +27,9 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	logger_path = "Main.Manga.Ms.Fl"
 	plugin_name = "Mangastream.com Scans Link Retreiver"
 	plugin_key  = "ms"
-	is_manga     = True
+	is_manga    = True
+	is_hentai   = False
+	is_book     = False
 
 	urlBase    = "http://mangastream.com/"
 	seriesBase = "http://mangastream.com/manga"

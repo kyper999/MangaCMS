@@ -16,6 +16,9 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	plugin_name = "Kawaii-Scans Link Retreiver"
 	plugin_key  = "kw"
 	is_manga    = True
+	is_hentai   = False
+	is_book     = False
+
 
 	urlBase = "http://kawaii.ca/"
 	feedUrl = "http://kawaii.ca/reader/"

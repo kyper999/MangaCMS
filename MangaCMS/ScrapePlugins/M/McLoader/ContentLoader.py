@@ -26,7 +26,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	logger_path  = "Main.Manga.Mc.Cl"
 	plugin_name  = "MangaCow Content Retreiver"
 	plugin_key   = "mc"
-	is_manga     = True
+	is_manga    = True
+	is_hentai   = False
+	is_book     = False
 
 	retreivalThreads = 2
 

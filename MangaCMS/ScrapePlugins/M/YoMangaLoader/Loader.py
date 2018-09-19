@@ -29,6 +29,9 @@ class Loader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase,
 	plugin_name = "YoManga Scans Link Retreiver"
 	plugin_key  = "ym"
 	is_manga    = True
+	is_hentai   = False
+	is_book     = False
+
 
 	urlBase    = "http://yomanga.co/"
 	seriesBase = "http://yomanga.co/reader/directory/%s/"

@@ -57,7 +57,7 @@ import MangaCMS.ScrapePlugins.H.ASMHentaiLoader.Run
 import MangaCMS.ScrapePlugins.H.HitomiLoader.Run
 import MangaCMS.ScrapePlugins.H.NHentaiLoader.Run
 import MangaCMS.ScrapePlugins.H.HBrowseLoader.Run
-# import MangaCMSOld.ScrapePlugins.M.BooksMadokami.Run
+import MangaCMS.ScrapePlugins.B.BooksMadokami.Run
 
 # Convenience functions to make intervals clearer.
 def days(num):
@@ -108,7 +108,7 @@ scrapePlugins = {
 	74 : (MangaCMSOld.ScrapePlugins.M.FoolSlide.Modules.VortexRun,          hours(12)),
 
 
-	# 81 : (MangaCMSOld.ScrapePlugins.M.BooksMadokami.Run,                    hours(4)),
+	81 : (MangaCMS.ScrapePlugins.B.BooksMadokami.Run,                    hours(4)),
 	#
 	0   : (MangaCMS.ScrapePlugins.M.MangaDex.Run,                        hours( 1)),
 	1   : (MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run,               hours( 6)),
@@ -218,7 +218,7 @@ if __name__ == "__main__":
 				# MangaCMSOld.ScrapePlugins.M.BuMonitor.Rescan,
 				# MangaCMSOld.ScrapePlugins.M.BuMonitor.Run,
 
-				# MangaCMSOld.ScrapePlugins.M.BooksMadokami.Run,
+				# MangaCMSOld.ScrapePlugins.B.BooksMadokami.Run,
 
 
 				MangaCMS.ScrapePlugins.H.ASMHentaiLoader.Run,

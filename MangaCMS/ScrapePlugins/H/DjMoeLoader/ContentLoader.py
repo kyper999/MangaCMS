@@ -35,6 +35,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	plugin_name = "DjMoe Content Retreiver"
 	plugin_key  = "djm"
 	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 
 	urlBase = "http://doujins.com/"

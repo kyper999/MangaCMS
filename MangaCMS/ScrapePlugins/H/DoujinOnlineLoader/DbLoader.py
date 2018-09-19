@@ -20,6 +20,8 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	plugin_name = "DoujinOnline Link Retreiver"
 	plugin_key  = "dol"
 	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 	urlBase = "https://doujinshi.online/"
 

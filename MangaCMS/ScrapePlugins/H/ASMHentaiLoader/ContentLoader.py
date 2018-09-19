@@ -25,6 +25,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	plugin_name = "ASMHentai Content Retreiver"
 	plugin_key  = "asmh"
 	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 	urlBase    = "https://asmhentai.com/"
 

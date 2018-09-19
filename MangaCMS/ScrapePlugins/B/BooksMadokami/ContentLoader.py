@@ -21,12 +21,11 @@ import MangaCMS.ScrapePlugins.RunBase
 
 from concurrent.futures import ThreadPoolExecutor
 
-import MangaCMS.cleaner.processDownload
 
 
 HTTPS_CREDS = [
-	(        "manga.madokami.al", settings.mkSettings["login"], settings.mkSettings["passWd"]),
-	( "http://manga.madokami.al", settings.mkSettings["login"], settings.mkSettings["passWd"]),
+	("manga.madokami.al",         settings.mkSettings["login"], settings.mkSettings["passWd"]),
+	("http://manga.madokami.al",  settings.mkSettings["login"], settings.mkSettings["passWd"]),
 	("https://manga.madokami.al", settings.mkSettings["login"], settings.mkSettings["passWd"]),
 	]
 
@@ -34,19 +33,19 @@ HTTPS_CREDS = [
 class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
-	logger_path = "Main.Manga.Mk.Cl"
-	plugin_name = "Manga.Madokami Content Retreiver"
-	plugin_key  = "mk"
-	is_manga    = True
+	logger_path = "Main.Books.Mk.Cl"
+	plugin_name = "Books.Madokami Content Retreiver"
+	plugin_key = "bmk"
+
+	is_manga    = False
 	is_hentai   = False
-	is_book     = False
+	is_book     = True
 
 
-	retreival_threads = 2
+	retreivalThreads = 1
 
+	tableName = "BookItems"
 	urlBase = "https://manga.madokami.al/"
-
-	itemLimit = 5000
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
@@ -54,6 +53,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 	def getLinkFile(self, fileUrl):
+
 		scheme, netloc, path, params, query, fragment = urllib.parse.urlparse(fileUrl)
 		path = urllib.parse.quote(path)
 		fileUrl = urllib.parse.urlunparse((scheme, netloc, path, params, query, fragment))
@@ -66,6 +66,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 		return pgctnt, hName
+
+
 
 	def get_link(self, link_row_id):
 		with self.row_sess_context(dbid=link_row_id) as row_tup:
@@ -119,10 +121,6 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		with self.row_context(dbid=link_row_id) as row:
 			row.state = 'processing'
 
-		# We don't want to upload the file we just downloaded, so specify doUpload as false.
-		# As a result of this, the seriesName paramerer also no longer matters
-		self.processDownload(seriesName=False, archivePath=fqFName, doUpload=False)
-
 
 		self.log.info( "Done")
 		with self.row_context(dbid=link_row_id) as row:
@@ -133,18 +131,49 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		return
 
 
-	def setup(self):
-		# Muck about in the webget internal settings
-		self.wg.errorOutCount = 4
-		self.wg.retryDelay    = 5
+	# either locate or create a directory for `seriesName`.
+	# If the directory cannot be found, one will be created.
+	# Returns {pathToDirectory string}, {HadToCreateDirectory bool}
+	def locateOrCreateDirectoryForSeries(self, seriesName):
 
+		if self.shouldCanonize and self.is_manga:
+			canonSeriesName = nt.getCanonicalMangaUpdatesName(seriesName)
+		else:
+			canonSeriesName = seriesName
+
+		safeBaseName = nt.makeFilenameSafe(canonSeriesName)
+
+
+		targetDir = os.path.join(settings.mkSettings["dirs"]['bookDir'], safeBaseName)
+		if not os.path.exists(targetDir):
+			self.log.info("Don't have target dir for: %s, full name = %s", canonSeriesName, seriesName)
+			try:
+				os.makedirs(targetDir)
+				return targetDir, True
+
+			except FileExistsError:
+				# Probably means the directory was concurrently created by another thread in the background?
+				self.log.critical("Directory doesn't exist, and yet it does?")
+				self.log.critical(traceback.format_exc())
+			except OSError:
+				self.log.critical("Directory creation failed?")
+				self.log.critical(traceback.format_exc())
+
+		else:
+			self.log.info("Directory exists.")
+			self.log.info("Directory not found in dir-dict, but it exists!")
+			self.log.info("Directory-Path: %s", targetDir)
+			self.log.info("Base series name: %s", seriesName)
+			self.log.info("Canonized series name: %s", canonSeriesName)
+			self.log.info("Safe canonized name: %s", safeBaseName)
+		return targetDir, False
 
 
 
 if __name__ == "__main__":
 	import utilities.testBase as tb
 
-	with tb.testSetup():
+	with tb.testSetup(load=False):
 
 		run = ContentLoader()
 		run.do_fetch_content()

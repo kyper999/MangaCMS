@@ -23,6 +23,8 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	plugin_name = "H-Browse Link Retreiver"
 	plugin_key  = "hb"
 	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 	urlBase = "http://www.hbrowse.com/"
 	urlFeed = "http://www.hbrowse.com/list"

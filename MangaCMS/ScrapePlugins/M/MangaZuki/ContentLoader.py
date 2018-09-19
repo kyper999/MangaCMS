@@ -32,7 +32,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	logger_path  = "Main.Manga.Mzk.Cl"
 	plugin_name  = "MangaZuki Content Retreiver"
 	plugin_key   = "mzk"
-	is_manga     = True
+	is_manga    = True
+	is_hentai   = False
+	is_book     = False
 
 	retreivalThreads = 1
 

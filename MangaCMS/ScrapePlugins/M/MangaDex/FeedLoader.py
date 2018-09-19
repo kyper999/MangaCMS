@@ -23,7 +23,9 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	logger_path  = "Main.Manga.MDx.Fl"
 	plugin_name  = "MangaDex Link Retreiver"
 	plugin_key   = "mdx"
-	is_manga     = True
+	is_manga    = True
+	is_hentai   = False
+	is_book     = False
 
 
 	urlBase    = "https://mangadex.org/"

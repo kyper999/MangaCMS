@@ -60,7 +60,9 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	plugin_name  = "Manga.Madokami Link Retreiver"
 	plugin_key   = "mk"
 
-	is_manga     = True
+	is_manga    = True
+	is_hentai   = False
+	is_book     = False
 
 	url_base     = "https://manga.madokami.al/"
 	tree_api     = "https://manga.madokami.al/stupidapi/lessdumbtree"
@@ -76,7 +78,7 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
 
-	def process_tree_elements(self, elements, cum_path="/mango"):
+	def process_tree_elements(self, elements, cum_path="/"):
 		ret = []
 
 		for element in elements:
@@ -87,8 +89,6 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 				ret.extend(self.process_tree_elements(element['contents'], item_path))
 			elif element['type'] == 'file':
 				item_path = os.path.join(cum_path, element['name'])
-
-				assert item_path.startswith(STRIP_PREFIX)
 
 				if any([item_path.startswith(prefix) for prefix in MASK_PATHS]):
 					continue
@@ -128,16 +128,6 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 		assert treedata['type'] == 'directory'
 		data_unfiltered = self.process_tree_elements(treedata['contents'])
 		return data_unfiltered
-
-		data = []
-		for sName, filen in data_unfiltered:
-			assert filen.startswith(STRIP_PREFIX)
-			filen = filen[len(STRIP_PREFIX):]
-			if not any([filen.startswith(prefix) for prefix in MASK_PATHS]):
-				sName = nt.getCanonicalMangaUpdatesName(sName)
-				data.append((sName, filen))
-
-		return data
 
 
 if __name__ == "__main__":

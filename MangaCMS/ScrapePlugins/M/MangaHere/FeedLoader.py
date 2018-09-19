@@ -23,6 +23,9 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	plugin_name = "MangaHere Link Retreiver"
 	plugin_key = "mh"
 	is_manga    = True
+	is_hentai   = False
+	is_book     = False
+
 
 	urlBase    = "http://www.mangahere.co/"
 	seriesBase = "http://www.mangahere.co/latest/"

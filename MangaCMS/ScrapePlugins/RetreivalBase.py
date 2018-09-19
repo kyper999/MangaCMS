@@ -558,7 +558,14 @@ class RetreivalBase(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase):
 				fqFName = self.save_image_set(row, sess, fqFName, image_list)
 
 			self.log.info("Processing download")
-			self.processDownload(seriesName = series_name, archivePath = fqFName, doUpload = self.is_manga)
+			if self.is_manga:
+				self.processDownload(seriesName = series_name, archivePath = fqFName, doUpload = True)
+			elif self.is_hentai:
+				self.processDownload(seriesName = series_name, archivePath = fqFName, doUpload = False)
+			elif self.is_book:
+				pass
+			else:
+				raise RuntimeError("Unknown type!")
 
 			with self.row_context(dbid=row_id) as row:
 				row.state         = 'complete'

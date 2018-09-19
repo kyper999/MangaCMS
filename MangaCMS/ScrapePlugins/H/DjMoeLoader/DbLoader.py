@@ -17,6 +17,8 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	plugin_name = "DjMoe Link Retreiver"
 	plugin_key  = "djm"
 	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 	urlBase = "http://doujins.com/"
 

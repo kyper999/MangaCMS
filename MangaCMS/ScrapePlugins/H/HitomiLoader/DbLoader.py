@@ -19,6 +19,8 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	plugin_name = "Hitomi Link Retreiver"
 	plugin_key    = "hit"
 	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 	urlBase = "https://hitomi.la/"
 

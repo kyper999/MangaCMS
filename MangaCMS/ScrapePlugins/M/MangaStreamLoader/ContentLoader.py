@@ -23,6 +23,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	plugin_name = "MangaStream.com Content Retreiver"
 	plugin_key  = "ms"
 	is_manga    = True
+	is_hentai   = False
+	is_book     = False
+
 
 	retreivalThreads = 2
 	urlBase    = "https://readms.net/"

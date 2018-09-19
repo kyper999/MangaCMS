@@ -4,6 +4,7 @@
 # Import the DB things.
 from .db_models import MangaReleases
 from .db_models import HentaiReleases
+from .db_models import BookReleases
 from .db_models import MangaTags
 from .db_models import HentaiTags
 from .db_models import ReleaseFile

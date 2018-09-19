@@ -94,6 +94,9 @@ def run_all():
 	nt.dirNameProxy.startDirObservers()
 
 	for plg_name, plugin in plgs.items():
+		if plg_name == 'sp':
+			continue
+
 		try:
 			runner = plugin['runner']()
 			runner.go()

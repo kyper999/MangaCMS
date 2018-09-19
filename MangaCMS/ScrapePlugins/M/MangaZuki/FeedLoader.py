@@ -24,7 +24,9 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	logger_path  = "Main.Manga.Mzk.Fl"
 	plugin_name  = "MangaZuki Link Retreiver"
 	plugin_key   = "mzk"
-	is_manga     = True
+	is_manga    = True
+	is_hentai   = False
+	is_book     = False
 
 	urlBase    = "https://mangazuki.co/"
 	seriesBase = "https://mangazuki.co/manga-list"

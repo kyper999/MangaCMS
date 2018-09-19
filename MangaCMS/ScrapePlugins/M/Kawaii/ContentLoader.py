@@ -14,6 +14,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	plugin_name = "Kawaii-Scans Content Retreiver"
 	plugin_key  = "kw"
 	is_manga    = True
+	is_hentai   = False
+	is_book     = False
+
 
 	retreivalThreads = 1
 

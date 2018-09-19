@@ -28,7 +28,9 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	logger_path  = "Main.Manga.Dy.Fl"
 	plugin_name  = "Dynasty Scans Link Retreiver"
 	plugin_key   = "dy"
-	is_manga     = True
+	is_manga    = True
+	is_hentai   = False
+	is_book     = False
 
 	urlBase    = "http://dynasty-scans.com/"
 	seriesBase = "http://dynasty-scans.com/?page={num}"

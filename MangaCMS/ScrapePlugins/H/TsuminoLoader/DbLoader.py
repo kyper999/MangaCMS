@@ -20,6 +20,8 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	plugin_name = "Tsumino Link Retreiver"
 	plugin_key  = "ts"
 	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 	urlBase = "http://www.tsumino.com/"
 

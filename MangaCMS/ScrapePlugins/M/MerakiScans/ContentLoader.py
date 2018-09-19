@@ -25,6 +25,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	plugin_name = "MerakiScans Content Retreiver"
 	plugin_key  = "meraki"
 	is_manga    = True
+	is_hentai   = False
+	is_book     = False
+
 	retreivalThreads = 1
 
 

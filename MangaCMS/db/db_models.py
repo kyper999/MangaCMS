@@ -203,6 +203,40 @@ class HentaiReleases(Base):
 		)
 
 
+class BookReleases(Base):
+	__tablename__ = 'book_releases'
+	id                  = Column(BigInteger, primary_key=True)
+	state               = Column(dlstate_enum, nullable=False, index=True, default='new')
+	err_str             = Column(Text)
+
+	source_site         = Column(Text, nullable=False, index=True)  # Actual source site
+	source_id           = Column(Text, nullable=False, index=True)  # ID On source site. Usually (but not always) the item URL
+
+	first_seen          = Column(DateTime, nullable=False)
+	posted_at           = Column(DateTime, nullable=False, default=datetime.datetime.min)
+	downloaded_at       = Column(DateTime, nullable=False, default=datetime.datetime.min)
+	last_checked        = Column(DateTime, nullable=False, default=datetime.datetime.min)
+
+	deleted             = Column(Boolean, default=False, nullable=False)
+	was_duplicate       = Column(Boolean, default=False, nullable=False)
+	phash_duplicate     = Column(Boolean, default=False, nullable=False)
+	uploaded            = Column(Boolean, default=False, nullable=False)
+
+	dirstate            = Column(dir_type, nullable=False, default="unknown")
+
+	origin_name         = Column(citext.CIText())
+	series_name         = Column(citext.CIText(), index=True)
+
+	additional_metadata = Column(sqlalchemy_jsonfield.JSONField())
+
+	fileid              = Column(BigInteger, ForeignKey('release_files.id'))
+	file                = relationship('ReleaseFile', backref='book_releases')
+
+	__table_args__ = (
+			UniqueConstraint('source_site', 'source_id'),
+			Index('book_releases_source_site_id_idx', 'source_site', 'source_id')
+		)
+
 
 
 class ReleaseFile(Base):

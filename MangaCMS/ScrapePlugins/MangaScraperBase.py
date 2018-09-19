@@ -38,19 +38,38 @@ class MangaScraperDbMixin(MangaCMS.lib.LogMixin.LoggerMixin):
 	def is_manga(self):
 		return None
 
+
+	@abc.abstractmethod
+	def is_book(self):
+		return None
+
+	@abc.abstractmethod
+	def is_hentai(self):
+		return None
+
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
 
 		self.db = mdb
 
+		assert len([tmp for tmp in [self.is_manga, self.is_book, self.is_hentai] if tmp]) == 1, "You can only be one type"
+
 		if self.is_manga:
 			self.shouldCanonize = True
 			self.target_table = self.db.MangaReleases
 			self.target_tags_table = self.db.MangaTags
-		else:
+		elif self.is_hentai:
 			self.shouldCanonize = False
 			self.target_table = self.db.HentaiReleases
 			self.target_tags_table = self.db.HentaiTags
+		elif self.is_book:
+			self.shouldCanonize = False
+			self.target_table = self.db.BookReleases
+			self.target_tags_table = None
+		else:
+			raise RuntimeError("No mode?")
+
+
 
 
 	# ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -132,6 +151,10 @@ class MangaScraperBase(MangaScraperDbMixin, MangaCMS.lib.LogMixin.LoggerMixin, M
 		assert all([len(tag) >= 2 for tag in tags]),    "All tags must be at least one character long. Bad tags: %s"  % [tag for tag in tags if len(tag) < 2]
 		assert all([len(tag) < 90 for tag in tags]),    "All tags must be less then 90 characters long. Bad tags: %s" % [(tag, len(tag)) for tag in tags if len(tag) >= 90]
 		assert all([type(tmp) == str for tmp in tags]), "All tags must be a string! Bad tags: %s"                     % [(tag, type(tag)) for tag in tags if type(tag) != str]
+
+		# Short circuit for no tags.
+		if not tags:
+			return
 
 		if row:
 			for tag in tags:

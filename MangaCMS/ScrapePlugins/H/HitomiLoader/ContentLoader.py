@@ -28,6 +28,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	plugin_name = "Hitomi Content Retreiver"
 	plugin_key   = "hit"
 	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 	urlBase = "https://hitomi.la/"
 

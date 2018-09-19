@@ -41,6 +41,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	plugin_name = "Kiss Manga Content Retreiver"
 	plugin_key  = "ki"
 	is_manga    = True
+	is_hentai   = False
+	is_book     = False
+
 
 
 	retreivalThreads = 1

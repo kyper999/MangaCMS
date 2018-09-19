@@ -36,6 +36,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	plugin_name = "Pururin Content Retreiver"
 	plugin_key  = "pu"
 	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 
 	urlBase = "http://pururin.io/"

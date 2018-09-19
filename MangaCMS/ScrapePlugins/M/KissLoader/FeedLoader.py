@@ -21,6 +21,9 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	plugin_name = "Kiss Manga Link Retreiver"
 	plugin_key  = "ki"
 	is_manga    = True
+	is_hentai   = False
+	is_book     = False
+
 
 	urlBase    = "http://kissmanga.com/"
 	seriesBase = "http://kissmanga.com/MangaList/LatestUpdate?page={num}"

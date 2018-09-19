@@ -17,6 +17,8 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	plugin_name = "ASMHentai Link Retreiver"
 	plugin_key  = "asmh"
 	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 	urlBase    = "https://asmhentai.com/"
 

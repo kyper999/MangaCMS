@@ -30,6 +30,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase, LoginMix
 	plugin_name = "SadPanda Content Retreiver"
 	plugin_key  = "sp"
 	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 	urlBase = "http://exhentai.org/"
 
@@ -98,7 +100,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase, LoginMix
 					self.log.info("Item tags = '%s'", tagList)
 					self.log.info("Triggering tags: = '%s', '%s'", exclude, when)
 					return False
-					
+
 		tagstr = str(tagList)
 		if not any([tmp in tagstr for tmp in settings.tagHighlight]):
 			self.log.info("Missing any highlighted tag. Not fetching!")
@@ -287,7 +289,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase, LoginMix
 				row, sess = row_tup
 				sess.delete(row)
 			return False
-			
+
 		except WebRequest.WebGetException:
 
 			self.log.error("Failure retrieving content for link %s", link_row_id)

@@ -21,6 +21,8 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	plugin_name = "Hentai2Read Link Retreiver"
 	plugin_key  = "h2r"
 	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 
 

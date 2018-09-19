@@ -21,6 +21,8 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	plugin_name = "Pururin Link Retreiver"
 	plugin_key  = "pu"
 	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 	retreivalThreads = 2
 

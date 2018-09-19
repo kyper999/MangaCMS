@@ -16,6 +16,8 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	plugin_name = "NHentai Link Retreiver"
 	plugin_key  = "nh"
 	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 	urlBase = "http://nhentai.net/"
 	urlFeed = "http://nhentai.net/language/english/?page={num}"

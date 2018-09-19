@@ -24,6 +24,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	plugin_name = "MangaDex Content Retreiver"
 	plugin_key  = "mdx"
 	is_manga    = True
+	is_hentai   = False
+	is_book     = False
+
 
 
 	retreivalThreads = 1

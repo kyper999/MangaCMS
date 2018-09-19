@@ -25,7 +25,9 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	logger_path  = "Main.Manga.Mc.Fl"
 	plugin_name  = "MangaCow Link Retreiver"
 	plugin_key   = "mc"
-	is_manga     = True
+	is_manga    = True
+	is_hentai   = False
+	is_book     = False
 
 
 	urlBase = "http://mngcow.co/"

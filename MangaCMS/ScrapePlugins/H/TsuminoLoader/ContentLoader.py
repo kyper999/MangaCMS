@@ -29,6 +29,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	plugin_name = "Tsumino Content Retreiver"
 	plugin_key  = "ts"
 	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 	urlBase = "http://www.tsumino.com/"
 

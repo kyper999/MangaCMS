@@ -260,6 +260,8 @@ class DownloadProcessor(MangaCMS.ScrapePlugins.MangaScraperBase.MangaScraperBase
 class MangaProcessor(DownloadProcessor):
 	tableName = 'MangaItems'
 	is_manga = True
+	is_book = False
+	is_hentai = False
 
 	def __init__(self, plugin_name, *args, **kwargs):
 		self.logger_path = "{}.{}.{}".format(self.logger_path, self.tableName, plugin_name.title())
@@ -268,6 +270,8 @@ class MangaProcessor(DownloadProcessor):
 class HentaiProcessor(DownloadProcessor):
 	tableName = 'HentaiItems'
 	is_manga = False
+	is_book = False
+	is_hentai = True
 
 	def __init__(self, plugin_name, *args, **kwargs):
 		self.logger_path = "{}.{}.{}".format(self.logger_path, self.tableName, plugin_name.title())

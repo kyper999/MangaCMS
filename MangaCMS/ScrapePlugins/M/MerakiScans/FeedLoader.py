@@ -25,7 +25,9 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	logger_path = "Main.Manga.Meraki.Fl"
 	plugin_name = "MerakiScans Link Retreiver"
 	plugin_key = "meraki"
-	is_manga     = True
+	is_manga    = True
+	is_hentai   = False
+	is_book     = False
 
 	urlBase = "http://merakiscans.com/"
 	feedUrl = "http://merakiscans.com/manga-list/"

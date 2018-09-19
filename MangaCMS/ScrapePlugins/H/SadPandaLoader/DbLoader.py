@@ -24,6 +24,8 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase, LoginMixin.ExLoginM
 	plugin_name = "SadPanda Link Retreiver"
 	plugin_key  = "sp"
 	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 
 	urlBase = "https://exhentai.org/"

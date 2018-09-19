@@ -30,6 +30,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	plugin_name = "H-Browse Content Retreiver"
 	plugin_key  = "hb"
 	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 	urlBase = "http://www.hbrowse.com/"
 

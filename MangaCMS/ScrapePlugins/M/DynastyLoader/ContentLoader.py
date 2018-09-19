@@ -34,6 +34,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	plugin_name = "Dynasty Scans Content Retreiver"
 	plugin_key  = "dy"
 	is_manga    = True
+	is_hentai   = False
+	is_book     = False
+
 
 
 	retreivalThreads = 2

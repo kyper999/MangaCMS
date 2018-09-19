@@ -37,6 +37,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	plugin_name = "DoujinOnline Content Retreiver"
 	plugin_key  = "dol"
 	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 
 	urlBase = "https://doujinshi.online/"
