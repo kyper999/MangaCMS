@@ -74,9 +74,9 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 			soup = bs4.BeautifulSoup(page, "lxml")
 
-			mainSection = soup.find("div", class_="gallery-listing")
+			mainSection = soup.find("div", class_="row-gallery")
 
-			doujinLink = mainSection.find_all("a", class_="thumb-pururin")
+			doujinLink = mainSection.find_all("a", class_="card-gallery")
 
 			for linkLi in doujinLink:
 				tmp = self.parseLinkLi(linkLi)

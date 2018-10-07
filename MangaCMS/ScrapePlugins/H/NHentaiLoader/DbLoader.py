@@ -94,11 +94,23 @@ class DbLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 
 	def update_item_tags(self, item):
-		self.log.info("Doing tag update")
+		if not item['tags']:
+			self.log.warning("Item has no tags '%s'?", item)
+			return
 
+		if not item['source_id']:
+			self.log.warning("SourceID is empty: '%s'?", item)
+			return
+
+
+		self.log.info("Doing tag update.")
 		# Do not decend into items where we've already added the item to the DB
 		with self.row_context(url=item['source_id']) as row:
-			self.update_tags(item['tags'], row=row)
+			if not row:
+				self.log.error("No row for item! What'%s', %s.", item, row)
+				return
+			self.log.info("Updating %s", row)
+			self.update_tags(row=row, tags=item['tags'])
 
 	def loadFeedContent(self, pageOverride=None):
 		self.log.info("Retrieving feed content...",)

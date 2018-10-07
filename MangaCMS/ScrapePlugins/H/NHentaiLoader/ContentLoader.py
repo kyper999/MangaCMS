@@ -24,8 +24,10 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 	logger_path = "Main.Manga.NHentai.Cl"
 	plugin_name = "NHentai Content Retreiver"
-	plugin_key   = "nh"
-	is_manga     = False
+	plugin_key  = "nh"
+	is_manga    = False
+	is_hentai   = True
+	is_book     = False
 
 	urlBase = "http://nhentai.net/"
 

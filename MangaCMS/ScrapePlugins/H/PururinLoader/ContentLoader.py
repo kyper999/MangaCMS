@@ -48,10 +48,10 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 	def getFileName(self, soup):
-		container = soup.find("span", class_='info')
+		container = soup.find("div", class_='gallery-wrapper')
 		# Descriptive, eh?
-		link_w_title = container.find("a", title=True)
-		title = link_w_title['title']
+		link_w_title = container.find("div", class_='title')
+		title = link_w_title.get_text(strip=True)
 
 		bad_prefix = "Read "
 		bad_postfix = " Online"
@@ -94,9 +94,9 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 
 	def getCategoryTags(self, soup):
-		container = soup.find("span", class_='info')
+		container = soup.find("div", class_='gallery-wrapper')
 		# Descriptive, eh?
-		tagTable = container.find("table", class_="table")
+		tagTable = container.find("table", class_="table-gallery-info")
 
 		tags = []
 

@@ -28,6 +28,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 	plugin_name = "Hentai2Read Content Retreiver"
 	plugin_key   = "h2r"
 	is_manga     = False
+	is_hentai    = True
+	is_book      = False
 
 	urlBase    = "https://hentai2read.com/"
 

@@ -4,6 +4,7 @@ import html.parser
 import urllib.parse
 import urllib.error
 import time
+import datetime
 import settings
 import re
 import os.path
@@ -25,7 +26,7 @@ MASK_PATHS = [
 	'/Manga/HOW_TO_FIND_STUFF.txt',
 	'/Manga/Non-English',
 	'/Misc',
-
+	'/Novels',
 	'/Needs sorting',
 	'/Needs%20sorting',
 	'/Raws',
@@ -76,22 +77,29 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 	def checkLogin(self):
 		pass
 
-
-
 	def process_tree_elements(self, elements, cum_path="/"):
 		ret = []
 
 		for element in elements:
+
 			if element['type'] == "report":
 				continue
 			elif element['type'] == 'directory':
-				item_path = os.path.join(cum_path, element['name'])
+				name = element['name']
+				name = urllib.parse.quote(name)
+				item_path = os.path.join(cum_path, name)
 				ret.extend(self.process_tree_elements(element['contents'], item_path))
 			elif element['type'] == 'file':
-				item_path = os.path.join(cum_path, element['name'])
+
+
+				name = element['name']
+				name = urllib.parse.quote(name)
+				item_path = os.path.join(cum_path, name)
+
 
 				if any([item_path.startswith(prefix) for prefix in MASK_PATHS]):
 					continue
+
 
 				# Parse out the series name if we're in a directory we understand,
 				# otherwise just assume the dir name is the series.
@@ -105,6 +113,7 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 					'source_id'   : urllib.parse.urljoin(self.url_base, item_path),
 					'origin_name' : element['name'],
 					'series_name' : nt.getCanonicalMangaUpdatesName(sname),
+					'posted_at'   : datetime.datetime.now()
 				}
 				ret.append(item)
 			else:
