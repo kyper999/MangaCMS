@@ -110,13 +110,13 @@ scrapePlugins = {
 
 	81 : (MangaCMS.ScrapePlugins.B.BooksMadokami.Run,                    hours(4)),
 	#
-	0   : (MangaCMS.ScrapePlugins.M.MangaDex.Run,                        hours( 1)),
+	0   : (MangaCMS.ScrapePlugins.M.MangaDex.Run,                        hours( 2)),
 	1   : (MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run,               hours( 6)),
 	25  : (MangaCMS.ScrapePlugins.M.YoMangaLoader.Run,                   hours(12)),
 	80  : (MangaCMS.ScrapePlugins.M.MangaMadokami.Run,                    hours(4)),
 
 	41  : (MangaCMS.ScrapePlugins.H.HBrowseLoader.Run,                   hours( 2)),
-	42  : (MangaCMS.ScrapePlugins.H.PururinLoader.Run,                   hours( 2)),
+	# 42  : (MangaCMS.ScrapePlugins.H.PururinLoader.Run,                   hours( 2)),
 	44  : (MangaCMS.ScrapePlugins.H.NHentaiLoader.Run,                   hours( 2)),
 	45  : (MangaCMS.ScrapePlugins.H.SadPandaLoader.Run,                  hours(24)),
 	46  : (MangaCMS.ScrapePlugins.H.DjMoeLoader.Run,                     hours( 2)),

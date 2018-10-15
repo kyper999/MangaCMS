@@ -169,7 +169,11 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		ret = {}
 		ret['file_name'] = self.getFileName(soup)
 
-		read_url = soup.find("a", text=re.compile("Read Online", re.IGNORECASE))
+		read_section = soup.find('i', class_='fa-book')
+		read_url = read_section.find_parent("a")
+
+		assert read_url
+
 		spage = urllib.parse.urljoin(self.urlBase, read_url['href'])
 
 		ret["s_page"] = spage
@@ -200,24 +204,27 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 	def getImages(self, dl_info):
 		soup = self.wg.getSoup(dl_info['s_page'], addlHeaders={'Referer': dl_info["source_url"]})
-		scripts = "\n".join([scrt.get_text() for scrt in soup.find_all("script")])
-		dat_arr = None
-		for line in [t.strip() for t in scripts.split("\n") if t.strip()]:
-			var_prefix = "var chapters = "
-			if line.startswith(var_prefix):
-				# Trin off the assignment and semicoln
-				data = line[len(var_prefix):-1]
-				dat_arr = json.loads(data)
-		if not dat_arr:
-			return []
 
-		self.log.info("Found %s images", len(dat_arr))
+		gpages_tag = soup.find('gallery-read')
+
+		assert gpages_tag
+
+		gall_def = json.loads(gpages_tag[':gallery'])
+
+
+		# I can't imagine google is too enthused about this.
+		imgurl_base = 'https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&' + \
+			'gadget=a&no_expand=1&resize_w=0&rewriteMime=image/*&url=//api.pururin.io/images/{gid}/{pnum}.png'
+
+		container_page = "https://pururin.io/read/{gid}/{pnum}/release"
 
 		images = []
-		values = list(dat_arr.values())
-		values.sort(key=lambda x: x['page'])
-		for value in values:
-			images.append(self.getImage(value['image'], dl_info['s_page']))
+
+		for im_idx in range(1, gall_def['total_pages'] + 1):
+			imgurl    = imgurl_base.format(gid=gid, pnum=im_idx)
+			refferrer = container_page.format(gid=gid, pnum=im_idx)
+
+			images.append(self.getImage(imgurl, refferrer))
 
 		return images
 
@@ -238,7 +245,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 				row.state = 'error'
 			return False
 
-
+		assert images
 
 		if not images:
 			with self.row_context(dbid=link_row_id) as row:
