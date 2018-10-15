@@ -191,16 +191,13 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		return ret
 
-	def getImage(self, imageUrl, referrer):
+	def getImage(self, insert_num, imageUrl, referrer):
+		content, fName = self.wg.getFileAndName(imageUrl, addlHeaders={'Referer': referrer})
 
-		content, handle = self.wg.getpage(imageUrl, returnMultiple=True, addlHeaders={'Referer': referrer})
-		if not content or not handle:
-			raise ValueError("Failed to retreive image from page '%s'!" % referrer)
+		filen = "{0:04d} - {1:}".format(insert_num, fName)
 
-		fileN = urllib.parse.unquote(urllib.parse.urlparse(handle.geturl())[2].split("/")[-1])
-		fileN = bs4.UnicodeDammit(fileN).unicode_markup
-		self.log.info("retreived image '%s' with a size of %0.3f K", fileN, len(content)/1000.0)
-		return fileN, content
+		self.log.info("retreived image '%s' with a size of %0.3f K", filen, len(content)/1000.0)
+		return filen, content
 
 	def getImages(self, dl_info):
 		soup = self.wg.getSoup(dl_info['s_page'], addlHeaders={'Referer': dl_info["source_url"]})
@@ -218,13 +215,21 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 
 		container_page = "https://pururin.io/read/{gid}/{pnum}/release"
 
+		gid    = gall_def['id']
+		gpages = gall_def['total_pages']
 		images = []
 
-		for im_idx in range(1, gall_def['total_pages'] + 1):
+		assert gid
+		assert gpages >= 1
+
+		self.log.info("Gallery has %s images", gpages)
+
+		for im_idx in range(1, gpages + 1):
 			imgurl    = imgurl_base.format(gid=gid, pnum=im_idx)
 			refferrer = container_page.format(gid=gid, pnum=im_idx)
+			images.append(self.getImage(im_idx, imgurl, refferrer))
 
-			images.append(self.getImage(imgurl, refferrer))
+		assert images
 
 		return images
 
@@ -241,6 +246,8 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 			file_name = dl_info['file_name']
 
 		except WebRequest.WebGetException:
+			self.log.error("Exception!")
+			traceback.print_exc()
 			with self.row_context(dbid=link_row_id) as row:
 				row.state = 'error'
 			return False
@@ -248,6 +255,7 @@ class ContentLoader(MangaCMS.ScrapePlugins.RetreivalBase.RetreivalBase):
 		assert images
 
 		if not images:
+			self.log.error("No images?")
 			with self.row_context(dbid=link_row_id) as row:
 				row.state = 'error'
 			return False
