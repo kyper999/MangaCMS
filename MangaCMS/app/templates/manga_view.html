@@ -134,7 +134,7 @@
 				Filter Params: {{params}}
 				{{manga_block(items, params)}}
 
-				{{ util_macros.render_pagination(items, url_for_param=url_for_param) }}
+				{{ util_macros.render_pagination(items, url_for_param=url_for_param, extra_kwargs=params) }}
 			</div>
 		</div>
 	{% endblock %}

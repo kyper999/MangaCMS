@@ -1,7 +1,7 @@
 
-{% macro render_pagination(pagination, url_for_param=None) %}
+{% macro render_pagination(pagination, url_for_param=None, extra_kwargs={}) %}
 
-	{%- set agg_dict = merge_dicts(request.args, kwargs) -%}
+	{%- set agg_dict = merge_dicts(request.args, kwargs, extra_kwargs) -%}
 
 	<div class="text-center">
 		<ul class="pagination pagination-lg">

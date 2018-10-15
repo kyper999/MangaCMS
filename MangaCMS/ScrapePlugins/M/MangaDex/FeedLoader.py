@@ -5,6 +5,7 @@ runStatus.preloadDicts = False
 
 
 
+import http.cookiejar
 import urllib.parse
 import time
 import calendar
@@ -33,7 +34,31 @@ class FeedLoader(MangaCMS.ScrapePlugins.LoaderBase.LoaderBase):
 
 	def setup(self):
 		now = int(time.time() * 1000)
-		self.wg.getpage("https://mangadex.org/ajax/actions.ajax.php?function=hentai_toggle&mode=1&_={}".format(now))
+
+		cookie = http.cookiejar.Cookie(
+				name               = 'mangadex_h_toggle',
+				value              = '1',
+
+				port               = '80',
+				domain             = 'mangadex.org',
+				path               = "/",
+				expires            = 9999999999,
+
+				version            = 1,
+				port_specified     = None,
+				domain_specified   = None,
+				domain_initial_dot = None,
+				path_specified     = None,
+				secure             = False,
+				discard            = False,
+				comment            = None,
+				comment_url        = None,
+				rest               = None,
+			)
+
+		self.wg.cj.set_cookie(cookie)
+		self.wg.getpage("https://mangadex.org")
+
 
 	def getUpdatedSeries(self, url):
 		ret = set()

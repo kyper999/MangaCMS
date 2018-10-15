@@ -158,12 +158,16 @@ def manga_only_view(page=1):
 @cache.cached(timeout=CACHE_LIFETIME, query_string=True)
 def manga_by_site_view(source_site, page=1):
 	params, items = select_from_table(main_table=db.MangaReleases, tag_table=db.MangaTags, link_table=db.manga_files_tags_link, page=page, site=source_site)
+
+	params['source_site'] = source_site
+	print("Params: ", params)
+
 	return render_template('manga_view.html',
 						   whole_page    = True,
 						   items         = items,
 						   params        = params,
 						   page          = page,
-						   url_for_param = "manga_only_view"
+						   url_for_param = "manga_by_site_view"
 						   )
 
 @app.route('/hentai/', methods=['GET'])
