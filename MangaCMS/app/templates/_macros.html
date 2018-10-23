@@ -59,8 +59,12 @@
 	{%- else -%}
 		<a href='/reader/by-series/{{itemInfo['dirKey'] | urlencode}}'>{{itemName}}</a>
 	{%- endif -%}
-</%def>
 
+{%- endmacro -%}
+
+
+{%- macro createMangaFileLink(show_name, file_dir, fq_filename) -%}
+	<a href='/reader/by-path/?{{ {'path' : fq_filename} | urlencode}}'>{{show_name}}</a>
 
 {%- endmacro -%}
 

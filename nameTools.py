@@ -782,6 +782,13 @@ class DirNameProxy(object):
 			ret += len(self._dirDicts[dirDictKey])
 		return ret
 
+	def is_subdir_of_paths(self, filepath):
+		filepath = os.path.abspath(filepath)
+		for value in self.paths.values():
+			print("Checking against", value['dir'], filepath.startswith(value['dir']))
+			if filepath.startswith(value['dir']):
+				return True
+		return False
 
 
 ## If we have the series name in the synonym database, look it up there, and use the ID

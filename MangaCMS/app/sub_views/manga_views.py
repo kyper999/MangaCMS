@@ -17,7 +17,8 @@ from MangaCMS.app import all_scrapers_ever
 from MangaCMS.app.utilities import paginate
 import MangaCMS.db as db
 
-CACHE_LIFETIME = 10 * 60
+from .cache_control import CACHE_LIFETIME
+
 
 def parse_table_args(**kwargs):
 

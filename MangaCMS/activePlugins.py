@@ -110,7 +110,7 @@ scrapePlugins = {
 
 	81 : (MangaCMS.ScrapePlugins.B.BooksMadokami.Run,                    hours(4)),
 	#
-	0   : (MangaCMS.ScrapePlugins.M.MangaDex.Run,                        hours( 2)),
+	0   : (MangaCMS.ScrapePlugins.M.MangaDex.Run,                        hours( 6)),
 	1   : (MangaCMS.ScrapePlugins.M.MangaStreamLoader.Run,               hours( 6)),
 	25  : (MangaCMS.ScrapePlugins.M.YoMangaLoader.Run,                   hours(12)),
 	80  : (MangaCMS.ScrapePlugins.M.MangaMadokami.Run,                    hours(4)),
